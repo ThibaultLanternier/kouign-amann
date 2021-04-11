@@ -1,0 +1,12 @@
+version: "3.3"
+services:
+  picture-client-dev:
+    build:
+      context: .
+      args: 
+        DOCKER_USER_ID: ${USER_ID}
+    ports:
+      - "3000:3000"
+      - "9229:9229"
+    volumes:
+      - ./app:/usr/app

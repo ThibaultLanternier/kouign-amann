@@ -1,0 +1,41 @@
+version: "3.4"
+services:
+  mongodb-test:
+    image: mongo:4.0
+  mongodb:
+    image: mongo:4.0
+    ports:
+      - "27017:27017"
+  python-shell:
+    build:
+      context: ./api
+      target: base
+    user: picture
+    volumes:
+      - ./app:/usr/app   
+    command: bash
+  api-dev:
+    build:
+      context: ./api
+      target: dev
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./api/app:/usr/app
+    depends_on:
+      - mongodb
+      - mongodb-test
+    env_file: 
+      - ./api/dev.env
+    command: python main.py
+  react-dev:
+    build:
+      context: ./react
+    ports:
+      - "3000:3000"
+      - "9229:9229"
+    volumes:
+      - ./react/app:/usr/app
+    depends_on:
+      - api-dev
+  

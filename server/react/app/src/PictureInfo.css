@@ -1,0 +1,5 @@
+.picture-info {
+    position: fixed;
+    top: 120px;
+    z-index: 15;
+}

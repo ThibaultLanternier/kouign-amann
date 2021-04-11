@@ -1,0 +1,25 @@
+[[source]]
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+pymongo = "*"
+flask = "*"
+flask-restful = "*"
+requests = "*"
+flask-cors = "*"
+gunicorn = "*"
+
+[dev-packages]
+pdbpp = "*"
+flake8 = "*"
+black = "*"
+isort = "*"
+mypy = "*"
+
+[requires]
+python_version = "3.8.6"
+
+[pipenv]
+allow_prereleases = true

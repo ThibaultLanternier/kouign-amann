@@ -1,0 +1,40 @@
+version: "3.4"
+services:
+  mongodb-test:
+    image: mongo:4.0
+  mongodb:
+    image: mongo:4.0
+    ports:
+      - "27017:27017"
+  python-shell:
+    build:
+      context: .
+      target: base
+    user: picture
+    volumes:
+      - ./app:/usr/app   
+    command: bash
+  server-dev:
+    build:
+      context: .
+      target: dev
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./app:/usr/app
+    depends_on:
+      - mongodb
+      - mongodb-test
+    env_file: 
+      - dev.env
+  server:
+    build:
+      context: .
+      target: prod
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mongodb
+    env_file: 
+      - dev.env
+    
