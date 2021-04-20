@@ -1,6 +1,6 @@
 version: "3.3"
 services:
-  picture-client-dev:
+  react-app:
     build:
       context: .
       args: 

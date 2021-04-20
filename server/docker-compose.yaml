@@ -27,7 +27,9 @@ services:
       - mongodb-test
     env_file: 
       - ./api/dev.env
-    command: python main.py
+    command: 
+      - python 
+      - main.py
   react-dev:
     build:
       context: ./react

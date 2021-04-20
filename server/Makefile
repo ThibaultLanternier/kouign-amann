@@ -17,10 +17,11 @@ init-dev:
 
 dev-python-shell: init-dev
 	docker-compose -p $(PROJECT) stop
-	docker-compose -p $(PROJECT) run --service-ports api-dev bash
+	docker-compose -p $(PROJECT) run --service-ports api-dev
 
 dev-node-shell: init-dev
 	docker-compose -p $(PROJECT) stop
+	docker-compose -p $(PROJECT) start api-dev
 	docker-compose -p $(PROJECT) run --service-ports react-dev bash
 
 run:
@@ -34,3 +35,6 @@ test: init-dev
 
 style: init-dev
 	docker-compose -p $(PROJECT) run api-dev make style
+
+build:
+	cd react && make build

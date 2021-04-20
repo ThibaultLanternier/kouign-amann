@@ -1,10 +1,12 @@
+import './Picture.css';
+import './Picture.css';
+
 import * as React from 'react';
 import {Image} from 'react-bootstrap';
 import {IBackup, IPicture} from './App'
 import { Button } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faClock, faCloudUploadAlt } from '@fortawesome/free-solid-svg-icons'
-import './Picture.css';
 import { IPictureAPI } from './Services';
 export interface IPictureProps {
     picture: IPicture;

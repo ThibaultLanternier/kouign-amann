@@ -1,5 +1,12 @@
 export USER_ID = $(shell id -u)
 
-shell:
-	docker-compose build --build-arg DOCKER_USER_ID=$(USER_ID) picture-client-dev
-	docker-compose run --service-ports picture-client-dev
+init:
+	docker-compose -p contact-sheet build --build-arg DOCKER_USER_ID=$(USER_ID) react-app
+
+shell: init
+	docker-compose -p contact-sheet run --service-ports react-app
+
+build: init
+	docker-compose -p contact-sheet run react-app yarn build
+	rm -R ../nginx/react
+	cp -R app/build ../nginx/react

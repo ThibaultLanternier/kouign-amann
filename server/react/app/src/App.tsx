@@ -1,9 +1,9 @@
+import './App.css';
+
 import React from 'react';
-import 'bootstrap/dist/css/bootstrap.min.css';
 import PictureSelector from './PictureSelector';
 import axios from 'axios';
 import { Container } from 'react-bootstrap';
-import './App.css';
 import { PictureConverter, RefreshPictureList } from './Tools';
 import { PictureAPI } from './Services';
 import PictureList from './PictureList';
