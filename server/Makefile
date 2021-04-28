@@ -38,3 +38,5 @@ style: init-dev
 
 build:
 	cd react && make build
+	cd api && make build
+	cd nginx && make build
