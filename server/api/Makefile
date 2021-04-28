@@ -33,3 +33,6 @@ test:
 style:
 	docker-compose build --build-arg DOCKER_USER_ID=$(USER_ID) server-dev
 	docker-compose run server-dev make style
+
+build:
+	docker build -t contact_sheet_api:$(GIT_HASH) --target prod --build-arg DOCKER_USER_ID=$(USER_ID) .

@@ -35,4 +35,5 @@ backup_manager = BackupManager(
 app.config["picture_manager"] = picture_manager
 app.config["backup_manager"] = backup_manager
 
-app.run(debug=DEBUG, host=HOST)
+if __name__ == "__main__":
+    app.run(debug=DEBUG, host=HOST)

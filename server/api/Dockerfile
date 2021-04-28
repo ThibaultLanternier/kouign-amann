@@ -40,6 +40,9 @@ FROM prod-deps as prod
 
 COPY app/src ./src
 COPY app/main.py ./main.py
+COPY app/gunicorn.conf.py ./gunicorn.conf.py
+
+EXPOSE 8000
 
 CMD ["gunicorn", "main:app"]
 

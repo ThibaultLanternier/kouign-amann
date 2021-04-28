@@ -4,7 +4,7 @@ from flask import Flask
 from flask_cors import CORS
 from flask_restful import Api
 
-from src.http.resources import (CrawlerBackup, Picture, PictureBackupRequest,
+from src.http.resources import (CrawlerBackup, Ping, Picture, PictureBackupRequest,
                                 PictureCount, PictureExists, PictureFile,
                                 PictureList, PicturePlanBackup, StorageConfig,
                                 UpdatedPictureList)
@@ -22,6 +22,7 @@ def get_flask_app():
     app.config["RESTFUL_JSON"] = {"default": fake_encoder}
     api = Api(app)
 
+    api.add_resource(Ping, "/ping")
     api.add_resource(Picture, "/picture/<string:hash>")
     api.add_resource(PictureFile, "/picture/file/<string:hash>")
     api.add_resource(PictureExists, "/picture/exists/<string:hash>")
