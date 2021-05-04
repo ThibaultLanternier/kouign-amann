@@ -1,0 +1,20 @@
+version: "3.4"
+services:
+    mongodb-run:
+        image: mongo:4.0
+        volumes:
+            - mongo-data:/data/db
+        ports:
+            - "27017:27017"
+    flaskapi:
+        image: contact_sheet_api:latest
+        env_file: 
+            - run.env
+            - secrets.env
+    nginx:
+        image: contact_sheet_nginx:latest
+        ports: 
+            - "80:80"
+
+volumes:
+    mongo-data:

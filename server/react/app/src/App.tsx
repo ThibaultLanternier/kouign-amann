@@ -61,7 +61,9 @@ interface monthlyPictureCount {
   end_date: string;
 }
 
-const pictureAPI = new PictureAPI("http://localhost:5000")
+const apiURL = process.env.REACT_APP_API_URL as string;
+
+const pictureAPI = new PictureAPI(apiURL)
 class App extends React.Component<{}, IAppState> {
   public constructor(props: {}) {
       super(props);
@@ -87,7 +89,7 @@ class App extends React.Component<{}, IAppState> {
 
   retrieveDateRangeList = () => {
     console.log("Retrieving list of available date ranges")
-    axios.get<monthlyPictureCount[]>("http://localhost:5000/picture/count").then((response) => {
+    axios.get<monthlyPictureCount[]>(`${apiURL}/picture/count`).then((response) => {
         const dateRangeList: IDateRange[] = response.data.map((value, index) => {
             const startDate = new Date(value.start_date);
             const endDate = new Date(value.end_date);
@@ -111,7 +113,7 @@ class App extends React.Component<{}, IAppState> {
     this.setState({loadingPictures: true});
     
     axios.get<IPicture[]>(
-        "http://localhost:5000/picture/list",
+        `${apiURL}/picture/list`,
         {
             params:{
                 start: startTime.toISOString(),
@@ -150,6 +152,7 @@ class App extends React.Component<{}, IAppState> {
         loading={this.state.loadingPictures}
         pictureAPI={pictureAPI}
       />
+      <p>{process.env.NODE_ENV} - {process.env.REACT_APP_API_URL}</p>
     </Container>
   }
 }

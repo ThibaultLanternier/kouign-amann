@@ -10,3 +10,5 @@ services:
       - "9229:9229"
     volumes:
       - ./app:/usr/app
+    environment: 
+      REACT_APP_API_URL: /api
