@@ -35,4 +35,4 @@ style:
 	docker-compose run server-dev make style
 
 build:
-	docker build -t contact_sheet_api:$(GIT_HASH) --target prod --build-arg DOCKER_USER_ID=$(USER_ID) .
+	docker build -t contact-sheet-api:$(GIT_HASH) --target prod --build-arg DOCKER_USER_ID=$(USER_ID) .

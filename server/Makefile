@@ -1,6 +1,8 @@
 GIT_HASH = $(shell git rev-parse --short HEAD)
 USER_ID = $(shell id -u) 
-PROJECT = contact-sheet 
+PROJECT = contact-sheet
+#DOCKER_REGISTRY = cloud.canister.io:5000/thibaultlanternier/
+DOCKER_REGISTRY = 192.168.1.30:32000/thibaultlanternier/
 
 clean:
 	docker-compose -p $(PROJECT) down --remove-orphans
@@ -33,8 +35,14 @@ build:
 	cd react && make build
 	cd api && make build
 	cd nginx && make build
-	docker tag contact_sheet_nginx:$(GIT_HASH) contact_sheet_nginx:latest
-	docker tag contact_sheet_api:$(GIT_HASH) contact_sheet_api:latest
+	docker tag contact-sheet-nginx:$(GIT_HASH) contact-sheet-nginx:latest
+	docker tag contact-sheet-api:$(GIT_HASH) contact-sheet-api:latest
+
+publish: build
+	docker tag contact-sheet-nginx:$(GIT_HASH) $(DOCKER_REGISTRY)contact-sheet-nginx:$(GIT_HASH)
+	docker push $(DOCKER_REGISTRY)contact-sheet-nginx:$(GIT_HASH) 
+	docker tag contact-sheet-api:$(GIT_HASH) $(DOCKER_REGISTRY)contact-sheet-api:$(GIT_HASH)
+	docker push $(DOCKER_REGISTRY)contact-sheet-api:$(GIT_HASH)
 
 run:
 	docker-compose -f docker-compose-run.yml -p run up
