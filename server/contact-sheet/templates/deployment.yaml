@@ -42,6 +42,25 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}contact-sheet-api:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+          - name: AWS_KEY
+            valueFrom:
+              secretKeyRef:
+                name: aws-creds
+                key: AWS_KEY
+          - name: AWS_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: aws-creds
+                key: AWS_SECRET
+          - name: HOST
+            value: "0.0.0.0"
+          - name: MONGO_HOST
+            value: "picture-mongodb.default"
+          - name: DEBUG
+            value: "0"
+          - name: AWS_BUCKET
+            value: "contactsheet.backup.thibault"
           ports:
             - name: http-api
               containerPort: 8000
