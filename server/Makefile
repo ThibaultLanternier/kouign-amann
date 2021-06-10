@@ -44,5 +44,8 @@ publish: build
 	docker tag contact-sheet-api:$(GIT_HASH) $(DOCKER_REGISTRY)contact-sheet-api:$(GIT_HASH)
 	docker push $(DOCKER_REGISTRY)contact-sheet-api:$(GIT_HASH)
 
+helm-package:
+	helm package --app-version $(GIT_HASH) contact-sheet/
+
 run:
 	docker-compose -f docker-compose-run.yml -p run up
