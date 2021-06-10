@@ -46,7 +46,7 @@ ingress:
     kubernetes.io/ingress.class: public
     # kubernetes.io/tls-acme: "true"
   hosts:
-    - host: photos.lanternier.lan
+    - host: lanternier-server-1.local
       paths:
       - path: /
   tls: []
