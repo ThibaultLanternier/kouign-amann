@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Modal } from 'react-bootstrap';
-import { IPicture } from './App';
+import { IPicture } from './Model';
 import PictureFileInfo from './PictureFileInfo';
 import './PictureInfo.css';
 

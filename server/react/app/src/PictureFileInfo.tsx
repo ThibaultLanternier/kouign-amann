@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Alert } from 'react-bootstrap';
-import {IFile} from './App';
+import {IFile} from './Model';
 import {ReduceString} from './Tools';
 
 const PictureFileInfo : React.FunctionComponent<IFile> = (props) => {

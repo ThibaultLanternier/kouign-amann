@@ -1,4 +1,4 @@
-import { IPicture } from "./App";
+import { IPicture, IDateRange } from "./Model";
 import axios, { AxiosResponse } from 'axios';
 import {PictureConverter} from './Tools';
 export interface IPictureAPI {
@@ -6,8 +6,15 @@ export interface IPictureAPI {
     planBackup: (pictureHash: string) => Promise<void>;
     getPictureInfo: (pictureHash: string) => Promise<IPicture>;
     setAndPlanBackup: (pictureHash: string, backup: boolean) => Promise<IPicture>;
+    getPictureList: (startTime: Date, endTime: Date) => Promise<IPicture[]>;
 }
-
+interface monthlyPictureCount {
+    date: string;
+    count: number;
+    start_date: string;
+    end_date: string;
+}
+  
 export class PictureAPI implements IPictureAPI {
     private serverURL: string;
     
@@ -30,6 +37,24 @@ export class PictureAPI implements IPictureAPI {
             });
         }
     }
+
+    public retrieveDateRangeList() : Promise<IDateRange[]> {
+        return axios.get<monthlyPictureCount[]>(`${this.serverURL}/picture/count`).then((response) => {
+            const dateRangeList: IDateRange[] = response.data.map((value, index) => {
+                const startDate = new Date(value.start_date);
+                const endDate = new Date(value.end_date);
+                
+                return {
+                    start: startDate,
+                    end: endDate,
+                    pictureCount: value.count,
+                    id: index,
+                };
+            })
+            
+            return dateRangeList;
+        });
+      }
 
     public planBackup(pictureHash: string) : Promise<void> {
         return axios.put(

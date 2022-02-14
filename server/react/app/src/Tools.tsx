@@ -1,4 +1,4 @@
-import { IPicture, IPictureInfo } from "./App";
+import { IDateRange, IPicture, IPictureInfo, IYearDateRange } from "./Model";
 
 export const PictureInfoConverter : (info: IPictureInfo) => IPictureInfo = (picture: IPictureInfo) => {
     return {...picture, creation_time_date: new Date(picture.creation_time)};
@@ -46,3 +46,60 @@ export const GetPictureMap = (pictureList: IPicture[]): Map<string, IPicture> =>
 
     return result;
 }
+
+export const GroupDateRangeByYear = (dateRangeList: IDateRange[]): IYearDateRange[] => {
+    const result = new Map<number, IDateRange[]>();
+
+    for(let dateRange of dateRangeList){
+        const year = dateRange.start.getFullYear();
+
+        if(!result.has(year)){
+            result.set(year, []);
+        }
+
+        result.get(year)?.push(dateRange);
+    }
+
+    const output : IYearDateRange[] = [];
+
+    result.forEach((dateRangeList, year) => {
+        const yearTotalPictureCount = dateRangeList.map(
+            dateRange => (dateRange.pictureCount)
+        ).reduce(
+            (a, b) => a + b
+        , 0);
+
+        output.push({ year: year, pictureCount: yearTotalPictureCount, dateRangeList: dateRangeList});
+    });
+
+    return output;
+}
+
+export const GetFrenchMonth = (input: Date) : string => {
+    const frenchMonth : Map<number, string> = new Map([
+        [0, "Janvier"],
+        [1, "Février"],
+        [2, "Mars"],
+        [3, "Avril"],
+        [4, "Mai"],
+        [5, "Juin"],
+        [6, "Juillet"],
+        [7, "Août"],
+        [8, "Septembre"],
+        [9, "Octobre"],
+        [10, "Novembre"],
+        [11, "Décembre"]
+    ]);
+
+    const monthNumber = input.getMonth();
+
+    if(frenchMonth.has(monthNumber)){
+        return frenchMonth.get(monthNumber) as string;
+    }else{
+        throw new Error("Not found");
+    }
+};
+
+export const getPictureLink : (start: Date, end: Date) => string = (start, end) => {
+    return `/pictures/${start.toISOString()}/${end.toISOString()}`;
+};

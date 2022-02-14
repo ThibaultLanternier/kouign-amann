@@ -1,6 +1,6 @@
 import * as React from 'react';
 import Picture from './Picture';
-import { IPicture } from './App';
+import { IPicture } from './Model';
 import { Card, Alert, Spinner } from 'react-bootstrap';
 import PictureInfo from './PictureInfo';
 import { IPictureAPI } from './Services';
