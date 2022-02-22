@@ -1,14 +1,14 @@
 import * as React from 'react';
 import { Badge, Card, Dropdown, DropdownButton } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import { IYearDateRange } from './Model';
-import { GetFrenchMonth, getPictureLink } from './Tools';
+import { IYearDateRange } from './Interfaces';
+import { getFrenchMonth, buildDateRangeLink } from './Tools';
 
 interface IPictureSelectorProps {
     dateList : IYearDateRange[];
 }
 
-const PictureSelector : React.FunctionComponent<IPictureSelectorProps> = (props) => {
+const MonthSelector : React.FunctionComponent<IPictureSelectorProps> = (props) => {
     const [activeYear, setActiveYear] = React.useState<IYearDateRange>();
     const [activeMonth, setActiveMonth] = React.useState<Date>();
 
@@ -48,12 +48,12 @@ const PictureSelector : React.FunctionComponent<IPictureSelectorProps> = (props)
             </DropdownButton>
             <DropdownButton 
                 className="d-inline-block" 
-                title={activeMonth !== undefined ? GetFrenchMonth(activeMonth) : "Mois"}
+                title={activeMonth !== undefined ? getFrenchMonth(activeMonth) : "Mois"}
                 onSelect={monthSelect}
             >
                 {activeYear?.dateRangeList.map((dateRange, index) => (
-                    <Dropdown.Item eventKey={index} as={Link} to={getPictureLink(dateRange.start, dateRange.end)}>
-                        {GetFrenchMonth(dateRange.start)}&nbsp;<Badge bg="secondary">{dateRange.pictureCount}</Badge>
+                    <Dropdown.Item eventKey={index} as={Link} to={buildDateRangeLink(dateRange.start, dateRange.end)}>
+                        {getFrenchMonth(dateRange.start)}&nbsp;<Badge bg="secondary">{dateRange.pictureCount}</Badge>
                     </Dropdown.Item>
                 ))}
             </DropdownButton>
@@ -61,4 +61,4 @@ const PictureSelector : React.FunctionComponent<IPictureSelectorProps> = (props)
     </Card>
 };
 
-export default PictureSelector;
+export default MonthSelector;

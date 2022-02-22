@@ -1,4 +1,4 @@
-import { IDateRange, IPicture, IPictureInfo, IYearDateRange } from "./Model";
+import { IDateRange, IPicture, IPictureInfo, IYearDateRange } from "./Interfaces";
 
 export const PictureInfoConverter : (info: IPictureInfo) => IPictureInfo = (picture: IPictureInfo) => {
     return {...picture, creation_time_date: new Date(picture.creation_time)};
@@ -8,7 +8,7 @@ export const PictureConverter : (picture: IPicture) => IPicture = (picture: IPic
     return {...picture, info: PictureInfoConverter(picture.info), rank: 1}
 }
 
-export const ReduceString : (input: string, maxLength: number) => string = (input: string, maxLength: number) => {
+export const shortenString : (input: string, maxLength: number) => string = (input: string, maxLength: number) => {
     const totalLength = input.length;
 
     if (totalLength <= maxLength) {
@@ -18,8 +18,8 @@ export const ReduceString : (input: string, maxLength: number) => string = (inpu
     }
 }
 
-export const RefreshPictureList = (currentList: IPicture[], updatedList: IPicture[]): IPicture[] => {
-    const updatedPictureMap = GetPictureMap(updatedList);
+export const refreshPictureList = (currentList: IPicture[], updatedList: IPicture[]): IPicture[] => {
+    const updatedPictureMap = getIndexedPictureMap(updatedList);
     
     return currentList.map((picture) => {
         if(updatedPictureMap.has(picture.hash)){
@@ -37,7 +37,7 @@ export const RefreshPictureList = (currentList: IPicture[], updatedList: IPictur
     });  
 }
 
-export const GetPictureMap = (pictureList: IPicture[]): Map<string, IPicture> => {
+export const getIndexedPictureMap = (pictureList: IPicture[]): Map<string, IPicture> => {
     const result = new Map<string, IPicture>();
 
     for(let picture of pictureList){
@@ -47,7 +47,7 @@ export const GetPictureMap = (pictureList: IPicture[]): Map<string, IPicture> =>
     return result;
 }
 
-export const GroupDateRangeByYear = (dateRangeList: IDateRange[]): IYearDateRange[] => {
+export const groupDateRangeByYear = (dateRangeList: IDateRange[]): IYearDateRange[] => {
     const result = new Map<number, IDateRange[]>();
 
     for(let dateRange of dateRangeList){
@@ -75,7 +75,7 @@ export const GroupDateRangeByYear = (dateRangeList: IDateRange[]): IYearDateRang
     return output;
 }
 
-export const GetFrenchMonth = (input: Date) : string => {
+export const getFrenchMonth = (input: Date) : string => {
     const frenchMonth : Map<number, string> = new Map([
         [0, "Janvier"],
         [1, "Février"],
@@ -100,6 +100,6 @@ export const GetFrenchMonth = (input: Date) : string => {
     }
 };
 
-export const getPictureLink : (start: Date, end: Date) => string = (start, end) => {
+export const buildDateRangeLink : (start: Date, end: Date) => string = (start, end) => {
     return `/pictures/${start.toISOString()}/${end.toISOString()}`;
 };

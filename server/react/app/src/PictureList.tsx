@@ -1,8 +1,8 @@
 import * as React from 'react';
 import Picture from './Picture';
-import { IPicture } from './Model';
+import { IPicture } from './Interfaces';
 import { Card, Alert, Spinner } from 'react-bootstrap';
-import PictureInfo from './PictureInfo';
+import PictureInfoModal from './PictureInfoModal';
 import { IPictureAPI } from './Services';
 interface IPictureListProps {
     pictures: IPicture[];
@@ -23,7 +23,7 @@ const PictureList : React.FunctionComponent<IPictureListProps> = (props) => {
 
     const renderPictureInfo = () => {
         if(activePictureInfo !== undefined) {
-            return <PictureInfo pictureInfo={activePictureInfo} onClose={unSelectActivePicture}></PictureInfo>    
+            return <PictureInfoModal pictureInfo={activePictureInfo} onClose={unSelectActivePicture}></PictureInfoModal>    
         }
     }
 

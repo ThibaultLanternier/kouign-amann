@@ -1,5 +1,5 @@
-import { IDateRange, IPicture, IPictureInfo } from "./Model";
-import { GetFrenchMonth, getPictureLink, GroupDateRangeByYear, PictureConverter, PictureInfoConverter, ReduceString, RefreshPictureList } from "./Tools"
+import { IDateRange, IPicture, IPictureInfo } from "./Interfaces";
+import { getFrenchMonth, buildDateRangeLink, groupDateRangeByYear, PictureConverter, PictureInfoConverter, shortenString, refreshPictureList } from "./Tools"
 
 test('PictureInfoConverter', () => {
     const date_string = "1972-03-01T20:00:03.000000Z";
@@ -35,13 +35,13 @@ test('ReduceString', () => {
     const testInput = "0123456789";
     const expectedOutput = "...6789";
 
-    expect(ReduceString(testInput, 4)).toEqual(expectedOutput);
+    expect(shortenString(testInput, 4)).toEqual(expectedOutput);
 });
 
 test('ReduceString short string', () => {
     const testInput = "0123456789";
 
-    expect(ReduceString(testInput, 10)).toEqual(testInput);
+    expect(shortenString(testInput, 10)).toEqual(testInput);
 });
 
 test("RefreshPictureList", () => {
@@ -66,7 +66,7 @@ test("RefreshPictureList", () => {
         {...picture, backup_required: true}
     ];
     
-    const refreshedList = RefreshPictureList(pictureList, updatedPictureList);
+    const refreshedList = refreshPictureList(pictureList, updatedPictureList);
     
     expect(refreshedList[0].backup_required).toBeTruthy();
     expect(refreshedList[0].rank).toEqual(2);
@@ -81,7 +81,7 @@ test("GroupDateRangeByYear", () => {
 
     const dateRangeList : IDateRange[] = [dateRange1980, dateRange1980_1, dateRange1981];
 
-    const yearDateRangeList = GroupDateRangeByYear(dateRangeList);
+    const yearDateRangeList = groupDateRangeByYear(dateRangeList);
 
     expect(yearDateRangeList).toEqual([
         {year:1980, pictureCount: 3, dateRangeList: [dateRange1980, dateRange1980_1]},
@@ -90,11 +90,11 @@ test("GroupDateRangeByYear", () => {
 });
 
 test("GetFrenchMonth", () => {
-    expect(GetFrenchMonth(new Date("1980-11-10"))).toEqual("Novembre");
+    expect(getFrenchMonth(new Date("1980-11-10"))).toEqual("Novembre");
 });
 
 test("getPictureLink", () => {
     expect(
-        getPictureLink(new Date("1980-02-03"), new Date("1980-02-05"))
+        buildDateRangeLink(new Date("1980-02-03"), new Date("1980-02-05"))
     ).toEqual("/pictures/1980-02-03T00:00:00.000Z/1980-02-05T00:00:00.000Z");
 });

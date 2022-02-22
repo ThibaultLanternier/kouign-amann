@@ -1,14 +1,14 @@
 import * as React from 'react';
 import { useParams } from 'react-router-dom';
-import { IPicture } from './Model';
+import { IPicture } from './Interfaces';
 import PictureList from './PictureList';
 import { PictureAPI } from './Services';
-import { RefreshPictureList } from './Tools';
+import { refreshPictureList } from './Tools';
 
 const apiURL = process.env.REACT_APP_API_URL as string;
 const pictureAPI = new PictureAPI(apiURL)
 
-const PictureContainer : React.FunctionComponent = () => {
+const PictureListContainer : React.FunctionComponent = () => {
     const {start, end} = useParams();
 
     const [pictureLoading, setPictureLoading] = React.useState<boolean>(true);
@@ -32,7 +32,7 @@ const PictureContainer : React.FunctionComponent = () => {
         const interval = setInterval(() => {
             console.log("Refreshing picture list");
             pictureAPI.getRecentlyUpdatedPictures(30).then((recentlyUpdatedPictureList => {
-                const updatedPictureList = RefreshPictureList(
+                const updatedPictureList = refreshPictureList(
                   pictureList,
                   recentlyUpdatedPictureList
                 );
@@ -51,4 +51,4 @@ const PictureContainer : React.FunctionComponent = () => {
     </div>
 }
 
-export default PictureContainer;
+export default PictureListContainer;

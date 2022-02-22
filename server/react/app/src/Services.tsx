@@ -1,4 +1,4 @@
-import { IPicture, IDateRange } from "./Model";
+import { IPicture, IDateRange } from "./Interfaces";
 import axios, { AxiosResponse } from 'axios';
 import {PictureConverter} from './Tools';
 export interface IPictureAPI {

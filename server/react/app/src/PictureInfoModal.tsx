@@ -1,15 +1,15 @@
 import * as React from 'react';
 import { Modal } from 'react-bootstrap';
-import { IPicture } from './Model';
-import PictureFileInfo from './PictureFileInfo';
-import './PictureInfo.css';
+import { IPicture } from './Interfaces';
+import FileInfo from './FileInfo';
+import './PictureInfoModal.css';
 
 export interface IPictureInfoProps {
     pictureInfo: IPicture;
     onClose: () => void;
 }
 
-const PictureInfo : React.FunctionComponent<IPictureInfoProps> = (props) => {
+const PictureInfoModal : React.FunctionComponent<IPictureInfoProps> = (props) => {
     return <Modal show={true} onHide={props.onClose}>
                 <Modal.Header closeButton><h5>Info</h5></Modal.Header>
                 <Modal.Body>
@@ -20,7 +20,7 @@ const PictureInfo : React.FunctionComponent<IPictureInfoProps> = (props) => {
                     </p>
                     <p><b>Files:</b></p>
                     {props.pictureInfo.file_list.map(file => (
-                        <PictureFileInfo {...file}></PictureFileInfo>
+                        <FileInfo {...file}></FileInfo>
                     ))}
                     <p><b>Backup:</b></p>
                     <ul>
@@ -32,4 +32,4 @@ const PictureInfo : React.FunctionComponent<IPictureInfoProps> = (props) => {
             </Modal>
 }
 
-export default PictureInfo;
+export default PictureInfoModal;

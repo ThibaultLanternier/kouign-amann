@@ -1,15 +1,15 @@
 import * as React from 'react';
 import { PictureAPI } from './Services';
-import { IDateRange } from './Model';
-import { GroupDateRangeByYear } from './Tools';
-import PictureSelector from './PictureSelector';
+import { IDateRange } from './Interfaces';
+import { groupDateRangeByYear } from './Tools';
+import MonthSelector from './MonthSelector';
 import { useParams } from 'react-router-dom';
 
 const apiURL = process.env.REACT_APP_API_URL as string;
 
 const pictureAPI = new PictureAPI(apiURL);
 
-const PictureDateRange : React.FunctionComponent = () => {
+const MonthSelectorContainer : React.FunctionComponent = () => {
     const [dateRange, setDateRange] = React.useState<IDateRange[]>([]);
 
     const {start, end} = useParams();
@@ -26,9 +26,9 @@ const PictureDateRange : React.FunctionComponent = () => {
         };
     }, [start, end]);
 
-    return <PictureSelector 
-        dateList={ GroupDateRangeByYear(dateRange)} 
+    return <MonthSelector 
+        dateList={ groupDateRangeByYear(dateRange)} 
     />
 };
 
-export default PictureDateRange;
+export default MonthSelectorContainer;
