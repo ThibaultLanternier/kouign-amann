@@ -10,22 +10,20 @@ interface IPictureDateMenuElementProps {
 }
 
 const PictureDateMenuElement : React.FunctionComponent<IPictureDateMenuElementProps> = (props) => {
-    return <Card>
-                <Accordion.Toggle as={Card.Header} variant="link" eventKey={props.eventKey}>
-                    <h3>{props.dateRange.year} <Badge variant="secondary">{props.dateRange.pictureCount}</Badge></h3>
-                </Accordion.Toggle>
-                <Accordion.Collapse eventKey={props.eventKey}>
-                    <Card.Body>
-                        <ListGroup variant="flush">
-                        {props.dateRange.dateRangeList.map((dateRange) => (
-                            <Link to={getPictureLink(dateRange.start, dateRange.end)}>
-                                <ListGroup.Item>{GetFrenchMonth(dateRange.start)}&nbsp;<Badge variant="secondary">{dateRange.pictureCount}</Badge></ListGroup.Item>
-                            </Link>
-                        ))}
-                        </ListGroup>
-                    </Card.Body>
-                </Accordion.Collapse>
-            </Card>
+    return <Accordion.Item eventKey={props.eventKey}>
+                <Accordion.Header>
+                    <h5>{props.dateRange.year} <Badge bg="secondary">{props.dateRange.pictureCount}</Badge></h5>
+                </Accordion.Header>
+                <Accordion.Body>
+                    <ListGroup variant="flush">
+                    {props.dateRange.dateRangeList.map((dateRange) => (
+                        <Link to={getPictureLink(dateRange.start, dateRange.end)}>
+                            <ListGroup.Item>{GetFrenchMonth(dateRange.start)}&nbsp;<Badge bg="secondary">{dateRange.pictureCount}</Badge></ListGroup.Item>
+                        </Link>
+                    ))}
+                    </ListGroup>
+                </Accordion.Body>
+            </Accordion.Item>
 }
 
 export default PictureDateMenuElement;

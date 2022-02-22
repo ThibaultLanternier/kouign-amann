@@ -1,5 +1,4 @@
 import './Picture.css';
-import './Picture.css';
 
 import * as React from 'react';
 import {Image} from 'react-bootstrap';
@@ -71,7 +70,7 @@ const Picture : React.FunctionComponent<IPictureProps> = (props) => {
         }
     }
 
-    return <div className="picture-container mr-1 mb-1" title={pictureData.hash}>
+    return <div className="picture-container me-1 mb-1" title={pictureData.hash}>
             <Image 
                 title={pictureData.info.creation_time} alt={pictureData.hash} src={'data:image/jpeg;base64,' +  pictureData.info.thumbnail} 
             />

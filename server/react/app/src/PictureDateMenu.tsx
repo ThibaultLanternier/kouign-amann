@@ -8,7 +8,7 @@ interface IPictureDateMenuProps {
 }
 
 const PictureDateMenu : React.FunctionComponent<IPictureDateMenuProps> = (props) => {
-    return <Accordion>
+    return <Accordion flush>
         {props.dateList.map((date, index) => (
             <PictureDateMenuElement key={index} dateRange={date} eventKey={index.toString()}/>
         ))}

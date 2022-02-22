@@ -22,14 +22,6 @@
     height: 100%;
 }
 
-.picture-container .clickable {
-    border: solid 1px green;
-    display: block;
-    width: 100%;
-    height: 100%;
-    z-index: 0;
-}
-
 .picture-container .overlay .icon{
     margin: 0;
     position: absolute;
