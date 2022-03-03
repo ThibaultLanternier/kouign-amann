@@ -34,13 +34,14 @@ class AbstractPictureAnalyzer(ABC):
 
 DEFAULT_DATETIME = datetime(1970, 1, 1, tzinfo=timezone.utc)
 
+DEFAULT_THUMBNAIL_SIZE = 800
 
 class PictureAnalyzer(AbstractPictureAnalyzer):
     def __init__(
         self,
         picture_path: str,
         hashing_function,
-        thumbnail_size: int = 300,
+        thumbnail_size: int = DEFAULT_THUMBNAIL_SIZE,
         current_timezone: timezone = timezone.utc,
     ):
         self.logger = logging.getLogger("app.picture")
@@ -189,7 +190,7 @@ class PictureAnalyzer(AbstractPictureAnalyzer):
 
 class PictureAnalyzerFactory:
     def perception_hash(
-        self, picture_path: str, thumbnail_size: int = 300
+        self, picture_path: str, thumbnail_size: int = DEFAULT_THUMBNAIL_SIZE
     ) -> AbstractPictureAnalyzer:
         return PictureAnalyzer(
             picture_path, perception_hashing_function, thumbnail_size
