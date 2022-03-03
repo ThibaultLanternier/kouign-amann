@@ -1,8 +1,12 @@
+-include secrets.env
+
 GIT_HASH = $(shell git rev-parse --short HEAD)
 USER_ID = $(shell id -u) 
 PROJECT = contact-sheet
 #DOCKER_REGISTRY = cloud.canister.io:5000/thibaultlanternier/
-DOCKER_REGISTRY = 192.168.1.30:32000/thibaultlanternier/
+DOCKER_REGISTRY = localhost:32000/thibaultlanternier/
+CHART_VERSION = 1.0.0
+HELM_NAMESPACE = local
 
 clean:
 	docker-compose -p $(PROJECT) down --remove-orphans
@@ -47,5 +51,16 @@ publish: build
 helm-package:
 	helm package --app-version $(GIT_HASH) contact-sheet/
 
-run:
-	docker-compose -f docker-compose-run.yml -p run up
+
+load-secret:
+	kubectl create secret generic aws-creds -n $(HELM_NAMESPACE) --from-literal=AWS_KEY=$(AWS_KEY) --from-literal=AWS_SECRET=$(AWS_SECRET)
+
+# Needs to have Helm and kubectl properly configured
+init-helm:
+	helm repo add bitnami https://charts.bitnami.com/bitnami
+	helm upgrade --install --set namespace=$(HELM_NAMESPACE) local-env ./helm/local-setup
+	helm upgrade -n $(HELM_NAMESPACE) --install -f ./helm/mongodb/values.yaml mongodb-local bitnami/mongodb
+
+# Upgrade current chart 
+deploy-local: publish
+	helm upgrade -n $(HELM_NAMESPACE) --version=$(CHART_VERSION) --install --set image.tag=$(GIT_HASH) deployment ./helm/contact-sheet

@@ -8,7 +8,7 @@ image:
   repository: localhost:32000/thibaultlanternier/
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
+  # tag: ""
 
 imagePullSecrets: []
 nameOverride: ""
@@ -46,7 +46,7 @@ ingress:
     kubernetes.io/ingress.class: public
     # kubernetes.io/tls-acme: "true"
   hosts:
-    - host: lanternier-server-1.local
+    - host: app.contactsheet.bzh
       paths:
       - path: /
   tls: []

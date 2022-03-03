@@ -1,0 +1,7 @@
+auth:
+  enabled:	false
+  username: mongo-user
+  database:	contact-sheet
+
+service:
+  type: NodePort
