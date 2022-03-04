@@ -8,7 +8,7 @@ from typing import List, Tuple
 import imagehash
 import piexif
 from imagehash import ImageHash
-from PIL import Image
+from PIL import Image, ImageOps
 
 from app.tools.hash import HashExtractor
 from app.models.picture import PictureData
@@ -156,20 +156,17 @@ class PictureAnalyzer(AbstractPictureAnalyzer):
             current_timezone,
         )
 
-    def record_thumbnail(self, file_name):
-        self.PILImage.thumbnail(self.thumbnail_size)
-        self.PILImage.save(file_name)
-
     def get_base64_thumbnail(self):
         """
         Returns a JPEG thumbnail encoded as Base64 UTF-8 string
         """
         self.__reference_time = datetime.now()
 
-        self.PILImage.thumbnail(self.thumbnail_size)
+        image = ImageOps.exif_transpose(self.PILImage)
+        image.thumbnail(self.thumbnail_size)
 
         with io.BytesIO() as thumbnail_output:
-            self.PILImage.save(thumbnail_output, format="JPEG")
+            image.save(thumbnail_output, format="JPEG")
             self.__record_step_duration("generate_thumbnail")
             return base64.b64encode(thumbnail_output.getvalue()).decode("UTF-8")
 
