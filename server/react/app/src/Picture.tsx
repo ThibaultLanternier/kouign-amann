@@ -11,11 +11,18 @@ export interface IPictureProps {
     picture: IPicture;
     onShowInfo: (picture: IPicture) => void;
     pictureAPI: IPictureAPI;
+    width: number;
 }
 
 const Picture : React.FunctionComponent<IPictureProps> = (props) => {
     const [pictureData, setPictureData] = React.useState<IPicture>(props.picture);
     const [isUpdating, setIsUpdating] = React.useState<boolean>(false);
+
+    const [currentWidth, setCurrentWidth] = React.useState<number>(props.width);
+
+    React.useEffect(() => {
+      setCurrentWidth(props.width);
+    }, [props]);
 
     const onHandleClick = (event: React.MouseEvent) => {
       if(!isUpdating){
@@ -72,7 +79,10 @@ const Picture : React.FunctionComponent<IPictureProps> = (props) => {
 
     return <div className="picture-container me-1 mb-1" title={pictureData.hash}>
             <Image 
-                title={pictureData.info.creation_time} alt={pictureData.hash} src={'data:image/jpeg;base64,' +  pictureData.info.thumbnail} 
+                title={pictureData.info.creation_time} 
+                alt={pictureData.hash} 
+                src={'data:image/jpeg;base64,' +  pictureData.info.thumbnail}
+                width={currentWidth}
             />
             <div className="overlay">
               <Button onClick={onHandleMouseOver} className="top-right" size="sm">?</Button>

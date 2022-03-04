@@ -5,11 +5,15 @@ import { groupDateRangeByYear } from './Tools';
 import MonthSelector from './MonthSelector';
 import { useParams } from 'react-router-dom';
 
+export interface IMonthSelectorContainerProps {
+    onPictureSizeChange : (newSize: number) => void;
+}
+
 const apiURL = process.env.REACT_APP_API_URL as string;
 
 const pictureAPI = new PictureAPI(apiURL);
 
-const MonthSelectorContainer : React.FunctionComponent = () => {
+const MonthSelectorContainer : React.FunctionComponent<IMonthSelectorContainerProps> = (props) => {
     const [dateRange, setDateRange] = React.useState<IDateRange[]>([]);
 
     const {start, end} = useParams();
@@ -28,6 +32,7 @@ const MonthSelectorContainer : React.FunctionComponent = () => {
 
     return <MonthSelector 
         dateList={ groupDateRangeByYear(dateRange)} 
+        onPictureSizeChange= {props.onPictureSizeChange}
     />
 };
 

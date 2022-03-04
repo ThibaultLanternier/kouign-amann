@@ -8,6 +8,7 @@ interface IPictureListProps {
     pictures: IPicture[];
     loading: boolean;
     pictureAPI: IPictureAPI;
+    pictureSize: number;
 }
 
 const PictureList : React.FunctionComponent<IPictureListProps> = (props) => {
@@ -41,6 +42,7 @@ const PictureList : React.FunctionComponent<IPictureListProps> = (props) => {
                             picture={picture} 
                             onShowInfo={onShowInfo}
                             pictureAPI={props.pictureAPI}
+                            width={props.pictureSize}
                         ></Picture>
                     ))}
                 </Card.Body>
