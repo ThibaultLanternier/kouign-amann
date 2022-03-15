@@ -2,7 +2,7 @@ import unittest
 from dataclasses import asdict
 from datetime import datetime, timedelta, timezone
 
-from app.models.picture import DictFactory, PictureData
+from app.models.picture import DictFactory, PictureData, PictureOrientation
 
 
 class TestPictureData(unittest.TestCase):
@@ -13,6 +13,7 @@ class TestPictureData(unittest.TestCase):
             "resolution": (5472, 3648),
             "thumbnail": "THUMBNAIL",
             "picture_path": "fake/path",
+            "orientation": PictureOrientation.LANDSCAPE
         }
 
         self.picture_data = PictureData(**self.picture_dict)
@@ -24,9 +25,12 @@ class TestPictureData(unittest.TestCase):
             "resolution": (5472, 3648),
             "thumbnail": "THUMBNAIL",
             "picture_path": "fake/path",
+            "orientation": "LANDSCAPE"
         }
 
-        self.assertEqual(expected, asdict(self.picture_data, dict_factory=DictFactory))
+        result = asdict(self.picture_data, dict_factory=DictFactory)
+
+        self.assertEqual(expected, result)
 
     def test_asdict_timezone(self):
         self.picture_data.creation_time = datetime(
@@ -39,6 +43,9 @@ class TestPictureData(unittest.TestCase):
             "resolution": (5472, 3648),
             "thumbnail": "THUMBNAIL",
             "picture_path": "fake/path",
+            "orientation": "LANDSCAPE"
         }
 
-        self.assertEqual(expected, asdict(self.picture_data, dict_factory=DictFactory))
+        result = asdict(self.picture_data, dict_factory=DictFactory)
+
+        self.assertEqual(expected, result)

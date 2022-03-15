@@ -2,6 +2,7 @@ import dataclasses
 import secrets
 import unittest
 from datetime import datetime, timedelta, timezone
+from app.models.picture import PictureOrientation
 
 from imagehash import ImageHash
 from PIL import Image
@@ -69,11 +70,26 @@ class TestPicture(unittest.TestCase):
 
         self.assertEqual(start_size, test_picture.PILImage.size)
 
+    def test_get_orientation_vertical(self):
+        test_picture = PictureAnalyzer(
+            VERTICAL_IMAGE_NAME, perception_hashing_function
+        )
+
+        self.assertEqual(PictureOrientation.PORTRAIT, test_picture.get_orientaton())
+    
+    def test_get_orientation_horizontal(self):
+        test_picture = PictureAnalyzer(
+            HORIZONTAL_IMAGE_NAME, perception_hashing_function
+        )
+
+        self.assertEqual(PictureOrientation.LANDSCAPE, test_picture.get_orientaton())
+
     def test_get_base64_thumbnail_vertical(self):
         test_picture = PictureAnalyzer(
             VERTICAL_IMAGE_NAME, perception_hashing_function, 10
         )
 
+        test_picture.get_orientaton()
         base64_thumbnail = test_picture.get_base64_thumbnail()
 
         self.assertEqual(VERTICAL_IMAGE_THUMBNAIL, base64_thumbnail)
@@ -83,6 +99,7 @@ class TestPicture(unittest.TestCase):
             HORIZONTAL_IMAGE_NAME, perception_hashing_function, 10
         )
 
+        test_picture.get_orientaton()
         base64_thumbnail = test_picture.get_base64_thumbnail()
 
         self.assertEqual(HORIZONTAL_IMAGE_THUMBNAIL, base64_thumbnail)
@@ -99,6 +116,7 @@ class TestPicture(unittest.TestCase):
             "resolution": (5472, 3648),
             "thumbnail": CANON_EOS_70D_THUMBNAIL,
             "picture_path": "tests/files/test-canon-eos70D.jpg",
+            "orientation": PictureOrientation.LANDSCAPE
         }
         actual_data = test_picture.get_data()
 
@@ -114,6 +132,7 @@ class TestPicture(unittest.TestCase):
             "creation_time": datetime(1970, 1, 1, tzinfo=timezone.utc),
             "resolution": (-1, -1),
             "picture_path": "tests/files/0025.jpg",
+            "orientation": PictureOrientation.LANDSCAPE
         }
         actual_dict = dataclasses.asdict(test_picture.get_data())
         actual_dict.pop("thumbnail")
@@ -131,6 +150,7 @@ class TestPicture(unittest.TestCase):
             "resolution": (5472, 3648),
             "picture_path": "tests/files/test-canon-eos70D.jpg",
             "thumbnail": None,
+            "orientation": None
         }
         actual_dict = test_picture.get_data(create_thumbnail=False)
 

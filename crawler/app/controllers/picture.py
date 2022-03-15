@@ -11,7 +11,7 @@ from imagehash import ImageHash
 from PIL import Image, ImageOps
 
 from app.tools.hash import HashExtractor
-from app.models.picture import PictureData
+from app.models.picture import PictureData, PictureOrientation
 
 
 def perception_hashing_function(image_file) -> ImageHash:
@@ -79,6 +79,8 @@ class PictureAnalyzer(AbstractPictureAnalyzer):
 
         self.resolution = self.__get_resolution()
         self.__record_step_duration("retrieve_resolution")
+
+        self.__thumbnail = None
 
     def __del__(self):
         self.PILImage.close()
@@ -156,17 +158,34 @@ class PictureAnalyzer(AbstractPictureAnalyzer):
             current_timezone,
         )
 
-    def get_base64_thumbnail(self):
+    def __get_thumbnail(self) -> Image:
+        """
+        Returns a JPEG thumbnail of the image
+        """
+        if self.__thumbnail is None:
+            self.__thumbnail = ImageOps.exif_transpose(self.PILImage)
+            self.__thumbnail.thumbnail(self.thumbnail_size)
+        
+        return self.__thumbnail
+
+    def get_orientaton(self) -> PictureOrientation:
+        size = self.__get_thumbnail().size
+
+        if size[0] > size[1]:
+            return PictureOrientation.LANDSCAPE
+        else:
+            return PictureOrientation.PORTRAIT
+
+    def get_base64_thumbnail(self) -> str:
         """
         Returns a JPEG thumbnail encoded as Base64 UTF-8 string
         """
         self.__reference_time = datetime.now()
 
-        image = ImageOps.exif_transpose(self.PILImage)
-        image.thumbnail(self.thumbnail_size)
+        thumbnail = self.__get_thumbnail()
 
         with io.BytesIO() as thumbnail_output:
-            image.save(thumbnail_output, format="JPEG")
+            thumbnail.save(thumbnail_output, format="JPEG")
             self.__record_step_duration("generate_thumbnail")
             return base64.b64encode(thumbnail_output.getvalue()).decode("UTF-8")
 
@@ -177,10 +196,12 @@ class PictureAnalyzer(AbstractPictureAnalyzer):
             "resolution": self.resolution,
             "picture_path": self.picture_path,
             "thumbnail": None,
+            "orientation": None
         }
 
         if create_thumbnail:
             output["thumbnail"] = self.get_base64_thumbnail()
+            output["orientation"] = self.get_orientaton()
 
         return PictureData(**output)
 
