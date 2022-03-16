@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Modal } from 'react-bootstrap';
+import { Image, Modal } from 'react-bootstrap';
 import { IPicture } from './Interfaces';
 import FileInfo from './FileInfo';
 import './PictureInfoModal.css';
@@ -10,10 +10,16 @@ export interface IPictureInfoProps {
 }
 
 const PictureInfoModal : React.FunctionComponent<IPictureInfoProps> = (props) => {
-    return <Modal show={true} onHide={props.onClose}>
+    return <Modal show={true} onHide={props.onClose} size="xl">
                 <Modal.Header closeButton><h5>Info</h5></Modal.Header>
                 <Modal.Body>
                     <p><b>Hash:</b>&nbsp;{props.pictureInfo.hash}</p>
+                    <Image
+                        title={props.pictureInfo.info.creation_time}  
+                        alt={props.pictureInfo.hash} 
+                        src={'data:image/jpeg;base64,' +  props.pictureInfo.info.thumbnail}
+                        style={{maxWidth: "100%"}}
+                    />
                     <p><b>Created:</b>
                         &nbsp;{props.pictureInfo.info.creation_time_date?.toLocaleDateString()}
                         &nbsp;{props.pictureInfo.info.creation_time_date?.toLocaleTimeString()}

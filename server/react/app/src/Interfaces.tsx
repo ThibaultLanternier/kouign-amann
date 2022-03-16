@@ -15,6 +15,7 @@ export interface IDateRange {
     creation_time: string;
     thumbnail: string;
     creation_time_date?: Date
+    orientation: string;
   }
   
   export interface IFile {
@@ -22,7 +23,6 @@ export interface IDateRange {
     resolution: [number, number]
     picture_path: string;
     last_seen: string;
-  
   }
   
   export interface IBackup {

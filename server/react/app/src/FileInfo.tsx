@@ -4,7 +4,7 @@ import {IFile} from './Interfaces';
 import {shortenString} from './Tools';
 
 const FileInfo : React.FunctionComponent<IFile> = (props) => {
-    return <Alert title={props.picture_path} variant="primary">{shortenString(props.picture_path, 30)}</Alert>
+    return <Alert title={props.picture_path} variant="primary">{shortenString(props.picture_path, 30)}&nbsp;({props.resolution[0]} x {props.resolution[1]})</Alert>
 }
 
 export default FileInfo;

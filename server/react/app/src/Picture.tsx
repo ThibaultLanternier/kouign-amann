@@ -79,10 +79,11 @@ const Picture : React.FunctionComponent<IPictureProps> = (props) => {
 
     return <div className="picture-container me-1 mb-1" title={pictureData.hash}>
             <Image 
-                title={pictureData.info.creation_time} 
+                title={pictureData.info.creation_time + "-" + pictureData.info.orientation}  
                 alt={pictureData.hash} 
                 src={'data:image/jpeg;base64,' +  pictureData.info.thumbnail}
-                width={currentWidth}
+                width={pictureData.info.orientation === "LANDSCAPE" ? currentWidth : undefined}
+                height={pictureData.info.orientation === "PORTRAIT" ? currentWidth : undefined}
             />
             <div className="overlay">
               <Button onClick={onHandleMouseOver} className="top-right" size="sm">?</Button>
