@@ -13,7 +13,7 @@ style:
 test: init test-unit test-integration
 
 test-unit:
-	TEST_AWS_KEY=$(AWS_KEY) TEST_AWS_SECRET=$(AWS_SECRET) python -m unittest discover -v tests
+	TEST_AWS_KEY=$(AWS_KEY) TEST_AWS_SECRET=$(AWS_SECRET) python -m unittest discover tests
 
 test-integration:
 	python -m unittest discover integration_tests

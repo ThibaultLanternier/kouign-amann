@@ -2,8 +2,7 @@ GIT_HASH = $(shell git rev-parse --short HEAD)
 USER_ID = $(shell id -u) 
 
 clean:
-	docker-compose stop server-dev
-	docker-compose rm -f server-dev
+	docker-compose down
 
 python-shell:
 	docker-compose build --build-arg DOCKER_USER_ID=$(USER_ID) python-shell
