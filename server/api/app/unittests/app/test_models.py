@@ -32,6 +32,7 @@ class TestPicture(unittest.TestCase):
             info=PictureInfo(
                 thumbnail="AAAA",
                 creation_time=datetime(1980, 11, 30, tzinfo=timezone.utc),
+                orientation="LANDSCAPE"
             ),
             backup_required=True,
             file_list=[self.file_1, self.file_2],
@@ -162,11 +163,14 @@ class TestPictureInfo(unittest.TestCase):
                 2007, 5, 24, 19, 53, 39, tzinfo=timezone(timedelta(seconds=3600))
             ),
             thumbnail="THUMBNAIL",
+            orientation="LANDSCAPE"
         )
 
     def test_date_conversion(self):
         picture_info_string = PictureInfo(
-            creation_time="2007-05-24T18:53:39.000000Z", thumbnail="THUMBNAIL"
+            creation_time="2007-05-24T18:53:39.000000Z", 
+            thumbnail="THUMBNAIL",
+            orientation="LANDSCAPE"
         )
 
         self.assertEqual(picture_info_string, self.picture_info)
@@ -175,6 +179,7 @@ class TestPictureInfo(unittest.TestCase):
         expected = {
             "creation_time": "2007-05-24T18:53:39.000000Z",
             "thumbnail": "THUMBNAIL",
+            "orientation": "LANDSCAPE"
         }
 
         self.assertEqual(expected, asdict(self.picture_info, dict_factory=DictFactory))
@@ -183,6 +188,7 @@ class TestPictureInfo(unittest.TestCase):
         expected = {
             "creation_time": datetime(2007, 5, 24, 18, 53, 39, tzinfo=timezone.utc),
             "thumbnail": "THUMBNAIL",
+            "orientation": "LANDSCAPE"
         }
 
         self.assertEqual(expected, asdict(self.picture_info))

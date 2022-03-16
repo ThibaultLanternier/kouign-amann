@@ -92,7 +92,11 @@ class TestPictureManager(unittest.TestCase):
     def test_record_picture_info_new(self):
         self.mock_persistence.get_picture.return_value = None
 
-        picture_info = PictureInfo(creation_time=DATE_1, thumbnail="CXSTTS")
+        picture_info = PictureInfo(
+            creation_time=DATE_1, 
+            thumbnail="CXSTTS",
+            orientation="LANDSCAPE"
+        )
 
         self.picture_manager.record_picture_info(hash="AAAA", info=picture_info)
 
@@ -107,7 +111,11 @@ class TestPictureManager(unittest.TestCase):
         )
 
     def test_record_picture_info_update(self):
-        old_picture_info = PictureInfo(creation_time=DATE_1, thumbnail="ABCDEF")
+        old_picture_info = PictureInfo(
+            creation_time=DATE_1, 
+            thumbnail="ABCDEF",
+            orientation="LANDSCAPE"
+        )
 
         self.mock_persistence.get_picture.return_value = Picture(
             hash="AAAA",
@@ -117,7 +125,11 @@ class TestPictureManager(unittest.TestCase):
             backup_list=[],
         )
 
-        picture_info = PictureInfo(creation_time=DATE_1, thumbnail="CXSTTS")
+        picture_info = PictureInfo(
+            creation_time=DATE_1, 
+            thumbnail="CXSTTS",
+            orientation="LANDSCAPE"
+        )
 
         self.picture_manager.record_picture_info(hash="AAAA", info=picture_info)
 

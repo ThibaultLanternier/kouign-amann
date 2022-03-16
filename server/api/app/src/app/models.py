@@ -108,6 +108,7 @@ class BackupException(Exception):
 class PictureInfo:
     creation_time: datetime
     thumbnail: str
+    orientation: str
 
     def __post_init__(self):
         if not isinstance(self.creation_time, datetime):
