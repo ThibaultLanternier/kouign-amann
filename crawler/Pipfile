@@ -12,6 +12,7 @@ pillow = "*"
 click = "*"
 mypy = "*"
 boto3 = "*"
+influxdb-client = "*"
 
 [dev-packages]
 pdbpp = "*"
