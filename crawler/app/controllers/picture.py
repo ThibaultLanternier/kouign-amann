@@ -12,6 +12,7 @@ from PIL import Image, ImageOps
 
 from app.tools.hash import HashExtractor
 from app.models.picture import PictureData, PictureOrientation
+from app.tools.metrics import MetricRecorder
 
 
 def perception_hashing_function(image_file) -> ImageHash:
@@ -31,6 +32,9 @@ class AbstractPictureAnalyzer(ABC):
     def get_recorded_hash(self):
         pass
 
+    @abstractmethod
+    def get_influxdb_line(self):
+        pass
 
 DEFAULT_DATETIME = datetime(1970, 1, 1, tzinfo=timezone.utc)
 
@@ -46,6 +50,7 @@ class PictureAnalyzer(AbstractPictureAnalyzer):
     ):
         self.logger = logging.getLogger("app.picture")
 
+        self.__recorder = MetricRecorder(measurement_name="picture_analyze")
         self.__reference_time = datetime.now()
         self.step_list: List[Tuple[str, timedelta]] = []
 
@@ -54,17 +59,19 @@ class PictureAnalyzer(AbstractPictureAnalyzer):
         self.current_timezone = current_timezone
 
         self.PILImage = Image.open(self.picture_path)
-        self.__record_step_duration("open_picture")
+        self.__recorder.add_step("open_picture")
 
         self.image_hash = self.get_recorded_hash()
 
         if self.image_hash is None:
+            self.__recorder.add_tag("hash_origin", "compute")
             self.image_hash = str(hashing_function(self.PILImage))
             self.record_hash_in_exif(self.image_hash)
-
-            self.__record_step_duration("compute_hash")
         else:
-            self.__record_step_duration("retrieve_hash_from_exif")
+            self.__recorder.add_tag("hash_origin", "retrieve")
+
+        self.__recorder.set_hash(self.image_hash)
+        self.__recorder.add_step("hash_generation")
 
         self.logger.debug(
             "Opening picture %s hash:%s, thumbnail size %s, timezone %s",
@@ -75,21 +82,15 @@ class PictureAnalyzer(AbstractPictureAnalyzer):
         )
 
         self.creation_time = self.__get_creation_time()
-        self.__record_step_duration("retrieve_creation_date")
+        self.__recorder.add_step("retrieve_creation_date")
 
         self.resolution = self.__get_resolution()
-        self.__record_step_duration("retrieve_resolution")
+        self.__recorder.add_step("retrieve_resolution")
 
         self.__thumbnail = None
 
     def __del__(self):
         self.PILImage.close()
-
-    def __record_step_duration(self, step_name: str):
-        new_reference_time = datetime.now()
-
-        self.step_list.append((step_name, new_reference_time - self.__reference_time))
-        self.__reference_time = new_reference_time
 
     def record_hash_in_exif(self, picture_hash):
         try:
@@ -186,7 +187,7 @@ class PictureAnalyzer(AbstractPictureAnalyzer):
 
         with io.BytesIO() as thumbnail_output:
             thumbnail.save(thumbnail_output, format="JPEG")
-            self.__record_step_duration("generate_thumbnail")
+            self.__recorder.add_step("generate_thumbnail")
             return base64.b64encode(thumbnail_output.getvalue()).decode("UTF-8")
 
     def get_data(self, create_thumbnail=True) -> PictureData:
@@ -205,6 +206,8 @@ class PictureAnalyzer(AbstractPictureAnalyzer):
 
         return PictureData(**output)
 
+    def get_influxdb_line(self):
+        return self.__recorder.get_line()
 
 class PictureAnalyzerFactory:
     def perception_hash(

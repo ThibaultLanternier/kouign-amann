@@ -47,7 +47,7 @@ class ParalellPictureProcessor:
                 break
 
             try:
-                if not self.picture_processor(current_picture_path):
+                if not self.picture_processor(current_picture_path, worker_id):
                     self.logger.error(
                         f"Worker {worker_id} failed for picture {current_picture_path}"
                     )
@@ -84,13 +84,17 @@ class PictureProcessor:
         self.crawler_id = crawler_id
         self.crawl_time = crawl_time
 
-    def process(self, picture_path):
+    def process(self, picture_path, worker_id=1):
         picture = self.picture_factory(picture_path)
 
         if self.picture_recorder.picture_already_exists(picture.image_hash):
             picture_data = picture.get_data(create_thumbnail=False)
         else:
             picture_data = picture.get_data(create_thumbnail=True)
+
+        with open(f"influxdb/picture-analyze-{worker_id}.influx", "a") as file:
+            file.write(picture.get_influxdb_line())
+            file.write('\n')
 
         return self.picture_recorder.record(
             picture_data=picture_data,
