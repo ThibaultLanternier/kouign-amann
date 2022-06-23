@@ -78,11 +78,15 @@ class PictureProcessor:
         picture_recorder: PictureRESTRecorder,
         crawler_id: str,
         crawl_time: datetime,
+        metrics_output_path: str,
+        crawl_id: str
     ):
         self.picture_factory = picture_factory
         self.picture_recorder = picture_recorder
         self.crawler_id = crawler_id
         self.crawl_time = crawl_time
+        self.metrics_output_path = metrics_output_path
+        self.crawl_id = crawl_id
 
     def process(self, picture_path, worker_id=1):
         picture = self.picture_factory(picture_path)
@@ -92,9 +96,10 @@ class PictureProcessor:
         else:
             picture_data = picture.get_data(create_thumbnail=True)
 
-        with open(f"influxdb/picture-analyze-{worker_id}.influx", "a") as file:
-            file.write(picture.get_influxdb_line())
-            file.write('\n')
+        if(self.metrics_output_path is not None):
+            with open(f"{self.metrics_output_path}/picture-analyze-{self.crawl_id}-{worker_id}.influx", "a") as file:
+                file.write(picture.get_influxdb_line())
+                file.write('\n')
 
         return self.picture_recorder.record(
             picture_data=picture_data,

@@ -26,7 +26,7 @@ class TestPictureProcessor(unittest.TestCase):
         test_time = datetime(1980, 11, 30)
 
         processor = PictureProcessor(
-            mock_picture_factory, mock_picture_recorder, 123, test_time
+            mock_picture_factory, mock_picture_recorder, 123, test_time, None, "xxx"
         )
 
         self.assertEqual(processor.process("picture_path"), "RETOUR")
@@ -47,7 +47,7 @@ class TestParalellPictureProcessor(unittest.TestCase):
         )
         test_picture_processor.run()
 
-        mock_picture_processor.assert_called_once_with("file1")
+        mock_picture_processor.assert_called_once_with("file1", 0)
         self.assertGreaterEqual(mock_logger.info.call_count, 3)
 
     def test_constructor_run_with_error(self):
@@ -59,7 +59,7 @@ class TestParalellPictureProcessor(unittest.TestCase):
         )
         test_picture_processor.run()
 
-        mock_picture_processor.assert_called_once_with("file1")
+        mock_picture_processor.assert_called_once_with("file1", 0)
         mock_logger.error.assert_called_once()
 
     def test_constructor_run_with_exception(self):
@@ -73,7 +73,7 @@ class TestParalellPictureProcessor(unittest.TestCase):
         )
         test_picture_processor.run()
 
-        mock_picture_processor.assert_called_once_with("file1")
+        mock_picture_processor.assert_called_once_with("file1", 0)
         mock_logger.exception.assert_called_once()
 
 
