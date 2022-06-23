@@ -1,28 +1,27 @@
 from influxdb_client import Point
-from datetime import datetime
-
-def test_2():
-    p = Point("record")
-
-    p.tag("type","new")
-    p.field("temps",456)
-    p.time(datetime.datetime.now())
-
-    return p.to_line_protocol()
+from datetime import datetime, timezone, tzinfo
+from time import time, time_ns
 
 class MetricRecorder:
-    def __init__(self, measurement_name: str, current_datetime: datetime = None) -> None:
+    def __init__(self, measurement_name: str, current_timestamp_ns: int = None) -> None:
         self.__p = Point(measurement_name)
 
-        self.__last_timestamp = datetime.now() if current_datetime is None else current_datetime
+        self.__last_timestamp_ns = self.__get_now_timestamp_ns() if current_timestamp_ns is None else current_timestamp_ns
 
-    def add_step(self, name: str, current_datetime: datetime = None) -> None:
-        current_datetime = datetime.now() if current_datetime is None else current_datetime
+    def get_datetime_from_ns_timestamp(timestamp_ns: int) -> datetime:
+        timestamp_s = timestamp_ns / 10e9
+        return datetime.fromtimestamp(timestamp_s, tz=timezone.utc)
 
-        step_duration = (current_datetime - self.__last_timestamp).microseconds * 1000
+    def __get_now_timestamp_ns(self) -> int:
+        return int(time_ns())
+
+    def add_step(self, name: str, current_timestamp_ns: datetime = None) -> None:
+        current_timestamp_ns = self.__get_now_timestamp_ns() if current_timestamp_ns is None else current_timestamp_ns
+
+        step_duration = current_timestamp_ns - self.__last_timestamp_ns
 
         self.__p.field(name, step_duration)
-        self.__last_timestamp = current_datetime
+        self.__last_timestamp_ns = current_timestamp_ns
 
     def add_tag(self, name: str, value: str) -> None:
         self.__p.tag(name, value)
@@ -33,10 +32,10 @@ class MetricRecorder:
     def get_steps(self) -> Point:
         return self.__p._fields
 
-    def get_line(self, current_datetime: datetime = None) -> str:
-        if current_datetime is None:
-            current_datetime = datetime.now()
+    def get_line(self, current_timestamp_ns: datetime = None) -> str:
+        if current_timestamp_ns is None:
+            current_timestamp_ns = self.__get_now_timestamp_ns()
 
-        self.__p.time(current_datetime)
+        self.__p.time(current_timestamp_ns)
 
         return self.__p.to_line_protocol()
