@@ -1,8 +1,8 @@
-from time import sleep, time_ns, timezone
 import unittest
+from time import time_ns
+
 from app.tools.metrics import MetricRecorder
-from datetime import datetime, timezone
-from time import time, gmtime
+
 
 class TestMetricRecorder(unittest.TestCase):
     def test_record_metric_datetime_now(self):
@@ -10,7 +10,7 @@ class TestMetricRecorder(unittest.TestCase):
         recorder.add_step("step_1")
         recorder.set_hash("xxxx")
         recorder.add_step("step_2")
-        recorder.add_tag("picture_type","new")
+        recorder.add_tag("picture_type", "new")
 
         self.assertIsNotNone(recorder.get_line())
 
@@ -21,20 +21,25 @@ class TestMetricRecorder(unittest.TestCase):
         time_step_2 = start_time_ns + 4
         end_time = start_time_ns + 5
 
-        recorder = MetricRecorder(measurement_name="test", current_timestamp_ns=start_time_ns)
+        recorder = MetricRecorder(
+            measurement_name="test", current_timestamp_ns=start_time_ns
+        )
         recorder.add_step("step_1", time_step_1)
         recorder.set_hash("xxxx")
         recorder.add_step("step_2", time_step_2)
-        recorder.add_tag("picture_type","new")
+        recorder.add_tag("picture_type", "new")
 
-        self.assertEqual("test,hash=xxxx,picture_type=new step_1=1i,step_2=3i 344433600000003005", recorder.get_line(end_time))
+        self.assertEqual(
+            "test,hash=xxxx,picture_type=new step_1=1i,step_2=3i 344433600000003005",
+            recorder.get_line(end_time),
+        )
 
     def test_record_metric_without_time_injection(self):
         recorder = MetricRecorder(measurement_name="test")
         recorder.add_step("step_1")
         recorder.set_hash("xxxx")
         recorder.add_step("step_2")
-        recorder.add_tag("picture_type","new")
+        recorder.add_tag("picture_type", "new")
         recorder.add_step("step_3")
 
         steps = recorder.get_steps()

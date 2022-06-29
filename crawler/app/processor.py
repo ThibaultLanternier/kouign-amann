@@ -79,7 +79,7 @@ class PictureProcessor:
         crawler_id: str,
         crawl_time: datetime,
         metrics_output_path: str,
-        crawl_id: str
+        crawl_id: str,
     ):
         self.picture_factory = picture_factory
         self.picture_recorder = picture_recorder
@@ -96,10 +96,13 @@ class PictureProcessor:
         else:
             picture_data = picture.get_data(create_thumbnail=True)
 
-        if(self.metrics_output_path is not None):
-            with open(f"{self.metrics_output_path}/picture-analyze-{self.crawl_id}-{worker_id}.influx", "a") as file:
+        if self.metrics_output_path is not None:
+            with open(
+                f"{self.metrics_output_path}/picture-analyze-{self.crawl_id}-{worker_id}.influx",
+                "a",
+            ) as file:
                 file.write(picture.get_influxdb_line())
-                file.write('\n')
+                file.write("\n")
 
         return self.picture_recorder.record(
             picture_data=picture_data,

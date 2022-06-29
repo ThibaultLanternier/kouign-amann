@@ -13,7 +13,7 @@ class TestPictureData(unittest.TestCase):
             "resolution": (5472, 3648),
             "thumbnail": "THUMBNAIL",
             "picture_path": "fake/path",
-            "orientation": PictureOrientation.LANDSCAPE
+            "orientation": PictureOrientation.LANDSCAPE,
         }
 
         self.picture_data = PictureData(**self.picture_dict)
@@ -25,7 +25,7 @@ class TestPictureData(unittest.TestCase):
             "resolution": (5472, 3648),
             "thumbnail": "THUMBNAIL",
             "picture_path": "fake/path",
-            "orientation": "LANDSCAPE"
+            "orientation": "LANDSCAPE",
         }
 
         result = asdict(self.picture_data, dict_factory=DictFactory)
@@ -43,7 +43,7 @@ class TestPictureData(unittest.TestCase):
             "resolution": (5472, 3648),
             "thumbnail": "THUMBNAIL",
             "picture_path": "fake/path",
-            "orientation": "LANDSCAPE"
+            "orientation": "LANDSCAPE",
         }
 
         result = asdict(self.picture_data, dict_factory=DictFactory)

@@ -36,9 +36,11 @@ class AbstractPictureAnalyzer(ABC):
     def get_influxdb_line(self):
         pass
 
+
 DEFAULT_DATETIME = datetime(1970, 1, 1, tzinfo=timezone.utc)
 
 DEFAULT_THUMBNAIL_SIZE = 800
+
 
 class PictureAnalyzer(AbstractPictureAnalyzer):
     def __init__(
@@ -166,7 +168,7 @@ class PictureAnalyzer(AbstractPictureAnalyzer):
         if self.__thumbnail is None:
             self.__thumbnail = ImageOps.exif_transpose(self.PILImage)
             self.__thumbnail.thumbnail(self.thumbnail_size)
-        
+
         return self.__thumbnail
 
     def get_orientaton(self) -> PictureOrientation:
@@ -197,7 +199,7 @@ class PictureAnalyzer(AbstractPictureAnalyzer):
             "resolution": self.resolution,
             "picture_path": self.picture_path,
             "thumbnail": None,
-            "orientation": None
+            "orientation": None,
         }
 
         if create_thumbnail:
@@ -208,6 +210,7 @@ class PictureAnalyzer(AbstractPictureAnalyzer):
 
     def get_influxdb_line(self):
         return self.__recorder.get_line()
+
 
 class PictureAnalyzerFactory:
     def perception_hash(

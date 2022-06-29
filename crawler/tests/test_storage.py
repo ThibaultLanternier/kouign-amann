@@ -7,14 +7,17 @@ from unittest.mock import MagicMock
 from app.controllers.backup import AbstractStorageConfigProvider
 from app.controllers.picture import PictureAnalyzerFactory
 from app.models.backup import StorageConfig, StorageType
-from app.storage.basic import (PictureHashMissmatch, PictureWithNoHash,
-                               S3BackupStorage, SimpleFileStorage,
-                               StorageFactory, StorageFactoryException, AbstractS3Client)
+from app.storage.basic import (AbstractS3Client, PictureHashMissmatch,
+                               PictureWithNoHash, S3BackupStorage,
+                               SimpleFileStorage, StorageFactory,
+                               StorageFactoryException)
 
 TEST_PICTURE = "tests/files/test-canon-eos70D-exif.jpg"
 TEST_BUCKET = "picture.backup.test"
 TEST_DIRECTORY = "test-directory-backup/"
 TEST_PICTURE_HASH = "xxxx"
+
+
 class TestSimpleFileStorage(unittest.TestCase):
     def setUp(self):
         uniq_id = secrets.token_hex(8)
@@ -59,9 +62,7 @@ class TestS3BackupStorage(unittest.TestCase):
         self.mock_S3_client = MagicMock(spec=AbstractS3Client)
 
         self.test_storage = S3BackupStorage(
-            s3_client=self.mock_S3_client,
-            bucket=TEST_BUCKET,
-            prefix = TEST_DIRECTORY
+            s3_client=self.mock_S3_client, bucket=TEST_BUCKET, prefix=TEST_DIRECTORY
         )
 
         self.picture_hash = (
@@ -73,14 +74,11 @@ class TestS3BackupStorage(unittest.TestCase):
 
         self.assertTrue(
             self.test_storage.backup(
-                picture_local_path=TEST_PICTURE,
-                picture_hash=self.picture_hash
+                picture_local_path=TEST_PICTURE, picture_hash=self.picture_hash
             )
         )
         self.mock_S3_client.upload_file.assert_called_once_with(
-            TEST_PICTURE,
-            TEST_BUCKET,
-            TEST_DIRECTORY+self.picture_hash
+            TEST_PICTURE, TEST_BUCKET, TEST_DIRECTORY + self.picture_hash
         )
 
     def test_backup_not_ok(self):
@@ -88,15 +86,12 @@ class TestS3BackupStorage(unittest.TestCase):
 
         self.assertFalse(
             self.test_storage.backup(
-                picture_local_path=TEST_PICTURE,
-                picture_hash=self.picture_hash
+                picture_local_path=TEST_PICTURE, picture_hash=self.picture_hash
             )
         )
 
         self.mock_S3_client.upload_file.assert_called_once_with(
-            TEST_PICTURE,
-            TEST_BUCKET,
-            TEST_DIRECTORY+self.picture_hash
+            TEST_PICTURE, TEST_BUCKET, TEST_DIRECTORY + self.picture_hash
         )
 
     def test_backup_hash_missmatch(self):
@@ -112,7 +107,7 @@ class TestS3BackupStorage(unittest.TestCase):
 
     def test_check_still_exists_file_exists(self):
         self.mock_S3_client.list_objects.return_value = [
-            TEST_DIRECTORY+self.picture_hash
+            TEST_DIRECTORY + self.picture_hash
         ]
 
         self.assertTrue(self.test_storage.check_still_exists(self.picture_hash))

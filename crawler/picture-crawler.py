@@ -79,7 +79,7 @@ def crawl(config_file: str):
     CRAWL_TIME = datetime.utcnow()
     CRAWLER_ID = config["crawler"]["id"]
     WORKER_QTY = int(config["crawler"].get("worker_qty", "5"))
-    METRICS_OUTPUT_PATH =  config["crawler"].get("metrics_output_path", None)
+    METRICS_OUTPUT_PATH = config["crawler"].get("metrics_output_path", None)
 
     file_crawler = FileCrawler(FILE_PATH)
     picture_recorder = PictureRESTRecorder(REST_API_URL)
@@ -90,7 +90,12 @@ def crawl(config_file: str):
     CRAWL_ID = uuid.uuid4()
 
     processor = PictureProcessor(
-        picture_with_perception_hash, picture_recorder, CRAWLER_ID, CRAWL_TIME, METRICS_OUTPUT_PATH, CRAWL_ID
+        picture_with_perception_hash,
+        picture_recorder,
+        CRAWLER_ID,
+        CRAWL_TIME,
+        METRICS_OUTPUT_PATH,
+        CRAWL_ID,
     )
 
     paralell_processor = ParalellPictureProcessor(

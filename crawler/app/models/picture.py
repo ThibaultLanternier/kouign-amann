@@ -18,9 +18,11 @@ class DictFactory(dict):
 
         return (key, value)
 
+
 class PictureOrientation(Enum):
     PORTRAIT = 0
     LANDSCAPE = 1
+
 
 @dataclass
 class PictureInfo:
@@ -51,9 +53,9 @@ class PictureData:
             raise Exception("Missing thumbnail")
 
         return PictureInfo(
-            creation_time=self.creation_time, 
+            creation_time=self.creation_time,
             thumbnail=self.thumbnail,
-            orientation=self.orientation
+            orientation=self.orientation,
         )
 
     def get_picture_file(self, current_time: datetime, crawler_id: str) -> PictureFile:

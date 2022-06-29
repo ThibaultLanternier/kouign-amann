@@ -1,11 +1,9 @@
 import shutil
 import os
-from turtle import pd
 import boto3
 
 from abc import ABC, abstractmethod
 from typing import Dict, Callable, List, TypedDict
-from boto3 import client as AWSClient
 
 from app.controllers.picture import PictureAnalyzerFactory
 from app.controllers.backup import AbstractStorageConfigProvider
@@ -51,16 +49,21 @@ class AbstractStorage:
     def delete(self, picture_hase: str) -> bool:
         pass
 
+
 class S3Content(TypedDict):
     Key: str
 
+
 class S3ListContentResponse(TypedDict):
     Contents: List[S3Content]
+
 
 class S3DeleteObjectResponse(TypedDict):
     DeleteMarker: bool
     VersionId: str
     RequestCharged: str
+
+
 class AbstractS3Client(ABC):
     @abstractmethod
     def upload_file(self, file_name: str, bucket: str, object_name: str) -> bool:
@@ -74,6 +77,7 @@ class AbstractS3Client(ABC):
     def delete_object(self, Bucket: str, Prefix: str) -> None:
         pass
 
+
 class S3Client(AbstractS3Client):
     def __init__(self, aws_key: str, aws_secret: str) -> None:
         self._client = boto3.client(
@@ -84,14 +88,11 @@ class S3Client(AbstractS3Client):
 
     def upload_file(self, file_name: str, bucket: str, object_name: str) -> bool:
         try:
-            self._client.upload_file(
-                file_name, bucket, object_name
-            )
+            self._client.upload_file(file_name, bucket, object_name)
             return True
 
         except boto3.exceptions.S3UploadFailedError:
             return False
-
 
     def list_objects(self, Bucket: str, Prefix: str) -> List[S3Content]:
         object_list = self._client.list_objects(
@@ -105,12 +106,11 @@ class S3Client(AbstractS3Client):
             return []
 
     def delete_object(self, Bucket: str, Prefix: str) -> None:
-        self._client.delete_object(
-            Bucket=Bucket,
-            Key=Prefix
-        )
+        self._client.delete_object(Bucket=Bucket, Key=Prefix)
 
         return
+
+
 class S3BackupStorage(AbstractStorage):
     def __init__(
         self,
@@ -131,9 +131,7 @@ class S3BackupStorage(AbstractStorage):
             raise PictureHashMissmatch
 
         return self._client.upload_file(
-            picture_local_path,
-            self._bucket,
-            f"{self._prefix}{picture_hash}"
+            picture_local_path, self._bucket, f"{self._prefix}{picture_hash}"
         )
 
     def check_still_exists(self, picture_hash: str) -> bool:
@@ -198,7 +196,7 @@ class StorageFactory:
             s3_client=S3Client(
                 aws_key=config.config["key"],
                 aws_secret=config.config["secret"],
-            )
+            ),
         )
 
     def create_from_id(self, storage_id: str) -> AbstractStorage:

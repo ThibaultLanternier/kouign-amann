@@ -19,7 +19,7 @@ class TestPictureRESTRecorder(unittest.TestCase):
             "resolution": (5472, 3648),
             "thumbnail": "THUMBNAIL",
             "picture_path": "fake/path",
-            "orientation": PictureOrientation.LANDSCAPE
+            "orientation": PictureOrientation.LANDSCAPE,
         }
 
         self.picture_data = PictureData(**self.picture_dict)
@@ -41,7 +41,7 @@ class TestPictureRESTRecorder(unittest.TestCase):
         self.expected_info_payload = {
             "creation_time": "2019-11-19T12:46:56.000000Z",
             "thumbnail": "THUMBNAIL",
-            "orientation": "LANDSCAPE"
+            "orientation": "LANDSCAPE",
         }
 
         self.expected_file_payload = {
