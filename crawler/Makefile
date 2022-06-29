@@ -1,7 +1,7 @@
 include test.env
 
 init:
-	pipenv install --dev 
+	pipenv install --dev
 	pipenv shell
 
 style:
@@ -13,10 +13,10 @@ style:
 test: init test-unit test-integration
 
 test-unit:
-	TEST_AWS_KEY=$(AWS_KEY) TEST_AWS_SECRET=$(AWS_SECRET) python -m unittest discover tests
+	python -m unittest discover tests -v
 
 test-integration:
-	python -m unittest discover integration_tests
+	TEST_AWS_KEY=$(AWS_KEY) TEST_AWS_SECRET=$(AWS_SECRET) python -m unittest discover integration_tests
 
 clean:
 	pipenv --rm
