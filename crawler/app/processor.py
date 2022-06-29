@@ -10,6 +10,7 @@ from app.controllers.picture import AbstractPictureAnalyzer
 from app.controllers.recorder import PictureRESTRecorder
 from app.models.backup import BackupRequest
 from app.storage.basic import StorageException, StorageFactory
+from app.tools.metrics import MetricRecorder
 
 
 class ParalellPictureProcessor:
@@ -71,6 +72,12 @@ class ParalellPictureProcessor:
             t.join()
 
 
+def record_metric_file(recorder: MetricRecorder, file_name: str) -> None:
+    with open(file_name, "a") as file:
+        file.write(recorder.get_line())
+        file.write("\n")
+
+
 class PictureProcessor:
     def __init__(
         self,
@@ -96,19 +103,27 @@ class PictureProcessor:
         else:
             picture_data = picture.get_data(create_thumbnail=True)
 
-        if self.metrics_output_path is not None:
-            with open(
-                f"{self.metrics_output_path}/picture-analyze-{self.crawl_id}-{worker_id}.influx",
-                "a",
-            ) as file:
-                file.write(picture.get_influxdb_line())
-                file.write("\n")
-
-        return self.picture_recorder.record(
+        record_result = self.picture_recorder.record(
             picture_data=picture_data,
             crawler_id=self.crawler_id,
             crawl_time=self.crawl_time,
         )
+
+        if self.metrics_output_path is not None:
+            record_metric_file(
+                picture.get_metric(),
+                f"{self.metrics_output_path}/picture-analyze-{self.crawl_id}-{worker_id}.influx",
+            )
+            record_metric_file(
+                self.picture_recorder.record_metric,
+                f"{self.metrics_output_path}/picture-record-{self.crawl_id}-{worker_id}.influx",
+            )
+            record_metric_file(
+                self.picture_recorder.picture_exists_metric,
+                f"{self.metrics_output_path}/picture-check-{self.crawl_id}-{worker_id}.influx",
+            )
+
+        return record_result
 
 
 class BackupProcessor:

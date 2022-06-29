@@ -29,11 +29,11 @@ class AbstractPictureAnalyzer(ABC):
         pass
 
     @abstractmethod
-    def get_recorded_hash(self):
+    def get_recorded_hash(self) -> str:
         pass
 
     @abstractmethod
-    def get_influxdb_line(self):
+    def get_metric(self) -> MetricRecorder:
         pass
 
 
@@ -53,7 +53,6 @@ class PictureAnalyzer(AbstractPictureAnalyzer):
         self.logger = logging.getLogger("app.picture")
 
         self.__recorder = MetricRecorder(measurement_name="picture_analyze")
-        self.__reference_time = datetime.now()
         self.step_list: List[Tuple[str, timedelta]] = []
 
         self.picture_path = picture_path
@@ -183,8 +182,6 @@ class PictureAnalyzer(AbstractPictureAnalyzer):
         """
         Returns a JPEG thumbnail encoded as Base64 UTF-8 string
         """
-        self.__reference_time = datetime.now()
-
         thumbnail = self.__get_thumbnail()
 
         with io.BytesIO() as thumbnail_output:
@@ -208,8 +205,8 @@ class PictureAnalyzer(AbstractPictureAnalyzer):
 
         return PictureData(**output)
 
-    def get_influxdb_line(self):
-        return self.__recorder.get_line()
+    def get_metric(self) -> MetricRecorder:
+        return self.__recorder
 
 
 class PictureAnalyzerFactory:
