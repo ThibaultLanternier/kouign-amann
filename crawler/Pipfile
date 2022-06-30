@@ -13,6 +13,7 @@ click = "*"
 mypy = "*"
 boto3 = "*"
 influxdb-client = "*"
+progressbar2 = "*"
 
 [dev-packages]
 pdbpp = "*"

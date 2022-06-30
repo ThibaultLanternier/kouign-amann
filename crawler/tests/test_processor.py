@@ -2,6 +2,8 @@ import unittest
 from datetime import datetime
 from unittest.mock import MagicMock
 
+from progressbar import ProgressBar
+
 from app.controllers.backup import BackupHandler
 from app.controllers.picture import AbstractPictureAnalyzer
 from app.controllers.recorder import PictureRESTRecorder
@@ -38,29 +40,42 @@ class TestPictureProcessor(unittest.TestCase):
 
 
 class TestParalellPictureProcessor(unittest.TestCase):
+    def setUp(self) -> None:
+        self.mock_logger = MagicMock(name="logger")
+        self.mock_progress_bar = MagicMock(name="progress_bar", spec=ProgressBar)
+
     def test_constructor_run(self):
         mock_picture_processor = MagicMock(name="picture_processor", return_value=True)
-        mock_logger = MagicMock(name="logger")
 
         test_picture_processor = ParalellPictureProcessor(
-            ["file1"], mock_picture_processor, mock_logger, 1
+            ["file1"],
+            mock_picture_processor,
+            self.mock_logger,
+            self.mock_progress_bar,
+            1,
         )
         test_picture_processor.run()
 
         mock_picture_processor.assert_called_once_with("file1", 0)
-        self.assertGreaterEqual(mock_logger.info.call_count, 3)
+        self.assertGreaterEqual(self.mock_logger.info.call_count, 2)
+        self.mock_progress_bar.start.assert_called_once_with(max_value=1)
+        self.mock_progress_bar.update.assert_called_once_with(1)
+        self.mock_progress_bar.finish.assert_called_once_with()
 
     def test_constructor_run_with_error(self):
         mock_picture_processor = MagicMock(name="picture_processor", return_value=False)
-        mock_logger = MagicMock(name="logger")
 
         test_picture_processor = ParalellPictureProcessor(
-            ["file1"], mock_picture_processor, mock_logger, 1
+            ["file1"],
+            mock_picture_processor,
+            self.mock_logger,
+            self.mock_progress_bar,
+            1,
         )
         test_picture_processor.run()
 
         mock_picture_processor.assert_called_once_with("file1", 0)
-        mock_logger.error.assert_called_once()
+        self.mock_logger.error.assert_called_once()
 
     def test_constructor_run_with_exception(self):
         mock_picture_processor = MagicMock(
@@ -69,12 +84,16 @@ class TestParalellPictureProcessor(unittest.TestCase):
         mock_logger = MagicMock(name="logger")
 
         test_picture_processor = ParalellPictureProcessor(
-            ["file1"], mock_picture_processor, mock_logger, 1
+            ["file1"],
+            mock_picture_processor,
+            self.mock_logger,
+            self.mock_progress_bar,
+            1,
         )
         test_picture_processor.run()
 
         mock_picture_processor.assert_called_once_with("file1", 0)
-        mock_logger.exception.assert_called_once()
+        self.mock_logger.exception.assert_called_once()
 
 
 class TestBackupProcessor(unittest.TestCase):
@@ -133,7 +152,7 @@ class TestParallelBackupProcessor(unittest.IsolatedAsyncioTestCase):
         self.parallel_processor = ParallelBackupProcessor(
             backup_processor=self.mock_backup_processor,
             logger=mock_logger,
-            worker_qty=1,
+            worker_qty=2,
         )
 
     async def test_fill_queue(self):
@@ -142,14 +161,14 @@ class TestParallelBackupProcessor(unittest.IsolatedAsyncioTestCase):
 
     async def test_create_workers(self):
         await self.parallel_processor._create_workers()
-        self.assertEqual(1, len(self.parallel_processor._workers))
+        self.assertEqual(2, len(self.parallel_processor._workers))
         self.assertFalse(self.parallel_processor._workers[0].done())
         self.assertFalse(self.parallel_processor._workers[0].cancelled())
 
     async def test_delete_workers(self):
         await self.parallel_processor._create_workers()
         await self.parallel_processor._delete_workers()
-        self.assertEqual(1, len(self.parallel_processor._workers))
+        self.assertEqual(2, len(self.parallel_processor._workers))
         self.assertTrue(self.parallel_processor._workers[0].cancelled())
 
     async def test_run(self):

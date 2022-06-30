@@ -5,6 +5,8 @@ import asyncio
 import uuid
 
 from datetime import datetime
+from progressbar import ProgressBar
+
 from app.processor import (
     PictureProcessor,
     ParalellPictureProcessor,
@@ -98,8 +100,10 @@ def crawl(config_file: str):
         CRAWL_ID,
     )
 
+    progressbar = ProgressBar()
+
     paralell_processor = ParalellPictureProcessor(
-        file_crawler.get_file_list(), processor.process, logger, WORKER_QTY
+        file_crawler.get_file_list(), processor.process, logger, progressbar, WORKER_QTY
     )
 
     paralell_processor.run()

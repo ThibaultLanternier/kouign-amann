@@ -5,6 +5,8 @@ from queue import Queue
 from threading import Thread
 from typing import Callable, List
 
+from progressbar import ProgressBar
+
 from app.controllers.backup import AbstractBackupHandler
 from app.controllers.picture import AbstractPictureAnalyzer
 from app.controllers.recorder import PictureRESTRecorder
@@ -19,6 +21,7 @@ class ParalellPictureProcessor:
         picture_path_list: List[str],
         picture_processor: Callable[[str], bool],
         logger,
+        progressbar: ProgressBar,
         worker_qty: int = 4,
     ):
         self.picture_processor = picture_processor
@@ -32,35 +35,40 @@ class ParalellPictureProcessor:
 
         self.threads = []
 
+        self.total_queue_size = self.picture_path_queue.qsize()
+
+        self.logger.info(f"Found {self.total_queue_size} pictures to process")
+        self.logger.info(f"Starting processing with {self.worker_qty} workers")
+
+        self.progressbar = progressbar
+        self.progressbar.start(max_value=self.total_queue_size)
+
         for i in range(self.worker_qty):
             t = Thread(target=self.__process, args=[i])
             t.start()
             self.threads.append(t)
 
     def __process(self, worker_id):
-        self.logger.info(f"Worker {worker_id} is starting")
-
         while True:
             current_picture_path = self.picture_path_queue.get()
 
             if current_picture_path is None:
-                self.logger.info(f"Worker {worker_id} has completed")
                 break
 
             try:
                 if not self.picture_processor(current_picture_path, worker_id):
                     self.logger.error(
-                        f"Worker {worker_id} failed for picture {current_picture_path}"
+                        f"Worker {worker_id} failed for {current_picture_path}"
                     )
             except Exception:
                 self.logger.exception(
-                    f"Worker {worker_id} failed for picture {current_picture_path}"
+                    f"Worker {worker_id} failed for {current_picture_path}"
                 )
 
             self.picture_path_queue.task_done()
-            queue_size = self.picture_path_queue.qsize()
-
-            self.logger.info(f"About {queue_size} remaining pictures to process ")
+            self.progressbar.update(
+                self.total_queue_size - self.picture_path_queue.qsize()
+            )
 
     def run(self):
         self.picture_path_queue.join()
@@ -70,6 +78,8 @@ class ParalellPictureProcessor:
 
         for t in self.threads:
             t.join()
+
+        self.progressbar.finish()
 
 
 def record_metric_file(recorder: MetricRecorder, file_name: str) -> None:
@@ -95,6 +105,9 @@ class PictureProcessor:
         self.metrics_output_path = metrics_output_path
         self.crawl_id = crawl_id
 
+    def _get_file_name(self, worker_id, name) -> str:
+        return f"{self.metrics_output_path}/picture-{name}-{self.crawl_id}-{worker_id}.influx"
+
     def process(self, picture_path, worker_id=1):
         picture = self.picture_factory(picture_path)
 
@@ -111,16 +124,15 @@ class PictureProcessor:
 
         if self.metrics_output_path is not None:
             record_metric_file(
-                picture.get_metric(),
-                f"{self.metrics_output_path}/picture-analyze-{self.crawl_id}-{worker_id}.influx",
+                picture.get_metric(), self._get_file_name(worker_id, "analyze")
             )
             record_metric_file(
                 self.picture_recorder.record_metric,
-                f"{self.metrics_output_path}/picture-record-{self.crawl_id}-{worker_id}.influx",
+                self._get_file_name(worker_id, "record"),
             )
             record_metric_file(
                 self.picture_recorder.picture_exists_metric,
-                f"{self.metrics_output_path}/picture-check-{self.crawl_id}-{worker_id}.influx",
+                self._get_file_name(worker_id, "check"),
             )
 
         return record_result
