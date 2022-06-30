@@ -60,7 +60,12 @@ def backup(config_file):
     handler = BackupHandler(crawler_id=CRAWLER_ID, base_url=REST_API_URL)
     storage_factory = StorageFactory(handler)
     backup_processor = BackupProcessor(handler, storage_factory, logger)
-    parallel_backup_processor = ParallelBackupProcessor(backup_processor, logger)
+
+    progressbar = ProgressBar()
+
+    parallel_backup_processor = ParallelBackupProcessor(
+        backup_processor, logger, progressbar
+    )
 
     asyncio.run(parallel_backup_processor.run_forever())
 

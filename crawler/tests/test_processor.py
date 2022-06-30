@@ -139,6 +139,7 @@ class TestParallelBackupProcessor(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         self.mock_backup_processor = MagicMock(spec=BackupProcessor)
         mock_logger = MagicMock(name="logger")
+        self.mock_progressbar = MagicMock(name="progressbar")
 
         self.mock_backup_processor.get_backup_requests.return_value = [
             BackupRequest(
@@ -152,6 +153,7 @@ class TestParallelBackupProcessor(unittest.IsolatedAsyncioTestCase):
         self.parallel_processor = ParallelBackupProcessor(
             backup_processor=self.mock_backup_processor,
             logger=mock_logger,
+            progressbar=self.mock_progressbar,
             worker_qty=2,
         )
 
@@ -173,6 +175,9 @@ class TestParallelBackupProcessor(unittest.IsolatedAsyncioTestCase):
 
     async def test_run(self):
         await self.parallel_processor.run()
+
+        self.mock_progressbar.start.assert_called_once_with(max_value=1)
+        self.mock_progressbar.update.assert_called_once_with(1)
 
     async def test_run_with_exception(self):
         self.mock_backup_processor.process.side_effect = Exception

@@ -175,11 +175,18 @@ class BackupProcessor:
 
 
 class ParallelBackupProcessor:
-    def __init__(self, backup_processor: BackupProcessor, logger, worker_qty: int = 3):
+    def __init__(
+        self,
+        backup_processor: BackupProcessor,
+        logger,
+        progressbar: ProgressBar,
+        worker_qty: int = 3,
+    ):
         self._backup_processor = backup_processor
         self._logger = logger
         self._worker_qty = worker_qty
         self._workers: List[Task] = []
+        self._progressbar = progressbar
 
     async def _fill_queue(self):
         self._backup_queue = asyncio.Queue()
@@ -189,14 +196,14 @@ class ParallelBackupProcessor:
             None, self._backup_processor.get_backup_requests
         )
 
-        self._logger.debug(f"Retrieved {len(backup_requests)} backup requests")
+        self._logger.info(f"Retrieved {len(backup_requests)} backup requests")
         for backup_request in backup_requests:
             await self._backup_queue.put(backup_request)
-            self._logger.debug(
-                f"Adding backup request for picture {backup_request.picture_hash}"
-            )
 
-        self._logger.info(f"Added {len(backup_requests)} backup requests to the queue")
+        self._total_backup_requests = self._backup_queue.qsize()
+
+        if self._total_backup_requests > 0:
+            self._progressbar.start(max_value=self._total_backup_requests)
 
     async def _create_workers(self):
         for i in range(self._worker_qty):
@@ -225,9 +232,10 @@ class ParallelBackupProcessor:
                     None, self._backup_processor.process, backup_request
                 )
                 if result:
-                    self._logger.info(
-                        f"{name} processed backup {backup_request.picture_hash}"
+                    self._progressbar.update(
+                        self._total_backup_requests - self._backup_queue.qsize()
                     )
+
             except Exception as e:
                 self._logger.exception(e)
 
