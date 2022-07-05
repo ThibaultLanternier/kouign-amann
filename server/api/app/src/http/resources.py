@@ -18,9 +18,11 @@ def get_picture_manager() -> AbstractPictureManager:
 def get_backup_manager() -> AbstractBackupManager:
     return current_app.config["backup_manager"]
 
+
 class Ping(Resource):
     def get(self):
-        return {"ping":"ok"} , 200
+        return {"ping": "ok"}, 200
+
 
 class PictureCount(Resource):
     def get(self):

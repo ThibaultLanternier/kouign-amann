@@ -4,10 +4,10 @@ from flask import Flask
 from flask_cors import CORS
 from flask_restful import Api
 
-from src.http.resources import (CrawlerBackup, Ping, Picture, PictureBackupRequest,
+from src.http.resources import (CrawlerBackup, Picture, PictureBackupRequest,
                                 PictureCount, PictureExists, PictureFile,
-                                PictureList, PicturePlanBackup, StorageConfig,
-                                UpdatedPictureList)
+                                PictureList, PicturePlanBackup, Ping,
+                                StorageConfig, UpdatedPictureList)
 
 
 def fake_encoder(o):

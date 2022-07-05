@@ -40,9 +40,9 @@ class TestMongoPersistence(unittest.TestCase):
 
     def _create_picture(self, hash: str, creation_time: datetime) -> Picture:
         picture_info = PictureInfo(
-            creation_time=creation_time, 
+            creation_time=creation_time,
             thumbnail="/9j/4AAQSkZ",
-            orientation="LANDSCAPE"
+            orientation="LANDSCAPE",
         )
 
         return Picture(
@@ -64,7 +64,6 @@ class TestMongoPersistence(unittest.TestCase):
         self.test_picture = self._create_picture(
             hash=self.test_hash,
             creation_time=datetime(2019, 11, 19, 12, 46, 56, tzinfo=timezone.utc),
-
         )
 
         self.test_picture_2 = self._create_picture(

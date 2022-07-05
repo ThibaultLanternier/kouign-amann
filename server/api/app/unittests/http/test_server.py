@@ -35,7 +35,7 @@ class TestServer(unittest.TestCase):
                     2019, 11, 30, 12, 15, 5, 2000, tzinfo=timezone.utc
                 ),
                 thumbnail="BBBBB",
-                orientation="LANDSCAPE"
+                orientation="LANDSCAPE",
             ),
             file_list=[],
             backup_required=False,
@@ -50,7 +50,7 @@ class TestServer(unittest.TestCase):
             "info": {
                 "creation_time": "2019-11-30T12:15:05.002000Z",
                 "thumbnail": "BBBBB",
-                "orientation": "LANDSCAPE"
+                "orientation": "LANDSCAPE",
             },
         }
 
@@ -118,7 +118,7 @@ class TestServer(unittest.TestCase):
                     2019, 11, 30, 12, 15, 5, 2000, tzinfo=timezone.utc
                 ),
                 thumbnail="BBBBB",
-                orientation="LANDSCAPE"
+                orientation="LANDSCAPE",
             ),
             file_list=[],
             backup_required=False,
@@ -135,7 +135,7 @@ class TestServer(unittest.TestCase):
             "info": {
                 "creation_time": "2019-11-30T12:15:05.002000Z",
                 "thumbnail": "BBBBB",
-                "orientation": "LANDSCAPE"
+                "orientation": "LANDSCAPE",
             },
         }
 
@@ -153,7 +153,7 @@ class TestServer(unittest.TestCase):
         test_info_json = {
             "creation_time": "2019-11-30T12:15:05.000000Z",
             "thumbnail": "BBBBB",
-            "orientation": "PORTRAIT"
+            "orientation": "PORTRAIT",
         }
 
         response = self.client.post("/picture/AAAAA", json=test_info_json)
@@ -164,7 +164,7 @@ class TestServer(unittest.TestCase):
             PictureInfo(
                 creation_time=datetime(2019, 11, 30, 12, 15, 5, tzinfo=timezone.utc),
                 thumbnail="BBBBB",
-                orientation="PORTRAIT"
+                orientation="PORTRAIT",
             ),
         )
 
@@ -191,7 +191,7 @@ class TestServer(unittest.TestCase):
                         2019, 11, 30, 12, 15, 5, 2000, tzinfo=timezone.utc
                     ),
                     thumbnail="BBBBB",
-                    orientation="LANDSCAPE"
+                    orientation="LANDSCAPE",
                 ),
                 file_list=[],
                 backup_required=False,
@@ -214,7 +214,7 @@ class TestServer(unittest.TestCase):
                     "info": {
                         "creation_time": "2019-11-30T12:15:05.002000Z",
                         "thumbnail": "BBBBB",
-                        "orientation": "LANDSCAPE"
+                        "orientation": "LANDSCAPE",
                     },
                 }
             ],
