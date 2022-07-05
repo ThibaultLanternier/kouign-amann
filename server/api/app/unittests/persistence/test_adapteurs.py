@@ -1,3 +1,4 @@
+from bdb import set_trace
 import unittest
 from datetime import datetime, timedelta, timezone
 
@@ -26,6 +27,7 @@ class TestMongoPersistence(unittest.TestCase):
             storage_id=backup.storage_id,
             file_path=backup.file_path,
             picture_hash=picture.hash,
+            status=backup.status
         )
 
     def _create_file(self) -> File:
@@ -54,6 +56,7 @@ class TestMongoPersistence(unittest.TestCase):
     def setUp(self):
         self.client = MongoClient("mongodb-test", 27017, tz_aware=True)
         self.db_name = "test-db"
+        #self.client.drop_database(self.db_name)
 
         self.persistence = MongoPersistence(client=self.client, db_name=self.db_name)
 
@@ -85,23 +88,28 @@ class TestMongoPersistence(unittest.TestCase):
 
     def test_get_pending_backup_request_done_and_pending(self):
         pending_backup = self._create_backup(status=BackupStatus.PENDING)
+        pending_delete_backup = self._create_backup(status=BackupStatus.PENDING_DELETE)
 
         self.test_picture.backup_list = [
             self._create_backup(status=BackupStatus.DONE),
             pending_backup,
+            pending_delete_backup
         ]
 
         expected_backup_request = self._create_backup_request(
             backup=pending_backup, picture=self.test_picture
         )
-
+        expected_backup_delete_request = self._create_backup_request(
+            backup=pending_delete_backup, picture=self.test_picture
+        )
         self.persistence.record_picture(self.test_picture)
 
         backup_list = self.persistence.get_pending_backup_request(
             crawler_id="AAA", limit=10
         )
+        self.maxDiff = None
 
-        self.assertEqual([expected_backup_request], backup_list)
+        self.assertEqual([expected_backup_request, expected_backup_delete_request], backup_list)
 
     def test_get_pending_backup_limit(self):
         self.test_picture.backup_list = [

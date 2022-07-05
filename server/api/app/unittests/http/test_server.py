@@ -364,12 +364,13 @@ class TestServer(unittest.TestCase):
         self.assertEqual(201, response.status_code)
         self.mock_app.record_picture.assert_called_once_with(expected_picture)
 
-    def test_crawler_get_request(self):
+    def test_crawler_get_backup_list(self):
         backup_request_dict = {
             "crawler_id": "AAA",
             "storage_id": "BBB",
             "file_path": "/file",
             "picture_hash": "acde",
+            "status": "PENDING"
         }
 
         backup_request = BackupRequest(**backup_request_dict)
@@ -383,12 +384,13 @@ class TestServer(unittest.TestCase):
             crawler_id="AAA", limit=20
         )
 
-    def test_post_backup_request(self):
+    def test_crawler_record_file_save_complete(self):
         backup_request_dict = {
             "crawler_id": "AAA",
             "storage_id": "BBB",
             "file_path": "/file",
             "picture_hash": "acde",
+            "status": "PENDING"
         }
 
         mock_picture = MagicMock(spec=Picture)
@@ -402,12 +404,50 @@ class TestServer(unittest.TestCase):
         )
         self.mock_app.record_picture.assert_called_once_with(picture=mock_picture)
 
-    def test_post_backup_error(self):
+    def test_crawler_record_file_delete_completed(self):
         backup_request_dict = {
             "crawler_id": "AAA",
             "storage_id": "BBB",
             "file_path": "/file",
             "picture_hash": "acde",
+            "status": "PENDING_DELETE"
+        }
+
+        mock_picture = MagicMock(spec=Picture)
+        self.mock_app.get_picture.return_value = mock_picture
+
+        response = self.client.post("/crawler/backup/xxx", json=backup_request_dict)
+
+        self.assertEqual(201, response.status_code)
+        mock_picture.record_deleted.assert_called_once_with(
+            storage_id="BBB", crawler_id="AAA"
+        )
+        self.mock_app.record_picture.assert_called_once_with(picture=mock_picture)
+
+    def test_crawler_record_backup_with_incorrect_status(self):
+        backup_request_dict = {
+            "crawler_id": "AAA",
+            "storage_id": "BBB",
+            "file_path": "/file",
+            "picture_hash": "acde",
+            "status": "DONE"
+        }
+
+        mock_picture = MagicMock(spec=Picture)
+        self.mock_app.get_picture.return_value = mock_picture
+
+        response = self.client.post("/crawler/backup/xxx", json=backup_request_dict)
+
+        self.assertEqual(400, response.status_code)
+
+
+    def test_crawler_record_file_save_error(self):
+        backup_request_dict = {
+            "crawler_id": "AAA",
+            "storage_id": "BBB",
+            "file_path": "/file",
+            "picture_hash": "acde",
+            "status": "PENDING"
         }
 
         mock_picture = MagicMock(spec=Picture)
@@ -421,12 +461,13 @@ class TestServer(unittest.TestCase):
         )
         self.mock_app.record_picture.assert_called_once_with(picture=mock_picture)
 
-    def test_post_backup_request_not_found(self):
+    def test_crawler_record_file_save_unknown_file(self):
         backup_request_dict = {
             "crawler_id": "AAA",
             "storage_id": "BBB",
             "file_path": "/file",
             "picture_hash": "acde",
+            "status": "PENDING"
         }
 
         self.mock_app.get_picture.return_value = None
@@ -435,7 +476,7 @@ class TestServer(unittest.TestCase):
 
         self.assertEqual(404, response.status_code)
 
-    def test_get_storage_config(self):
+    def test_crawler_get_storage_config(self):
         storage_config = StorageConfig(
             id="xxx", type=StorageType.AWS_GLACIER, config={"config": "config"}
         )

@@ -6,7 +6,7 @@ from flask_restful import Resource
 from flask_restful.inputs import datetime_from_iso8601
 from flask_restful.reqparse import RequestParser
 
-from src.app.models import BackupRequest, DictFactory, File, PictureInfo
+from src.app.models import BackupRequest, BackupStatus, DictFactory, File, PictureInfo
 from src.app.ports import (AbstractBackupManager, AbstractPictureManager,
                            MissingPictureException)
 
@@ -157,24 +157,34 @@ class CrawlerBackup(Resource):
 
         return backup_request_list_dict, 200
 
+    # Use to acknowledge completion of a save (PENDING) or delete backup request (PENDING_DELETE)
     def post(self, crawler_id: str):
         picture_manager = get_picture_manager()
 
         backup_request = BackupRequest(**request.json)
+
+        if backup_request.status not in [BackupStatus.PENDING, BackupStatus.PENDING_DELETE]:
+            return "INCORRECT BACKUP STATUS", 400
 
         picture = picture_manager.get_picture(backup_request.picture_hash)
 
         if picture is None:
             return "NOT FOUND", 404
 
-        picture.record_done(
-            storage_id=backup_request.storage_id, crawler_id=backup_request.crawler_id
-        )
+        if backup_request.status == BackupStatus.PENDING:
+            picture.record_done(
+                storage_id=backup_request.storage_id, crawler_id=backup_request.crawler_id
+            )
+        else:
+            picture.record_deleted(
+                storage_id=backup_request.storage_id, crawler_id=backup_request.crawler_id
+            )
 
         picture_manager.record_picture(picture=picture)
 
         return f"/picture/{backup_request.picture_hash}", 201
 
+    # Used to record a backup error
     def delete(self, crawler_id: str):
         picture_manager = get_picture_manager()
 

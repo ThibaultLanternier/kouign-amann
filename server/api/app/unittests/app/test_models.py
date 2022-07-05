@@ -32,13 +32,13 @@ class TestPicture(unittest.TestCase):
             info=PictureInfo(
                 thumbnail="AAAA",
                 creation_time=datetime(1980, 11, 30, tzinfo=timezone.utc),
-                orientation="LANDSCAPE"
+                orientation="LANDSCAPE",
             ),
             backup_required=True,
             file_list=[self.file_1, self.file_2],
             backup_list=[],
         )
-        self.backup = Backup(
+        self.pending_backup = Backup(
             crawler_id="B",
             storage_id="a",
             file_path="/picture_1_large",
@@ -48,22 +48,39 @@ class TestPicture(unittest.TestCase):
 
         self.maxDiff = None
 
-    def test_done(self):
-        self.test_picture.backup_list = [self.backup]
+    def test_record_done(self):
+        self.test_picture.backup_list = [self.pending_backup]
 
         self.test_picture.record_done(
-            storage_id=self.backup.storage_id,
-            crawler_id=self.backup.crawler_id,
+            storage_id=self.pending_backup.storage_id,
+            crawler_id=self.pending_backup.crawler_id,
         )
 
         self.assertEqual(BackupStatus.DONE, self.test_picture.backup_list[0].status)
 
+    def test_record_deleted(self):
+        pending_backup_2 = Backup(
+            crawler_id="B",
+            storage_id="b",
+            file_path="/picture_1_large",
+            status=BackupStatus.PENDING_DELETE,
+            creation_time=OTHER_TEST_TIME,
+        )
+        self.test_picture.backup_list = [self.pending_backup, pending_backup_2]
+
+        self.test_picture.record_deleted(
+            storage_id=self.pending_backup.storage_id,
+            crawler_id=self.pending_backup.crawler_id,
+        )
+
+        self.assertEqual([pending_backup_2], self.test_picture.backup_list)
+
     def test_backup_error(self):
-        self.test_picture.backup_list = [self.backup]
+        self.test_picture.backup_list = [self.pending_backup]
 
         self.test_picture.record_backup_error(
-            storage_id=self.backup.storage_id,
-            crawler_id=self.backup.crawler_id,
+            storage_id=self.pending_backup.storage_id,
+            crawler_id=self.pending_backup.crawler_id,
         )
 
         self.assertEqual(BackupStatus.ERROR, self.test_picture.backup_list[0].status)
@@ -95,18 +112,18 @@ class TestPicture(unittest.TestCase):
         )
 
     def test_plan_backup_already_planned(self):
-        self.test_picture.backup_list = [self.backup]
+        self.test_picture.backup_list = [self.pending_backup]
 
         self.test_picture.plan_backup(
             storage_list=[self.storage],
             current_time=TEST_TIME,
         )
 
-        self.assertEqual(self.test_picture.backup_list, [self.backup])
+        self.assertEqual(self.test_picture.backup_list, [self.pending_backup])
 
-    def test_plan_backup_remove_done_backup(self):
-        self.backup.status = BackupStatus.DONE
-        self.test_picture.backup_list = [self.backup]
+    def test_plan_backup_switch_done_backup_to_pending_delete(self):
+        self.pending_backup.status = BackupStatus.DONE
+        self.test_picture.backup_list = [self.pending_backup]
         self.test_picture.backup_required = False
 
         self.test_picture.plan_backup(
@@ -114,10 +131,12 @@ class TestPicture(unittest.TestCase):
             current_time=TEST_TIME,
         )
 
-        self.assertEqual(self.test_picture.backup_list, [self.backup])
+        self.assertEqual(
+            self.test_picture.backup_list[0].status, BackupStatus.PENDING_DELETE
+        )
 
-    def test_plan_backup_remove_backup(self):
-        self.test_picture.backup_list = [self.backup]
+    def test_plan_backup_remove_pending_backup(self):
+        self.test_picture.backup_list = [self.pending_backup]
         self.test_picture.backup_required = False
 
         self.test_picture.plan_backup(
@@ -163,14 +182,14 @@ class TestPictureInfo(unittest.TestCase):
                 2007, 5, 24, 19, 53, 39, tzinfo=timezone(timedelta(seconds=3600))
             ),
             thumbnail="THUMBNAIL",
-            orientation="LANDSCAPE"
+            orientation="LANDSCAPE",
         )
 
     def test_date_conversion(self):
         picture_info_string = PictureInfo(
-            creation_time="2007-05-24T18:53:39.000000Z", 
+            creation_time="2007-05-24T18:53:39.000000Z",
             thumbnail="THUMBNAIL",
-            orientation="LANDSCAPE"
+            orientation="LANDSCAPE",
         )
 
         self.assertEqual(picture_info_string, self.picture_info)
@@ -179,7 +198,7 @@ class TestPictureInfo(unittest.TestCase):
         expected = {
             "creation_time": "2007-05-24T18:53:39.000000Z",
             "thumbnail": "THUMBNAIL",
-            "orientation": "LANDSCAPE"
+            "orientation": "LANDSCAPE",
         }
 
         self.assertEqual(expected, asdict(self.picture_info, dict_factory=DictFactory))
@@ -188,7 +207,7 @@ class TestPictureInfo(unittest.TestCase):
         expected = {
             "creation_time": datetime(2007, 5, 24, 18, 53, 39, tzinfo=timezone.utc),
             "thumbnail": "THUMBNAIL",
-            "orientation": "LANDSCAPE"
+            "orientation": "LANDSCAPE",
         }
 
         self.assertEqual(expected, asdict(self.picture_info))

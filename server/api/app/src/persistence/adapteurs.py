@@ -4,7 +4,7 @@ from typing import Dict, List, Union
 
 from pymongo import ASCENDING, MongoClient
 
-from src.app.models import (Backup, BackupRequest, File, Picture, PictureCount,
+from src.app.models import (Backup, BackupRequest, BackupStatus, File, Picture, PictureCount,
                             PictureInfo)
 from src.persistence.ports import PersistencePort
 from src.tools.date import DateTimeConverter, DateTimeFormatException
@@ -43,7 +43,7 @@ class MongoPersistence(PersistencePort):
 
     def _to_backup_request(self, mongo_dict: Dict) -> BackupRequest:
         mongo_dict.pop("_id")
-
+        mongo_dict["status"] = BackupStatus(mongo_dict["status"])
         return BackupRequest(**mongo_dict)
 
     def get_picture(self, hash: str) -> Union[Picture, None]:
@@ -143,7 +143,7 @@ class MongoPersistence(PersistencePort):
             {
                 "$match": {
                     "backup_list.crawler_id": crawler_id,
-                    "backup_list.status": "PENDING",
+                    "backup_list.status": { "$in": ["PENDING","PENDING_DELETE"]},
                 }
             },
             {
@@ -152,6 +152,7 @@ class MongoPersistence(PersistencePort):
                     "storage_id": "$backup_list.storage_id",
                     "file_path": "$backup_list.file_path",
                     "picture_hash": "$hash",
+                    "status": "$backup_list.status"
                 }
             },
             {"$limit": limit},

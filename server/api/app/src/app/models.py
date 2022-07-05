@@ -24,6 +24,7 @@ class BackupStatus(str, Enum):
     PENDING = "PENDING"
     DONE = "DONE"
     ERROR = "ERROR"
+    PENDING_DELETE = "PENDING_DELETE"
 
 
 @dataclass
@@ -66,14 +67,13 @@ class File:
     def __ge__(self, other) -> bool:
         return self > other or self == other
 
-
 @dataclass
 class BackupRequest:
     crawler_id: str
     storage_id: str
     file_path: str
     picture_hash: str
-
+    status: BackupStatus
 
 @dataclass
 class Backup:
@@ -142,9 +142,18 @@ class Picture:
                         )
                     )
         else:
-            self.backup_list = self._get_not_done_backup()
+            self.backup_list = [
+                self._change_backup_status(backup, BackupStatus.PENDING_DELETE)
+                for backup in self._get_already_done_backup()
+            ]
 
-    def _get_not_done_backup(self) -> List[Backup]:
+    def _change_backup_status(
+        self, backup_request: Backup, new_status: BackupStatus
+    ) -> Backup:
+        backup_request.status = new_status
+        return backup_request
+
+    def _get_already_done_backup(self) -> List[Backup]:
         return [x for x in self.backup_list if x.status == BackupStatus.DONE]
 
     def _get_best_file(self) -> File:
@@ -187,6 +196,11 @@ class Picture:
 
     def record_done(self, storage_id: str, crawler_id: str) -> None:
         self._set_backup_status(storage_id, crawler_id, BackupStatus.DONE)
+
+    def record_deleted(self, storage_id: str, crawler_id: str) -> None:
+        for backup in self.backup_list:
+            if backup.storage_id == storage_id and backup.crawler_id == crawler_id:
+                self.backup_list.remove(backup)
 
     def record_backup_error(self, storage_id: str, crawler_id: str) -> None:
         self._set_backup_status(storage_id, crawler_id, BackupStatus.ERROR)
