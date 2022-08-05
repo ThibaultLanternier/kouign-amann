@@ -2,7 +2,38 @@ import unittest
 from dataclasses import asdict
 from datetime import datetime, timedelta, timezone
 
-from app.models.picture import DictFactory, PictureData, PictureOrientation
+from app.models.backup import BackupRequest, BackupStatus
+from app.models.picture import PictureData, PictureOrientation
+from app.models.shared import DictFactory
+
+
+class TestBackupRequest(unittest.TestCase):
+    def setUp(self):
+        self.backup_request_dict = {
+            "crawler_id": "AAA",
+            "storage_id": "BBB",
+            "file_path": "/file",
+            "picture_hash": "acde",
+            "status": "PENDING",
+        }
+
+    def test_construct_enum_conversion(self):
+        backup_request_class = BackupRequest(**self.backup_request_dict)
+
+        self.assertEqual(BackupStatus.PENDING, backup_request_class.status)
+
+    def test_construct_enum_error(self):
+        self.backup_request_dict["status"] = "NIMPORTEQUOI"
+
+        with self.assertRaises(ValueError):
+            BackupRequest(**self.backup_request_dict)
+
+    def test_construct_with_actual_enum(self):
+        self.backup_request_dict["status"] = BackupStatus.PENDING
+
+        backup_request_class = BackupRequest(**self.backup_request_dict)
+
+        self.assertEqual(BackupStatus.PENDING, backup_request_class.status)
 
 
 class TestPictureData(unittest.TestCase):

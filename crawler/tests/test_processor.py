@@ -7,7 +7,7 @@ from progressbar import ProgressBar
 from app.controllers.backup import BackupHandler
 from app.controllers.picture import AbstractPictureAnalyzer
 from app.controllers.recorder import PictureRESTRecorder
-from app.models.backup import BackupRequest
+from app.models.backup import BackupRequest, BackupStatus
 from app.processor import (BackupProcessor, ParalellPictureProcessor,
                            ParallelBackupProcessor, PictureProcessor)
 from app.storage.basic import AbstractStorage, StorageException, StorageFactory
@@ -114,6 +114,7 @@ class TestBackupProcessor(unittest.TestCase):
             storage_id="B",
             file_path="/file",
             picture_hash="C",
+            status=BackupStatus.PENDING,
         )
 
     def test_process_ok(self):
@@ -147,6 +148,7 @@ class TestParallelBackupProcessor(unittest.IsolatedAsyncioTestCase):
                 storage_id="B",
                 file_path="/file",
                 picture_hash="C",
+                status=BackupStatus.PENDING,
             )
         ]
 

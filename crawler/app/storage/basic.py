@@ -46,7 +46,7 @@ class AbstractStorage:
         pass
 
     @abstractmethod
-    def delete(self, picture_hase: str) -> bool:
+    def delete(self, picture_hash: str) -> bool:
         pass
 
 
@@ -144,7 +144,7 @@ class S3BackupStorage(AbstractStorage):
 
     def delete(self, picture_hash: str) -> bool:
         self._client.delete_object(
-            Bucket=self._bucket, Key=f"{self._prefix}{picture_hash}"
+            Bucket=self._bucket, Prefix=f"{self._prefix}{picture_hash}"
         )
 
         return True

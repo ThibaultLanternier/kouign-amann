@@ -5,6 +5,7 @@ from dataclasses import asdict
 import requests
 
 from app.models.backup import BackupRequest, StorageConfig, StorageType
+from app.models.shared import DictFactory
 
 
 class BackupHandlerException(Exception):
@@ -36,6 +37,8 @@ class BackupHandler(AbstractBackupHandler):
         self.crawler_id = crawler_id
         self.base_url = base_url
 
+    """ Retrieves the list of current backup requests for a given crawler """
+
     def get_backup_requests(self) -> List[BackupRequest]:
         response = requests.get(f"{self.base_url}/crawler/backup/{self.crawler_id}")
 
@@ -50,25 +53,33 @@ class BackupHandler(AbstractBackupHandler):
         else:
             raise BackupHandlerException("ERROR RETRIEVING BACKUP REQUESTS")
 
+    """ Acknowledge that a backup request (save or delete) has been completed """
+
     def send_backup_completed(self, status: BackupRequest) -> bool:
         response = requests.post(
-            f"{self.base_url}/crawler/backup/{self.crawler_id}", json=asdict(status)
+            f"{self.base_url}/crawler/backup/{self.crawler_id}",
+            json=asdict(status, dict_factory=DictFactory),
         )
 
         if response.status_code == 201:
             return True
         else:
             return False
+
+    """ Reports that an error occured on a specific backup request """
 
     def send_backup_error(self, status: BackupRequest) -> bool:
         response = requests.delete(
-            f"{self.base_url}/crawler/backup/{self.crawler_id}", json=asdict(status)
+            f"{self.base_url}/crawler/backup/{self.crawler_id}",
+            json=asdict(status, dict_factory=DictFactory),
         )
 
         if response.status_code == 201:
             return True
         else:
             return False
+
+    """ Retrieve credentials and configuration for a specific storage """
 
     def get_storage_config(self, storage_id: str) -> StorageConfig:
         response = requests.get(f"{self.base_url}/crawler/storage/{storage_id}")

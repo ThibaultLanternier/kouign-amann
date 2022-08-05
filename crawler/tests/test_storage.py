@@ -115,6 +115,14 @@ class TestS3BackupStorage(unittest.TestCase):
     def test_check_still_exists_not_found(self):
         self.assertFalse(self.test_storage.check_still_exists("AAAA"))
 
+    def test_delete(self):
+        self.test_storage.delete("AAAA")
+
+        self.mock_S3_client.delete_object.assert_called_once_with(
+            Bucket='picture.backup.test',
+            Prefix='test-directory-backup/AAAA'
+        )
+
 
 class TestStorageFactory(unittest.TestCase):
     def setUp(self):

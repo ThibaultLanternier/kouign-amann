@@ -1,10 +1,12 @@
 import unittest
+from pydoc import resolve
 from unittest.mock import MagicMock, patch
 
 from requests import Response
 
 from app.controllers.backup import BackupHandler, BackupHandlerException
-from app.models.backup import BackupRequest, StorageConfig, StorageType
+from app.models.backup import (BackupRequest, BackupStatus, StorageConfig,
+                               StorageType)
 
 
 class TestBackup(unittest.TestCase):
@@ -16,6 +18,7 @@ class TestBackup(unittest.TestCase):
             "storage_id": "BBB",
             "file_path": "/file",
             "picture_hash": "acde",
+            "status": "PENDING",
         }
 
         self.storage_config_dict = {
@@ -39,6 +42,7 @@ class TestBackup(unittest.TestCase):
         response = self.backup_handler.get_backup_requests()
 
         self.assertEqual([BackupRequest(**self.backup_request_dict)], response)
+        self.assertEqual(BackupStatus.PENDING, response[0].status)
         mock_get.assert_called_once_with("BASE_URL/crawler/backup/crawler_id")
 
     @patch("requests.get")

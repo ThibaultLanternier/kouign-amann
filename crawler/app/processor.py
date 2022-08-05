@@ -10,7 +10,7 @@ from progressbar import ProgressBar
 from app.controllers.backup import AbstractBackupHandler
 from app.controllers.picture import AbstractPictureAnalyzer
 from app.controllers.recorder import PictureRESTRecorder
-from app.models.backup import BackupRequest
+from app.models.backup import BackupRequest, BackupStatus
 from app.storage.basic import StorageException, StorageFactory
 from app.tools.metrics import MetricRecorder
 
@@ -156,10 +156,14 @@ class BackupProcessor:
         storage = self._storage_factory.create_from_id(backup_request.storage_id)
 
         try:
-            storage.backup(
-                picture_local_path=backup_request.file_path,
-                picture_hash=backup_request.picture_hash,
-            )
+            if backup_request.status == BackupStatus.PENDING:
+                storage.backup(
+                    picture_local_path=backup_request.file_path,
+                    picture_hash=backup_request.picture_hash,
+                )
+            else:
+                storage.delete(picture_hash=backup_request.picture_hash)
+
         except StorageException as e:
             self._logger.warning(
                 f"Processing of picture {backup_request.picture_hash} failed : {e}"
@@ -192,13 +196,18 @@ class ParallelBackupProcessor:
         self._backup_queue = asyncio.Queue()
 
         loop = asyncio.get_event_loop()
-        backup_requests = await loop.run_in_executor(
+        backup_delete_requests = await loop.run_in_executor(
             None, self._backup_processor.get_backup_requests
         )
 
-        self._logger.info(f"Retrieved {len(backup_requests)} backup requests")
-        for backup_request in backup_requests:
-            await self._backup_queue.put(backup_request)
+        delete_requests = [request for request in backup_delete_requests if request.status == BackupStatus.PENDING_DELETE]
+        backup_requests = [request for request in backup_delete_requests if request.status == BackupStatus.PENDING]
+
+        self._logger.info(f"Retrieved {len(backup_delete_requests)} backup requests")
+        self._logger.info(f"{len(delete_requests)} deletion(s), {len(backup_requests)} backup(s)")
+
+        for request in backup_delete_requests:
+            await self._backup_queue.put(request)
 
         self._total_backup_requests = self._backup_queue.qsize()
 

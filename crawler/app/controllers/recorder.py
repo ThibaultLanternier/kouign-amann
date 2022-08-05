@@ -1,11 +1,11 @@
-from cmath import pi
 import logging
 from datetime import datetime, timedelta
 from typing import List, Tuple
 
 import requests
 
-from app.models.picture import PictureData, DictFactory
+from app.models.picture import PictureData
+from app.models.shared import DictFactory
 from app.tools.metrics import MetricRecorder
 
 from dataclasses import asdict
