@@ -1,7 +1,9 @@
 import logging
 import sys
 
-LOG_FORMAT = "%(asctime)s - %(threadName)s - %(name)s %(levelname)s - %(message)s"
+LOG_FORMAT = (
+    "%(asctime)s - %(threadName)s - %(name)s %(levelname)s - %(message)s"  # noqa: E501
+)
 
 
 def init_console(log_level):

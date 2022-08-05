@@ -43,7 +43,9 @@ class PictureData:
             orientation=self.orientation,
         )
 
-    def get_picture_file(self, current_time: datetime, crawler_id: str) -> PictureFile:
+    def get_picture_file(
+        self, current_time: datetime, crawler_id: str
+    ) -> PictureFile:  # noqa: E501
         return PictureFile(
             crawler_id=crawler_id,
             resolution=self.resolution,

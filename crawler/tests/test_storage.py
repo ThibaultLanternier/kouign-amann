@@ -119,8 +119,7 @@ class TestS3BackupStorage(unittest.TestCase):
         self.test_storage.delete("AAAA")
 
         self.mock_S3_client.delete_object.assert_called_once_with(
-            Bucket='picture.backup.test',
-            Prefix='test-directory-backup/AAAA'
+            Bucket="picture.backup.test", Prefix="test-directory-backup/AAAA"
         )
 
 

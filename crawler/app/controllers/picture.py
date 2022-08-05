@@ -108,9 +108,9 @@ class PictureAnalyzer(AbstractPictureAnalyzer):
     def get_recorded_hash(self):
         try:
             exif_dict = piexif.load(self.PILImage.info["exif"])
-            raw_hash = exif_dict["0th"][piexif.ImageIFD.ImageID].decode("ASCII")
+            hash = exif_dict["0th"][piexif.ImageIFD.ImageID].decode("ASCII")
 
-            return HashExtractor().extract(raw_hash)
+            return HashExtractor().extract(hash)
 
         except Exception:
             return None
@@ -118,11 +118,9 @@ class PictureAnalyzer(AbstractPictureAnalyzer):
     def __get_creation_time(self):
         try:
             exif_dict = piexif.load(self.PILImage.info["exif"], key_is_name=True)
-            raw_original_date_time = exif_dict["Exif"]["DateTimeOriginal"].decode(
-                "UTF-8"
-            )
+            original_date_time = exif_dict["Exif"]["DateTimeOriginal"].decode("UTF-8")
             return self.__extract_date_time(
-                raw_date_time=raw_original_date_time,
+                raw_date_time=original_date_time,
                 current_timezone=self.current_timezone,
             )
 

@@ -21,9 +21,7 @@ class TestMetricRecorder(unittest.TestCase):
         time_step_2 = start_time_ns + 4
         end_time = start_time_ns + 5
 
-        recorder = MetricRecorder(
-            measurement_name="test", current_timestamp_ns=start_time_ns
-        )
+        recorder = MetricRecorder(measurement_name="test", now_ns=start_time_ns)
         recorder.add_step("step_1", time_step_1)
         recorder.set_hash("xxxx")
         recorder.add_step("step_2", time_step_2)

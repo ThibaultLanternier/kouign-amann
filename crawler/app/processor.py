@@ -102,11 +102,12 @@ class PictureProcessor:
         self.picture_recorder = picture_recorder
         self.crawler_id = crawler_id
         self.crawl_time = crawl_time
-        self.metrics_output_path = metrics_output_path
+        self.metrics_path = metrics_output_path
         self.crawl_id = crawl_id
 
     def _get_file_name(self, worker_id, name) -> str:
-        return f"{self.metrics_output_path}/picture-{name}-{self.crawl_id}-{worker_id}.influx"
+        influx_file = f"picture-{name}-{self.crawl_id}-{worker_id}.influx"
+        return f"{self.metrics_path}/{influx_file}"
 
     def process(self, picture_path, worker_id=1):
         picture = self.picture_factory(picture_path)
@@ -122,7 +123,7 @@ class PictureProcessor:
             crawl_time=self.crawl_time,
         )
 
-        if self.metrics_output_path is not None:
+        if self.metrics_path is not None:
             record_metric_file(
                 picture.get_metric(), self._get_file_name(worker_id, "analyze")
             )
@@ -149,29 +150,29 @@ class BackupProcessor:
         self._storage_factory = storage_factory
         self._logger = logger
 
-    def process(self, backup_request: BackupRequest) -> bool:
+    def process(self, request: BackupRequest) -> bool:
         self._logger.debug(
-            f"SYNC processing backup for picture {backup_request.picture_hash}"
-        )
-        storage = self._storage_factory.create_from_id(backup_request.storage_id)
+            f"SYNC processing backup for picture {request.picture_hash}"
+        )  # noqa: E501
+        storage = self._storage_factory.create_from_id(request.storage_id)
 
         try:
-            if backup_request.status == BackupStatus.PENDING:
+            if request.status == BackupStatus.PENDING:
                 storage.backup(
-                    picture_local_path=backup_request.file_path,
-                    picture_hash=backup_request.picture_hash,
+                    picture_local_path=request.file_path,
+                    picture_hash=request.picture_hash,
                 )
             else:
-                storage.delete(picture_hash=backup_request.picture_hash)
+                storage.delete(picture_hash=request.picture_hash)
 
         except StorageException as e:
             self._logger.warning(
-                f"Processing of picture {backup_request.picture_hash} failed : {e}"
+                f"Processing of picture {request.picture_hash} failed : {e}"
             )
-            self._backup_handler.send_backup_error(backup_request)
+            self._backup_handler.send_backup_error(request)
             return False
 
-        self._backup_handler.send_backup_completed(backup_request)
+        self._backup_handler.send_backup_completed(request)
         return True
 
     def get_backup_requests(self) -> List[BackupRequest]:
@@ -196,23 +197,33 @@ class ParallelBackupProcessor:
         self._backup_queue = asyncio.Queue()
 
         loop = asyncio.get_event_loop()
-        backup_delete_requests = await loop.run_in_executor(
+        all_requests = await loop.run_in_executor(
             None, self._backup_processor.get_backup_requests
         )
 
-        delete_requests = [request for request in backup_delete_requests if request.status == BackupStatus.PENDING_DELETE]
-        backup_requests = [request for request in backup_delete_requests if request.status == BackupStatus.PENDING]
+        delete_requests = [
+            request
+            for request in all_requests
+            if request.status == BackupStatus.PENDING_DELETE
+        ]
+        backup_requests = [
+            request
+            for request in all_requests
+            if request.status == BackupStatus.PENDING
+        ]
 
-        self._logger.info(f"Retrieved {len(backup_delete_requests)} backup requests")
-        self._logger.info(f"{len(delete_requests)} deletion(s), {len(backup_requests)} backup(s)")
+        self._logger.info(f"Retrieved {len(all_requests)} backup requests")
+        self._logger.info(
+            f"{len(delete_requests)} deletion(s), {len(backup_requests)} backup(s)"  # noqa: E501
+        )
 
-        for request in backup_delete_requests:
+        for request in all_requests:
             await self._backup_queue.put(request)
 
-        self._total_backup_requests = self._backup_queue.qsize()
+        self._requests_count = self._backup_queue.qsize()
 
-        if self._total_backup_requests > 0:
-            self._progressbar.start(max_value=self._total_backup_requests)
+        if self._requests_count > 0:
+            self._progressbar.start(max_value=self._requests_count)
 
     async def _create_workers(self):
         for i in range(self._worker_qty):
@@ -233,7 +244,7 @@ class ParallelBackupProcessor:
             loop = asyncio.get_event_loop()
             backup_request: BackupRequest = await self._backup_queue.get()
             self._logger.debug(
-                f"{name} retrieved backup request for {backup_request.picture_hash}"
+                f"{name} retrieved backup request for {backup_request.picture_hash}"  # noqa: E501
             )
 
             try:
@@ -242,7 +253,7 @@ class ParallelBackupProcessor:
                 )
                 if result:
                     self._progressbar.update(
-                        self._total_backup_requests - self._backup_queue.qsize()
+                        self._requests_count - self._backup_queue.qsize()
                     )
 
             except Exception as e:

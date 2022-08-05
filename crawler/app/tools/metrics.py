@@ -4,13 +4,11 @@ from time import time_ns
 
 
 class MetricRecorder:
-    def __init__(self, measurement_name: str, current_timestamp_ns: int = None) -> None:
+    def __init__(self, measurement_name: str, now_ns: int = None) -> None:
         self.__p = Point(measurement_name)
 
         self.__last_timestamp_ns = (
-            self.__get_now_timestamp_ns()
-            if current_timestamp_ns is None
-            else current_timestamp_ns
+            self.__get_now_timestamp_ns() if now_ns is None else now_ns
         )
 
     def get_datetime_from_ns_timestamp(timestamp_ns: int) -> datetime:
@@ -20,17 +18,13 @@ class MetricRecorder:
     def __get_now_timestamp_ns(self) -> int:
         return int(time_ns())
 
-    def add_step(self, name: str, current_timestamp_ns: datetime = None) -> None:
-        current_timestamp_ns = (
-            self.__get_now_timestamp_ns()
-            if current_timestamp_ns is None
-            else current_timestamp_ns
-        )
+    def add_step(self, name: str, now_ns: datetime = None) -> None:
+        now_ns = self.__get_now_timestamp_ns() if now_ns is None else now_ns
 
-        step_duration = current_timestamp_ns - self.__last_timestamp_ns
+        step_duration = now_ns - self.__last_timestamp_ns
 
         self.__p.field(name, step_duration)
-        self.__last_timestamp_ns = current_timestamp_ns
+        self.__last_timestamp_ns = now_ns
 
     def add_tag(self, name: str, value: str) -> None:
         self.__p.tag(name, value)

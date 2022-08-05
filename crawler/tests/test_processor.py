@@ -81,7 +81,6 @@ class TestParalellPictureProcessor(unittest.TestCase):
         mock_picture_processor = MagicMock(
             name="picture_processor", return_value=True, side_effect=Exception("Error")
         )
-        mock_logger = MagicMock(name="logger")
 
         test_picture_processor = ParalellPictureProcessor(
             ["file1"],

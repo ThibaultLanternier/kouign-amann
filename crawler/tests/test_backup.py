@@ -1,5 +1,4 @@
 import unittest
-from pydoc import resolve
 from unittest.mock import MagicMock, patch
 
 from requests import Response
