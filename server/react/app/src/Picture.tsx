@@ -36,7 +36,7 @@ const Picture : React.FunctionComponent<IPictureProps> = (props) => {
         });
       }
     }
-    
+
     const onHandleMouseOver = (event: React.MouseEvent) => {
         props.onShowInfo(pictureData);
     }
@@ -44,27 +44,29 @@ const Picture : React.FunctionComponent<IPictureProps> = (props) => {
     const getIconColor = (backupList: IBackup[]) => {
       const totalBackupCount = backupList.length;
 
-      const NOT_PLANNED = "text-muted";
+      const ON_GOING_DELETION = "text-muted";
       const ON_GOING = "text-warning";
       const DONE = "text-success";
       const ERROR = "text-danger";
 
-      if(totalBackupCount === 0){
-        return NOT_PLANNED;
+      const pendingDeletions = backupList.filter(backup => backup.status === "PENDING_DELETE");
+
+      if(pendingDeletions.length > 0){
+        return ON_GOING_DELETION;
+      }
+
+      const completedBackups = backupList.filter(backup => backup.status === "DONE");
+
+      if(completedBackups.length === totalBackupCount){
+        return DONE;
       } else {
-        const completedBackupCount = backupList.filter(backup => backup.status === "DONE");
+        const errorBackupCount = backupList.filter(backup => backup.status === "ERROR");
 
-        if(completedBackupCount.length === totalBackupCount){
-          return DONE;
-        } else {
-          const errorBackupCount = backupList.filter(backup => backup.status === "ERROR");
-
-          if(errorBackupCount.length > 0){
-            return ERROR;
-          }
-
-          return ON_GOING;
+        if(errorBackupCount.length > 0){
+          return ERROR;
         }
+
+        return ON_GOING;
       }
     }
 
@@ -72,15 +74,15 @@ const Picture : React.FunctionComponent<IPictureProps> = (props) => {
         if(isUpdating) {
           return <FontAwesomeIcon className={"text-muted icon"} size="2x" icon={faClock}></FontAwesomeIcon>
         }
-        if(pictureData.backup_required) {
-            return <FontAwesomeIcon className={[getIconColor(pictureData.backup_list), "icon"].join(' ')} size="2x" icon={faCloudUploadAlt} /> 
+        if(pictureData.backup_required || pictureData.backup_list.length > 0) {
+            return <FontAwesomeIcon className={[getIconColor(pictureData.backup_list), "icon"].join(' ')} size="2x" icon={faCloudUploadAlt} />
         }
     }
 
     return <div className="picture-container me-1 mb-1" title={pictureData.hash}>
-            <Image 
-                title={pictureData.info.creation_time + "-" + pictureData.info.orientation}  
-                alt={pictureData.hash} 
+            <Image
+                title={pictureData.info.creation_time + "-" + pictureData.info.orientation}
+                alt={pictureData.hash}
                 src={'data:image/jpeg;base64,' +  pictureData.info.thumbnail}
                 width={pictureData.info.orientation === "LANDSCAPE" ? currentWidth : undefined}
                 height={pictureData.info.orientation === "PORTRAIT" ? currentWidth : undefined}
