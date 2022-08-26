@@ -17,7 +17,7 @@ class TestBackupManager(unittest.TestCase):
         self.mock_persistence: PersistencePort = MagicMock(spec=PersistencePort)
 
         self.test_storage_config = StorageConfig(
-            id="aaaa", type=StorageType.AWS_GLACIER, config={"value": 12}
+            id="aaaa", type=StorageType.AWS_GLACIER, config={"value": "12"}
         )
 
         self.backup_manager = BackupManager(

@@ -1,7 +1,7 @@
 -include secrets.env
 
 GIT_HASH = $(shell git rev-parse --short HEAD)
-USER_ID = $(shell id -u) 
+USER_ID = $(shell id -u)
 PROJECT = contact-sheet
 #DOCKER_REGISTRY = cloud.canister.io:5000/thibaultlanternier/
 DOCKER_REGISTRY = localhost:32000/thibaultlanternier/
@@ -22,7 +22,7 @@ init-dev:
 	docker-compose -p $(PROJECT) build --build-arg DOCKER_USER_ID=$(USER_ID) react-dev
 
 dev-python-shell: init-dev
-	docker-compose -p $(PROJECT) run --service-ports api-dev
+	docker-compose -p $(PROJECT) run --service-ports api-dev bash
 
 dev-node-shell: init-dev
 	docker-compose -p $(PROJECT) up -d api-dev
@@ -44,7 +44,7 @@ build:
 
 publish: build
 	docker tag contact-sheet-nginx:$(GIT_HASH) $(DOCKER_REGISTRY)contact-sheet-nginx:$(GIT_HASH)
-	docker push $(DOCKER_REGISTRY)contact-sheet-nginx:$(GIT_HASH) 
+	docker push $(DOCKER_REGISTRY)contact-sheet-nginx:$(GIT_HASH)
 	docker tag contact-sheet-api:$(GIT_HASH) $(DOCKER_REGISTRY)contact-sheet-api:$(GIT_HASH)
 	docker push $(DOCKER_REGISTRY)contact-sheet-api:$(GIT_HASH)
 
@@ -61,6 +61,6 @@ init-helm:
 	helm upgrade --install --set namespace=$(HELM_NAMESPACE) local-env ./helm/local-setup
 	helm upgrade -n $(HELM_NAMESPACE) --install -f ./helm/mongodb/values.yaml mongodb-local bitnami/mongodb
 
-# Upgrade current chart 
+# Upgrade current chart
 deploy-local: publish
 	helm upgrade -n $(HELM_NAMESPACE) --version=$(CHART_VERSION) --install --set image.tag=$(GIT_HASH) deployment ./helm/contact-sheet

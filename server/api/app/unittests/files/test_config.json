@@ -1,0 +1,14 @@
+{
+    "storage_list": [
+        {
+            "id": "id_test",
+            "type": "AWS_S3",
+            "config": {
+                "key" : {
+                    "from_env": "TEST_KEY"
+                },
+                "bucket" : "bucket_test"
+            }
+        }
+    ]
+}

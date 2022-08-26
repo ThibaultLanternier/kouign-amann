@@ -1,3 +1,5 @@
+import os
+
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
@@ -98,6 +100,27 @@ class Storage:
 class StorageConfig(Storage):
     type: StorageType
     config: Dict[str, str]
+
+    def __post_init__(self):
+        if not isinstance(self.type, StorageType):
+            if self.type not in StorageType._member_map_:
+                raise Exception(f"Unknown storage type {self.type}")
+
+            self.type = StorageType[self.type]
+
+        for key in self.config.keys():
+            value = self.config[key]
+
+            if isinstance(value, dict) and value.get("from_env") is not None:
+                env_key = value["from_env"]
+                value = os.getenv(env_key)
+                if value is None:
+                    raise Exception(f"Environment variable {env_key} is None")
+
+                self.config[key] = value
+
+            if not isinstance(value, str):
+                raise Exception(f"Config key {key} is of type {type(value)}, only string are allowed")
 
 
 class BackupException(Exception):

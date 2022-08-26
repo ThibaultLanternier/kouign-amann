@@ -1,0 +1,17 @@
+{
+    "storage_list" : [
+        {
+            "id": "xxxx",
+            "type": "AWS_S3",
+            "config": {
+                "key" : {
+                    "from_env": "AWS_KEY"
+                },
+                "secret" : {
+                    "from_env": "AWS_SECRET"
+                },
+                "bucket" : "picture.backup.test"
+            }
+        }
+    ]
+}
