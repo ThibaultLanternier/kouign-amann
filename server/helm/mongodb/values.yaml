@@ -5,3 +5,9 @@ auth:
 
 service:
   type: NodePort
+
+volumePermissions:
+  enabled: true # If sets to false creating the datadir fails because of permissions
+
+persistence:
+    size: 50Gi
