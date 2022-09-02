@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: gluster-pv
+  namespace: local
+spec:
+  capacity:
+    storage: 50Gi
+  accessModes:
+  - ReadWriteOnce
+  glusterfs:
+    endpoints: gluster-cluster
+    path: /volume50g
+    readOnly: false
+  persistentVolumeReclaimPolicy: Retain
