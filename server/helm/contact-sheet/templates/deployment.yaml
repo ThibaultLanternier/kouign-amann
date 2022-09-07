@@ -27,6 +27,10 @@ spec:
       serviceAccountName: {{ include "contact-sheet.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      volumes:
+        - name: storage-config
+          configMap:
+            name: {{ include "contact-sheet.fullname" . }}
       containers:
         - name: {{ .Chart.Name }}-nginx
           securityContext:
@@ -42,6 +46,10 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}contact-sheet-api:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          volumeMounts:
+            - name: storage-config
+              mountPath: /usr/app/storage.json
+              subPath: storage.json
           env:
           - name: AWS_KEY
             valueFrom:

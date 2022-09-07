@@ -4,7 +4,7 @@ GIT_HASH = $(shell git rev-parse --short HEAD)
 USER_ID = $(shell id -u)
 PROJECT = contact-sheet
 #DOCKER_REGISTRY = cloud.canister.io:5000/thibaultlanternier/
-DOCKER_REGISTRY = localhost:32000/thibaultlanternier/
+DOCKER_REGISTRY = 192.168.1.200:32000/thibaultlanternier/
 CHART_VERSION = 1.0.0
 HELM_NAMESPACE = local
 

@@ -8,5 +8,5 @@ shell: init
 
 build: init
 	docker-compose -p contact-sheet run react-app yarn build
-	rm -R ../nginx/react
+	rm -f -R ../nginx/react
 	cp -R app/build ../nginx/react
