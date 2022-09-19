@@ -8,9 +8,40 @@ from src.app.models import (Backup, BackupRequest, BackupStatus, File, Picture,
                             StorageType)
 from src.app.ports import (AbstractBackupManager, AbstractPictureManager,
                            MissingPictureException)
+from src.http.resources import GoogleAuthAccessTokenAnswer
 from src.http.server import get_flask_app
 
 FAKE_CURRENT_TIME = datetime(1980, 11, 30, tzinfo=timezone.utc)
+
+class TestSchema(unittest.TestCase):
+    def test_google_auth_answer(self):
+        input = {
+            "access_token": "ya29.",
+            "expires_in": 3599,
+            "refresh_token": "1//03IcJ",
+            "scope": [
+                "https://www.googleapis.com/auth/photoslibrary.readonly",
+                "https://www.googleapis.com/auth/photoslibrary.appendonly"
+            ],
+            "token_type": "Bearer",
+            "expires_at": 1663104574.3838615
+        }
+
+        GoogleAuthAccessTokenAnswer().load(input)
+
+    def test_google_auth_answer_no_refresh(self):
+        input = {
+            "access_token": "ya29.",
+            "expires_in": 3599,
+            "scope": [
+                "https://www.googleapis.com/auth/photoslibrary.readonly",
+                "https://www.googleapis.com/auth/photoslibrary.appendonly"
+            ],
+            "token_type": "Bearer",
+            "expires_at": 1663104574.3838615
+        }
+
+        GoogleAuthAccessTokenAnswer().load(input)
 
 
 class TestServer(unittest.TestCase):
@@ -370,7 +401,7 @@ class TestServer(unittest.TestCase):
             "storage_id": "BBB",
             "file_path": "/file",
             "picture_hash": "acde",
-            "status": "PENDING"
+            "status": "PENDING",
         }
 
         backup_request = BackupRequest(**backup_request_dict)
@@ -390,7 +421,7 @@ class TestServer(unittest.TestCase):
             "storage_id": "BBB",
             "file_path": "/file",
             "picture_hash": "acde",
-            "status": "PENDING"
+            "status": "PENDING",
         }
 
         mock_picture = MagicMock(spec=Picture)
@@ -410,7 +441,7 @@ class TestServer(unittest.TestCase):
             "storage_id": "BBB",
             "file_path": "/file",
             "picture_hash": "acde",
-            "status": "PENDING_DELETE"
+            "status": "PENDING_DELETE",
         }
 
         mock_picture = MagicMock(spec=Picture)
@@ -430,7 +461,7 @@ class TestServer(unittest.TestCase):
             "storage_id": "BBB",
             "file_path": "/file",
             "picture_hash": "acde",
-            "status": "DONE"
+            "status": "DONE",
         }
 
         mock_picture = MagicMock(spec=Picture)
@@ -440,14 +471,13 @@ class TestServer(unittest.TestCase):
 
         self.assertEqual(400, response.status_code)
 
-
     def test_crawler_record_file_save_error(self):
         backup_request_dict = {
             "crawler_id": "AAA",
             "storage_id": "BBB",
             "file_path": "/file",
             "picture_hash": "acde",
-            "status": "PENDING"
+            "status": "PENDING",
         }
 
         mock_picture = MagicMock(spec=Picture)
@@ -467,7 +497,7 @@ class TestServer(unittest.TestCase):
             "storage_id": "BBB",
             "file_path": "/file",
             "picture_hash": "acde",
-            "status": "PENDING"
+            "status": "PENDING",
         }
 
         self.mock_app.get_picture.return_value = None

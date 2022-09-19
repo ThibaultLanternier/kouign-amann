@@ -10,6 +10,8 @@ flask-restful = "*"
 requests = "*"
 flask-cors = "*"
 gunicorn = "*"
+google-auth-oauthlib = "*"
+marshmallow = "*"
 
 [dev-packages]
 pdbpp = "*"

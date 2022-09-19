@@ -1,7 +1,6 @@
 import os
-
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any, Dict, List, Tuple
 
@@ -69,6 +68,7 @@ class File:
     def __ge__(self, other) -> bool:
         return self > other or self == other
 
+
 @dataclass
 class BackupRequest:
     crawler_id: str
@@ -76,6 +76,7 @@ class BackupRequest:
     file_path: str
     picture_hash: str
     status: BackupStatus
+
 
 @dataclass
 class Backup:
@@ -120,7 +121,9 @@ class StorageConfig(Storage):
                 self.config[key] = value
 
             if not isinstance(value, str):
-                raise Exception(f"Config key {key} is of type {type(value)}, only string are allowed")
+                raise Exception(
+                    f"Config key {key} is of type {type(value)}, only string are allowed"
+                )
 
 
 class BackupException(Exception):
@@ -235,3 +238,28 @@ class PictureCount:
     count: int
     start_date: datetime
     end_date: datetime
+
+@dataclass
+class GoogleAccessToken:
+    access_token: str
+    scope: List[str]
+    token_type: str
+    expires_at: datetime
+
+
+def google_access_token_factory(input: Dict, now: datetime) -> GoogleAccessToken:
+    if "refresh_token" in input:
+        del input["refresh_token"]
+
+    expiry_date = now + timedelta(seconds=input["expires_in"])
+    input["expires_at"] = expiry_date
+
+    del input["expires_in"]
+
+    return GoogleAccessToken(**input)
+
+@dataclass
+class GoogleRefreshToken:
+    refresh_token: str
+    scope: List[str]
+    issued_at: datetime

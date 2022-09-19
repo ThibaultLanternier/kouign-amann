@@ -1,4 +1,4 @@
-# To launch shell environment and install requirements 
+# To launch shell environment and install requirements
 ```bash
 docker-compose run picture-server-dev
 

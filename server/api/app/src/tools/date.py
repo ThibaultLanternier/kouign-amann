@@ -8,6 +8,9 @@ MONGODB_ISO_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
 class DateTimeFormatException(Exception):
     pass
 
+class DateTimeUtilities:
+    def get_expiration_datetime(self, duration_s: int, now: datetime) -> datetime:
+        raise NotImplementedError()
 
 class DateTimeConverter:
     def from_string(self, input: str) -> datetime:

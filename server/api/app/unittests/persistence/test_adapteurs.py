@@ -1,14 +1,82 @@
-from bdb import set_trace
 import unittest
 from datetime import datetime, timedelta, timezone
 
 from pymongo import MongoClient
 
-from src.app.models import (Backup, BackupRequest, BackupStatus, File, Picture,
-                            PictureCount, PictureInfo)
-from src.persistence.adapteurs import MongoPersistence
+from src.app.models import (Backup, BackupRequest, BackupStatus, File,
+                            GoogleAccessToken, GoogleRefreshToken, Picture, PictureCount,
+                            PictureInfo)
+from src.persistence.adapteurs import (MongoCredentialsPersistence,
+                                       MongoPersistence)
 
 CURRENT_TIME = datetime(1980, 11, 30, tzinfo=timezone.utc)
+
+
+class TestMongoCredentialsPersistence(unittest.TestCase):
+    def setUp(self):
+        self.client = MongoClient("mongodb-test", 27017, tz_aware=True)
+        self.db_name = "credentials-test"
+        self.persistence = MongoCredentialsPersistence(
+            client=self.client, db_name=self.db_name
+        )
+
+    def test_get_current_state(self):
+        self.assertIsNotNone(self.persistence.get_current_state())
+
+    def test_retrieve_record_refresh_token(self):
+        self.assertIsNone(self.persistence.get_refresh_token())
+
+        token_1 = GoogleRefreshToken(
+            refresh_token="aaa",
+            scope=[],
+            issued_at=datetime(1980,11,1,13,15,1, tzinfo=timezone.utc)
+        )
+
+        token_2 = GoogleRefreshToken(
+            refresh_token="aaa",
+            scope=[],
+            issued_at=datetime(1980,11,1,13,14,1, tzinfo=timezone.utc)
+        )
+
+        self.persistence.record_refresh_token(token_1)
+        self.persistence.record_refresh_token(token_2)
+
+        self.assertEqual(token_1, self.persistence.get_refresh_token())
+
+    def test_retrieve_record_access_token(self):
+        self.assertIsNone(self.persistence.get_access_token())
+
+        token_1 = GoogleAccessToken(
+            **{
+                "access_token": "ya29",
+                "scope": [
+                    "https://www.googleapis.com/auth/photoslibrary.readonly",
+                    "https://www.googleapis.com/auth/photoslibrary.appendonly",
+                ],
+                "token_type": "Bearer",
+                "expires_at": datetime(1980,11,1,13,15,1, tzinfo=timezone.utc),
+            }
+        )
+
+        token_2 = GoogleAccessToken(
+            **{
+                "access_token": "wZ42",
+                "scope": [
+                    "https://www.googleapis.com/auth/photoslibrary.readonly",
+                    "https://www.googleapis.com/auth/photoslibrary.appendonly",
+                ],
+                "token_type": "Bearer",
+                "expires_at": datetime(1980,11,1,13,12,1, tzinfo=timezone.utc),
+            }
+        )
+
+        self.persistence.record_access_token(token_1)
+        self.persistence.record_access_token(token_2)
+
+        self.assertEqual(token_1, self.persistence.get_access_token())
+
+    def tearDown(self):
+        self.client.drop_database(self.db_name)
 
 
 class TestMongoPersistence(unittest.TestCase):
@@ -27,7 +95,7 @@ class TestMongoPersistence(unittest.TestCase):
             storage_id=backup.storage_id,
             file_path=backup.file_path,
             picture_hash=picture.hash,
-            status=backup.status
+            status=backup.status,
         )
 
     def _create_file(self) -> File:
@@ -56,7 +124,7 @@ class TestMongoPersistence(unittest.TestCase):
     def setUp(self):
         self.client = MongoClient("mongodb-test", 27017, tz_aware=True)
         self.db_name = "test-db"
-        #self.client.drop_database(self.db_name)
+        # self.client.drop_database(self.db_name)
 
         self.persistence = MongoPersistence(client=self.client, db_name=self.db_name)
 
@@ -92,7 +160,7 @@ class TestMongoPersistence(unittest.TestCase):
         self.test_picture.backup_list = [
             self._create_backup(status=BackupStatus.DONE),
             pending_backup,
-            pending_delete_backup
+            pending_delete_backup,
         ]
 
         expected_backup_request = self._create_backup_request(
@@ -108,7 +176,9 @@ class TestMongoPersistence(unittest.TestCase):
         )
         self.maxDiff = None
 
-        self.assertEqual([expected_backup_request, expected_backup_delete_request], backup_list)
+        self.assertEqual(
+            [expected_backup_request, expected_backup_delete_request], backup_list
+        )
 
     def test_get_pending_backup_limit(self):
         self.test_picture.backup_list = [

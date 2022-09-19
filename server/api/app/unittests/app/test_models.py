@@ -1,12 +1,11 @@
 import unittest
-import os
-
 from dataclasses import asdict
 from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
 from src.app.models import (Backup, BackupException, BackupStatus, DictFactory,
-                            File, Picture, PictureInfo, Storage, StorageConfig, StorageType)
+                            File, GoogleAccessToken, Picture, PictureInfo, Storage, StorageConfig,
+                            StorageType, google_access_token_factory)
 
 TEST_TIME = datetime(1980, 11, 30, tzinfo=timezone.utc)
 OTHER_TEST_TIME = datetime(1980, 11, 30, 12, tzinfo=timezone.utc)
@@ -290,6 +289,28 @@ class TestFile(unittest.TestCase):
             [self.large_file_c, self.small_file_e, self.small_file_a], test_list
         )
 
+class TestGoogleAccessToken(unittest.TestCase):
+    def test_google_access_token_factory(self):
+        input = {
+            "access_token": "ya29",
+            "expires_in": 35,
+            "scope": [
+                "https://toto"
+            ],
+            "token_type": "Bearer",
+            "expires_at": 1663104574.3838615
+        }
+        now = datetime(1980,11,30,15,0,0, tzinfo=timezone.utc)
+        expected_expiry = datetime(1980,11,30,15,0,35, tzinfo=timezone.utc)
+
+        result = google_access_token_factory(input, now)
+
+        self.assertEqual(GoogleAccessToken(
+            access_token="ya29",
+            scope=["https://toto"],
+            token_type="Bearer", expires_at=expected_expiry
+        ), result)
+
 class TestStorageConfig(unittest.TestCase):
     @patch("os.getenv")
     def test_missing_env_variable(self, mock_env):
@@ -299,41 +320,32 @@ class TestStorageConfig(unittest.TestCase):
             input = {
                 "id": "id_test",
                 "type": "AWS_S3",
-                "config": {
-                    "key" : "key",
-                    "bucket" : {
-                        "from_env" : "ENV_TOTO"
-                    }
-                }
+                "config": {"key": "key", "bucket": {"from_env": "ENV_TOTO"}},
             }
 
             StorageConfig(**input)
 
-        self.assertRaisesRegex(Exception, "Environment variable ENV_TOTO", missing_env_variable)
+        self.assertRaisesRegex(
+            Exception, "Environment variable ENV_TOTO", missing_env_variable
+        )
 
     def test_incorrect_dict_in_config(self):
         def incorrect_dict_in_config():
             input = {
                 "id": "id_test",
                 "type": "AWS_S3",
-                "config": {
-                    "key": {"sub_key":"sub_value"}
-                }
+                "config": {"key": {"sub_key": "sub_value"}},
             }
 
             StorageConfig(**input)
 
-        self.assertRaisesRegex(Exception, "only string are allowed",incorrect_dict_in_config)
+        self.assertRaisesRegex(
+            Exception, "only string are allowed", incorrect_dict_in_config
+        )
 
     def test_int_in_config(self):
         def int_in_config():
-            input = {
-                "id": "id_test",
-                "type": "AWS_S3",
-                "config": {
-                    "key_int": 1245
-                }
-            }
+            input = {"id": "id_test", "type": "AWS_S3", "config": {"key_int": 1245}}
 
             StorageConfig(**input)
 
@@ -341,15 +353,13 @@ class TestStorageConfig(unittest.TestCase):
 
     def test_incorrect_storage_type(self):
         def incorrect_storage_type_init():
-            input = {
-                "id": "id_test",
-                "type": "NIMPORTE_QUOI",
-                "config": {}
-            }
+            input = {"id": "id_test", "type": "NIMPORTE_QUOI", "config": {}}
 
             StorageConfig(**input)
 
-        self.assertRaisesRegex(Exception, "Unknown storage type NIMPORTE_QUOI",incorrect_storage_type_init)
+        self.assertRaisesRegex(
+            Exception, "Unknown storage type NIMPORTE_QUOI", incorrect_storage_type_init
+        )
 
     @patch("os.getenv")
     def test_ok(self, mock_getenv):
@@ -358,12 +368,7 @@ class TestStorageConfig(unittest.TestCase):
         input = {
             "id": "id_test",
             "type": "AWS_S3",
-            "config": {
-                "key" : "key",
-                "bucket" : {
-                    "from_env" : "ENV_TOTO"
-                }
-            }
+            "config": {"key": "key", "bucket": {"from_env": "ENV_TOTO"}},
         }
 
         result = StorageConfig(**input)
@@ -371,9 +376,6 @@ class TestStorageConfig(unittest.TestCase):
         self.assertEqual("id_test", result.id)
         self.assertEqual(StorageType.AWS_S3, result.type)
 
-        expected_config = {
-            "key": "key",
-            "bucket": "toto"
-        }
+        expected_config = {"key": "key", "bucket": "toto"}
 
         self.assertEqual(expected_config, result.config)

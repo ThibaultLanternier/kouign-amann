@@ -2,7 +2,30 @@ from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
 from typing import List, Union
 
-from src.app.models import BackupRequest, Picture, PictureCount
+from src.app.models import (BackupRequest, GoogleAccessToken, GoogleRefreshToken, Picture,
+                            PictureCount)
+
+
+class CredentialsPersistencePort(ABC):
+    @abstractmethod
+    def record_refresh_token(self, refresh_token: GoogleRefreshToken):
+        pass
+
+    @abstractmethod
+    def get_refresh_token(self) -> GoogleRefreshToken:
+        pass
+
+    @abstractmethod
+    def record_access_token(self, creds: GoogleAccessToken):
+        pass
+
+    @abstractmethod
+    def get_access_token(self) -> GoogleAccessToken:
+        pass
+
+    @abstractmethod
+    def get_current_state(self) -> str:
+        pass
 
 
 class PersistencePort(ABC):

@@ -1,13 +1,50 @@
 from dataclasses import asdict
 from datetime import datetime, timedelta, timezone
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Tuple
 
-from pymongo import ASCENDING, MongoClient
+from bson.objectid import ObjectId
+from pymongo import ASCENDING, DESCENDING, MongoClient
 
-from src.app.models import (Backup, BackupRequest, BackupStatus, File, Picture, PictureCount,
+from src.app.models import (Backup, BackupRequest, BackupStatus, File,
+                            GoogleAccessToken, GoogleRefreshToken, Picture, PictureCount,
                             PictureInfo)
-from src.persistence.ports import PersistencePort
+from src.persistence.ports import CredentialsPersistencePort, PersistencePort
 from src.tools.date import DateTimeConverter, DateTimeFormatException
+
+
+class MongoCredentialsPersistence(CredentialsPersistencePort):
+    def __init__(self, client: MongoClient, db_name: str = "credentials"):
+        self.client = client
+        self.db = self.client[db_name]
+        self.creds_id = ObjectId(b"123456789012")
+
+    def record_refresh_token(self, refresh_token: GoogleRefreshToken):
+        self.db.refresh_tokens.insert_one(asdict(refresh_token))
+
+    def get_refresh_token(self) -> GoogleRefreshToken:
+        refresh_token_list = self.db.refresh_tokens.find().sort("issued_at", DESCENDING)
+
+        for refresh_token in refresh_token_list:
+            del refresh_token["_id"]
+            return GoogleRefreshToken(**refresh_token)
+
+        return None
+
+    def record_access_token(self, creds: GoogleAccessToken):
+        self.db.access_tokens.insert_one(asdict(creds))
+
+    def get_access_token(self) -> GoogleAccessToken:
+        access_token_list = self.db.access_tokens.find().sort("expires_at", DESCENDING)
+
+        for access_token in access_token_list:
+            del access_token['_id']
+            return GoogleAccessToken(**access_token)
+
+        return None
+
+    def get_current_state(self) -> str:
+        # Temporary : to be changed when managing user session
+        return "Ltd9crg0zzdvXyOBqfklJkwC5jIBil"
 
 
 class MongoPersistence(PersistencePort):
@@ -143,7 +180,7 @@ class MongoPersistence(PersistencePort):
             {
                 "$match": {
                     "backup_list.crawler_id": crawler_id,
-                    "backup_list.status": { "$in": ["PENDING","PENDING_DELETE"]},
+                    "backup_list.status": {"$in": ["PENDING", "PENDING_DELETE"]},
                 }
             },
             {
@@ -152,7 +189,7 @@ class MongoPersistence(PersistencePort):
                     "storage_id": "$backup_list.storage_id",
                     "file_path": "$backup_list.file_path",
                     "picture_hash": "$hash",
-                    "status": "$backup_list.status"
+                    "status": "$backup_list.status",
                 }
             },
             {"$limit": limit},
@@ -163,6 +200,9 @@ class MongoPersistence(PersistencePort):
         return [self._to_backup_request(backup) for backup in backup_list_cursor]
 
 
-def get_mongo_persistence(host: str, port: int = 27017) -> PersistencePort:
+def get_mongo_persistences(host: str, port: int = 27017) -> Tuple[PersistencePort, CredentialsPersistencePort]:
     client = MongoClient(host=host, port=port, tz_aware=True)
-    return MongoPersistence(client=client, db_name="pictures-manager")
+    return (
+        MongoPersistence(client=client, db_name="pictures-manager"),
+        MongoCredentialsPersistence(client=client, db_name="pictures-manager")
+    )

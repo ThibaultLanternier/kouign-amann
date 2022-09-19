@@ -1,11 +1,12 @@
 import json
-
 from typing import Dict, List
+
 from src.app.models import StorageConfig
+
 
 class ConfigManager:
     def __init__(self, config_file: str) -> None:
-        with open(config_file, 'r') as config_file:
+        with open(config_file, "r") as config_file:
             self._config = json.load(config_file)
 
     def storage_config_list(self) -> List[Dict]:

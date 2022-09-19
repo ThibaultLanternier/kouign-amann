@@ -12,7 +12,7 @@ services:
       target: base
     user: picture
     volumes:
-      - ./app:/usr/app   
+      - ./api/app:/usr/app
     command: bash
   api-dev:
     build:
@@ -25,10 +25,10 @@ services:
     depends_on:
       - mongodb
       - mongodb-test
-    env_file: 
+    env_file:
       - ./api/dev.env
-    command: 
-      - python 
+    command:
+      - python
       - main.py
   react-dev:
     build:
@@ -36,10 +36,9 @@ services:
     ports:
       - "3000:3000"
       - "9229:9229"
-    environment: 
-      REACT_APP_API_URL: http://localhost:5000
+    environment:
+      REACT_APP_API_URL: https://app.kouignamann.bzh:5000
     volumes:
       - ./react/app:/usr/app
     depends_on:
       - api-dev
-  
