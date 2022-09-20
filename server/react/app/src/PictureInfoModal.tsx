@@ -15,8 +15,8 @@ const PictureInfoModal : React.FunctionComponent<IPictureInfoProps> = (props) =>
                 <Modal.Body>
                     <p><b>Hash:</b>&nbsp;{props.pictureInfo.hash}</p>
                     <Image
-                        title={props.pictureInfo.info.creation_time}  
-                        alt={props.pictureInfo.hash} 
+                        title={props.pictureInfo.info.creation_time}
+                        alt={props.pictureInfo.hash}
                         src={'data:image/jpeg;base64,' +  props.pictureInfo.info.thumbnail}
                         style={{maxWidth: "100%"}}
                     />
@@ -31,7 +31,7 @@ const PictureInfoModal : React.FunctionComponent<IPictureInfoProps> = (props) =>
                     <p><b>Backup:</b></p>
                     <ul>
                     {props.pictureInfo.backup_list.map(backup => (
-                        <li>{backup.crawler_id} - {backup.status}</li>
+                        <li>Crawler: {backup.crawler_id} - Storage: {backup.storage_id} - {backup.status}</li>
                     ))}
                     </ul>
                 </Modal.Body>
