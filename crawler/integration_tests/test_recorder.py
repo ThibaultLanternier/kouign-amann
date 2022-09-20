@@ -5,7 +5,7 @@ from app.controllers.picture import PictureData
 from app.controllers.recorder import PictureRESTRecorder
 from app.models.picture import PictureOrientation
 
-BASE_URL = "http://localhost:5000"
+BASE_URL = "http://app.kouignamann.bzh:5000"
 
 
 class TestPictureRESTRecorder(unittest.TestCase):

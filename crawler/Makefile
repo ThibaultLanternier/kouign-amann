@@ -13,13 +13,11 @@ style:
 	flake8 app/ tests/ picture-crawler.py
 	mypy --ignore-missing-imports picture-crawler.py
 
-test: init test-unit test-integration
-
 test-unit:
 	python -m unittest discover tests -v
 
 test-integration:
-	TEST_AWS_KEY=$(AWS_KEY) TEST_AWS_SECRET=$(AWS_SECRET) python -m unittest discover integration_tests
+	TEST_AWS_KEY=$(AWS_KEY) TEST_AWS_SECRET=$(AWS_SECRET) GOOGLE_AUTH_ACCESS_TOKEN=$(GOOGLE_AUTH_ACCESS_TOKEN) python -m unittest discover integration_tests
 
 clean:
 	pipenv --rm
