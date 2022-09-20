@@ -90,6 +90,7 @@ class Backup:
 class StorageType(Enum):
     AWS_GLACIER = 0
     AWS_S3 = 1
+    GOOGLE_PHOTOS = 2
 
 
 @dataclass

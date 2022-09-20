@@ -37,7 +37,7 @@ services:
       - "3000:3000"
       - "9229:9229"
     environment:
-      REACT_APP_API_URL: https://app.kouignamann.bzh:5000
+      REACT_APP_API_URL: http://app.kouignamann.bzh:5000
     volumes:
       - ./react/app:/usr/app
     depends_on:

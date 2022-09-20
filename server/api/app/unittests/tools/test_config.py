@@ -26,3 +26,14 @@ class TestConfigManager(unittest.TestCase):
 
         self.assertEqual(expected_list, actual_list)
         mock_getenv.assert_called_once_with("TEST_KEY")
+
+    def test_storage_list(self):
+        storage_list = [
+            StorageConfig(**{
+                "id": "id_google_photos",
+                "type": "GOOGLE_PHOTOS",
+                "config": {"config_file":"google.json"},
+            })
+        ]
+
+        self.assertEqual("google.json",ConfigManager.get_google_photos_config_file(storage_list=storage_list))

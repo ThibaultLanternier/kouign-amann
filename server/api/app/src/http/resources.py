@@ -16,6 +16,9 @@ from src.persistence.ports import CredentialsPersistencePort
 OAUTH_HOST = "https://app.kouignamann.bzh:5000"
 GOOGLE_OAUTH_SECRET_FILENAME = "google_api_oauth.json"
 
+def get_google_oauth_secret_filename() -> str:
+    return current_app.config["google_auth_config_file"]
+
 def get_picture_manager() -> AbstractPictureManager:
     return current_app.config["picture_manager"]
 
@@ -246,8 +249,11 @@ GOOGLE_PHOTO_API_SCOPES = [
 ]
 class Authentification(Resource):
     def get(self):
+        if get_google_oauth_secret_filename() is None:
+            return "Google Photos not enabled", 404
+
         flow = Flow.from_client_secrets_file(
-            "google_api_oauth.json",
+            get_google_oauth_secret_filename(),
             scopes=GOOGLE_PHOTO_API_SCOPES,
             state=get_credentials_storage().get_current_state()
         )
@@ -262,10 +268,13 @@ class Authentification(Resource):
 
 class Oauth(Resource):
     def get(self):
+        if get_google_oauth_secret_filename() is None:
+            return "Google Photos not enabled", 404
+
         credentials_storage = get_credentials_storage()
 
         flow = Flow.from_client_secrets_file(
-            GOOGLE_OAUTH_SECRET_FILENAME,
+            get_google_oauth_secret_filename(),
             scopes=GOOGLE_PHOTO_API_SCOPES,
             state=credentials_storage.get_current_state()
         )

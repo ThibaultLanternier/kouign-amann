@@ -15,6 +15,9 @@ app = get_flask_app()
 
 storage_list = ConfigManager(STORAGE_CONFIG).storage_config_list()
 
+google_auth_config_file = ConfigManager.get_google_photos_config_file(storage_list=storage_list)
+app.config["google_auth_config_file"] = google_auth_config_file
+
 persistence, credentials_storage = get_mongo_persistences(host=MONGO_HOST)
 picture_manager = PictureManager(persistence=persistence)
 backup_manager = BackupManager(
