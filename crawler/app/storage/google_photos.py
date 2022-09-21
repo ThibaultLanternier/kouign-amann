@@ -8,10 +8,18 @@ from app.storage.basic import AbstractStorage
 class GooglePhotosAPIException(Exception):
     pass
 
+class GooglePhotosAPIAuthenficationException(GooglePhotosAPIException):
+    pass
 
 class GooglePhotosAPIClient:
     def __init__(self, access_token: str) -> None:
         self._access_token = access_token
+
+    def _check_authentication(self, res: requests.Response) -> None:
+        if res.status_code == 401:
+            raise GooglePhotosAPIAuthenficationException("Access Token is incorrect")
+
+        return
 
     def _upload_bytes(self, picture_file_path: str) -> str:
         with open(picture_file_path, "rb") as f:
@@ -26,6 +34,9 @@ class GooglePhotosAPIClient:
                     "X-Goog-Upload-Protocol": "raw",
                 },
             )
+
+            self._check_authentication(res)
+
             if res.status_code == 200:
                 return res.text
 
@@ -50,6 +61,8 @@ class GooglePhotosAPIClient:
             },
         )
 
+        self._check_authentication(res)
+
         if res.status_code == 200:
             return res.json()
 
@@ -72,6 +85,8 @@ class GooglePhotosAPIClient:
             },
         )
 
+        self._check_authentication(res)
+
         if res.status_code == 200:
             return True
 
@@ -84,6 +99,8 @@ class GooglePhotosAPIClient:
                 "Authorization": f"Bearer {self._access_token}",
             },
         )
+
+        self._check_authentication(res)
 
         if res.status_code == 400:
             return None
