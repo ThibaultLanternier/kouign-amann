@@ -10,7 +10,8 @@ from app.controllers.recorder import PictureRESTRecorder
 from app.models.backup import BackupRequest, BackupStatus
 from app.processor import (BackupProcessor, ParalellPictureProcessor,
                            ParallelBackupProcessor, PictureProcessor)
-from app.storage.basic import AbstractStorage, StorageException, StorageFactory
+from app.storage.basic import AbstractStorage, StorageException
+from app.storage.factory import StorageFactory
 
 
 class TestPictureProcessor(unittest.TestCase):

@@ -11,7 +11,8 @@ from app.controllers.backup import AbstractBackupHandler
 from app.controllers.picture import AbstractPictureAnalyzer
 from app.controllers.recorder import PictureRESTRecorder
 from app.models.backup import BackupRequest, BackupStatus
-from app.storage.basic import StorageException, StorageFactory
+from app.storage.basic import StorageException
+from app.storage.factory import StorageFactory
 from app.tools.metrics import MetricRecorder
 
 

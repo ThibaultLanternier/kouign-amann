@@ -3,7 +3,7 @@ import unittest
 import uuid
 from typing import List
 
-from app.storage.basic import S3Client, S3Content
+from app.storage.aws_s3 import S3Client, S3Content
 
 TEST_PICTURE = "tests/files/test.txt"
 TEST_BUCKET = "picture.backup.test"

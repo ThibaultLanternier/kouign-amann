@@ -7,10 +7,10 @@ from unittest.mock import MagicMock
 from app.controllers.backup import AbstractStorageConfigProvider
 from app.controllers.picture import PictureAnalyzerFactory
 from app.models.backup import StorageConfig, StorageType
-from app.storage.basic import (AbstractS3Client, PictureHashMissmatch,
-                               PictureWithNoHash, S3BackupStorage,
-                               SimpleFileStorage, StorageFactory,
-                               StorageFactoryException)
+from app.storage.aws_s3 import AbstractS3Client, S3BackupStorage
+from app.storage.basic import (PictureHashMissmatch, PictureWithNoHash,
+                               SimpleFileStorage)
+from app.storage.factory import StorageFactory, StorageFactoryException
 
 TEST_PICTURE = "tests/files/test-canon-eos70D-exif.jpg"
 TEST_BUCKET = "picture.backup.test"
