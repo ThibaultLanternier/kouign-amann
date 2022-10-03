@@ -2,10 +2,11 @@ from dataclasses import asdict
 from datetime import datetime, timedelta, timezone
 
 import flask
+import requests
 from flask import current_app, request
 from flask_restful import Resource
 from google_auth_oauthlib.flow import Flow
-from marshmallow import Schema, fields
+from marshmallow import Schema, fields, post_load
 
 from src.app.models import (BackupRequest, BackupStatus, DictFactory, File, GoogleAccessToken, GoogleRefreshToken,
                             PictureInfo, google_access_token_factory)
@@ -47,6 +48,17 @@ class PictureCount(Resource):
 class DateRangeSchema(Schema):
     start = fields.AwareDateTime()
     end = fields.AwareDateTime()
+
+class GoogleRefreshTokenAnswer(Schema):
+    access_token = fields.String()
+    expires_in = fields.Integer()
+    token_type = fields.String()
+    scope = fields.String()
+
+    @post_load()
+    def convert_scope_to_list(self, data, **kwargs):
+        data["scope"] = data["scope"].split(" ")
+        return data
 
 class GoogleAuthAccessTokenAnswer(Schema):
     access_token = fields.String()
@@ -299,3 +311,45 @@ class Oauth(Resource):
         credentials_storage.record_access_token(access_token)
 
         return result, 200
+
+class AccessToken(Resource):
+    def get(self):
+        credentials_storage = get_credentials_storage()
+
+        return asdict(credentials_storage.get_access_token(), dict_factory=DictFactory), 200
+
+    def patch(self):
+        credentials_storage = get_credentials_storage()
+
+        flow = Flow.from_client_secrets_file(
+            get_google_oauth_secret_filename(),
+            scopes=GOOGLE_PHOTO_API_SCOPES,
+            state=credentials_storage.get_current_state()
+        )
+        client_config = flow.client_config
+
+        refresh_token = credentials_storage.get_refresh_token().refresh_token
+
+        refresh_token_query = {
+            "client_id": client_config["client_id"],
+            "client_secret": client_config["client_secret"],
+            "refresh_token": refresh_token,
+            "grant_type": "refresh_token"
+        }
+
+        res = requests.post(
+            url= client_config["token_uri"],
+            json=refresh_token_query
+        )
+
+        res_json = res.json()
+
+        if res.status_code != 200:
+            return res_json, res.status_code
+
+        google_auth_answer = GoogleRefreshTokenAnswer().load(res_json)
+        access_token = google_access_token_factory(google_auth_answer, now=datetime.now(tz=timezone.utc))
+        credentials_storage.record_access_token(access_token)
+
+        return asdict(access_token, dict_factory=DictFactory), 200
+
