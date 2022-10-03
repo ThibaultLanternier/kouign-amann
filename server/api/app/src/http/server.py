@@ -4,11 +4,11 @@ from flask import Flask
 from flask_cors import CORS
 from flask_restful import Api
 
-from src.http.resources import (AccessToken, Authentification, CrawlerBackup, Oauth,
-                                Picture, PictureBackupRequest, PictureCount,
-                                PictureExists, PictureFile, PictureList,
-                                PicturePlanBackup, Ping, StorageConfig,
-                                UpdatedPictureList)
+from src.http.resources import (AccessToken, Authentification, CrawlerBackup,
+                                Oauth, Picture, PictureBackupRequest,
+                                PictureCount, PictureExists, PictureFile,
+                                PictureList, PicturePlanBackup, Ping,
+                                StorageConfig, UpdatedPictureList)
 
 
 def fake_encoder(o):
@@ -36,6 +36,6 @@ def get_flask_app():
     api.add_resource(StorageConfig, "/crawler/storage/<string:storage_id>")
     api.add_resource(Oauth, "/auth/google/callback")
     api.add_resource(Authentification, "/auth/google")
-    api.add_resource(AccessToken,"/auth/google/access_token")
+    api.add_resource(AccessToken, "/auth/google/access_token")
 
     return app

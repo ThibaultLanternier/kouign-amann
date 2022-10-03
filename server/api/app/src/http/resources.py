@@ -8,8 +8,9 @@ from flask_restful import Resource
 from google_auth_oauthlib.flow import Flow
 from marshmallow import Schema, fields, post_load
 
-from src.app.models import (BackupRequest, BackupStatus, DictFactory, File, GoogleAccessToken, GoogleRefreshToken,
-                            PictureInfo, google_access_token_factory)
+from src.app.models import (BackupRequest, BackupStatus, DictFactory, File,
+                            GoogleRefreshToken, PictureInfo,
+                            google_access_token_factory)
 from src.app.ports import (AbstractBackupManager, AbstractPictureManager,
                            MissingPictureException)
 from src.persistence.ports import CredentialsPersistencePort
@@ -17,8 +18,10 @@ from src.persistence.ports import CredentialsPersistencePort
 OAUTH_HOST = "https://app.kouignamann.bzh:5000"
 GOOGLE_OAUTH_SECRET_FILENAME = "google_api_oauth.json"
 
+
 def get_google_oauth_secret_filename() -> str:
     return current_app.config["google_auth_config_file"]
+
 
 def get_picture_manager() -> AbstractPictureManager:
     return current_app.config["picture_manager"]
@@ -27,8 +30,10 @@ def get_picture_manager() -> AbstractPictureManager:
 def get_backup_manager() -> AbstractBackupManager:
     return current_app.config["backup_manager"]
 
+
 def get_credentials_storage() -> CredentialsPersistencePort:
     return current_app.config["credentials_storage"]
+
 
 class Ping(Resource):
     def get(self):
@@ -49,6 +54,7 @@ class DateRangeSchema(Schema):
     start = fields.AwareDateTime()
     end = fields.AwareDateTime()
 
+
 class GoogleRefreshTokenAnswer(Schema):
     access_token = fields.String()
     expires_in = fields.Integer()
@@ -60,6 +66,7 @@ class GoogleRefreshTokenAnswer(Schema):
         data["scope"] = data["scope"].split(" ")
         return data
 
+
 class GoogleAuthAccessTokenAnswer(Schema):
     access_token = fields.String()
     expires_in = fields.Integer()
@@ -67,6 +74,7 @@ class GoogleAuthAccessTokenAnswer(Schema):
     scope = fields.List(fields.String())
     token_type = fields.String()
     expires_at = fields.Float()
+
 
 class PictureList(Resource):
     def get(self):
@@ -254,11 +262,14 @@ class StorageConfig(Resource):
         else:
             return asdict(storage_config, dict_factory=DictFactory), 200
 
+
 GOOGLE_PHOTO_API_SCOPES = [
     "https://www.googleapis.com/auth/photoslibrary.readonly",
     "https://www.googleapis.com/auth/photoslibrary.appendonly",
-    "https://www.googleapis.com/auth/photoslibrary.edit.appcreateddata"
+    "https://www.googleapis.com/auth/photoslibrary.edit.appcreateddata",
 ]
+
+
 class Authentification(Resource):
     def get(self):
         if get_google_oauth_secret_filename() is None:
@@ -267,7 +278,7 @@ class Authentification(Resource):
         flow = Flow.from_client_secrets_file(
             get_google_oauth_secret_filename(),
             scopes=GOOGLE_PHOTO_API_SCOPES,
-            state=get_credentials_storage().get_current_state()
+            state=get_credentials_storage().get_current_state(),
         )
         flow.redirect_uri = f"{OAUTH_HOST}/auth/google/callback"
 
@@ -288,7 +299,7 @@ class Oauth(Resource):
         flow = Flow.from_client_secrets_file(
             get_google_oauth_secret_filename(),
             scopes=GOOGLE_PHOTO_API_SCOPES,
-            state=credentials_storage.get_current_state()
+            state=credentials_storage.get_current_state(),
         )
 
         flow.redirect_uri = f"{OAUTH_HOST}/auth/google/callback"
@@ -300,23 +311,29 @@ class Oauth(Resource):
 
         if "refresh_token" in google_auth_answer:
             token = GoogleRefreshToken(
-                refresh_token=google_auth_answer['refresh_token'],
-                scope=google_auth_answer['scope'],
-                issued_at=datetime.now(tz=timezone.utc)
+                refresh_token=google_auth_answer["refresh_token"],
+                scope=google_auth_answer["scope"],
+                issued_at=datetime.now(tz=timezone.utc),
             )
             credentials_storage.record_refresh_token(refresh_token=token)
 
-        access_token = google_access_token_factory(google_auth_answer, now=datetime.now(tz=timezone.utc))
+        access_token = google_access_token_factory(
+            google_auth_answer, now=datetime.now(tz=timezone.utc)
+        )
 
         credentials_storage.record_access_token(access_token)
 
         return result, 200
 
+
 class AccessToken(Resource):
     def get(self):
         credentials_storage = get_credentials_storage()
 
-        return asdict(credentials_storage.get_access_token(), dict_factory=DictFactory), 200
+        return (
+            asdict(credentials_storage.get_access_token(), dict_factory=DictFactory),
+            200,
+        )
 
     def patch(self):
         credentials_storage = get_credentials_storage()
@@ -324,7 +341,7 @@ class AccessToken(Resource):
         flow = Flow.from_client_secrets_file(
             get_google_oauth_secret_filename(),
             scopes=GOOGLE_PHOTO_API_SCOPES,
-            state=credentials_storage.get_current_state()
+            state=credentials_storage.get_current_state(),
         )
         client_config = flow.client_config
 
@@ -334,13 +351,10 @@ class AccessToken(Resource):
             "client_id": client_config["client_id"],
             "client_secret": client_config["client_secret"],
             "refresh_token": refresh_token,
-            "grant_type": "refresh_token"
+            "grant_type": "refresh_token",
         }
 
-        res = requests.post(
-            url= client_config["token_uri"],
-            json=refresh_token_query
-        )
+        res = requests.post(url=client_config["token_uri"], json=refresh_token_query)
 
         res_json = res.json()
 
@@ -348,8 +362,9 @@ class AccessToken(Resource):
             return res_json, res.status_code
 
         google_auth_answer = GoogleRefreshTokenAnswer().load(res_json)
-        access_token = google_access_token_factory(google_auth_answer, now=datetime.now(tz=timezone.utc))
+        access_token = google_access_token_factory(
+            google_auth_answer, now=datetime.now(tz=timezone.utc)
+        )
         credentials_storage.record_access_token(access_token)
 
         return asdict(access_token, dict_factory=DictFactory), 200
-

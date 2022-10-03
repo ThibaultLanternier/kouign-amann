@@ -240,6 +240,7 @@ class PictureCount:
     start_date: datetime
     end_date: datetime
 
+
 @dataclass
 class GoogleAccessToken:
     access_token: str
@@ -258,6 +259,7 @@ def google_access_token_factory(input: Dict, now: datetime) -> GoogleAccessToken
     del input["expires_in"]
 
     return GoogleAccessToken(**input)
+
 
 @dataclass
 class GoogleRefreshToken:

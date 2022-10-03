@@ -1,13 +1,13 @@
 from dataclasses import asdict
 from datetime import datetime, timedelta, timezone
-from typing import Dict, List, Union, Tuple
+from typing import Dict, List, Tuple, Union
 
 from bson.objectid import ObjectId
 from pymongo import ASCENDING, DESCENDING, MongoClient
 
 from src.app.models import (Backup, BackupRequest, BackupStatus, File,
-                            GoogleAccessToken, GoogleRefreshToken, Picture, PictureCount,
-                            PictureInfo)
+                            GoogleAccessToken, GoogleRefreshToken, Picture,
+                            PictureCount, PictureInfo)
 from src.persistence.ports import CredentialsPersistencePort, PersistencePort
 from src.tools.date import DateTimeConverter, DateTimeFormatException
 
@@ -37,7 +37,7 @@ class MongoCredentialsPersistence(CredentialsPersistencePort):
         access_token_list = self.db.access_tokens.find().sort("expires_at", DESCENDING)
 
         for access_token in access_token_list:
-            del access_token['_id']
+            del access_token["_id"]
             return GoogleAccessToken(**access_token)
 
         return None
@@ -200,9 +200,11 @@ class MongoPersistence(PersistencePort):
         return [self._to_backup_request(backup) for backup in backup_list_cursor]
 
 
-def get_mongo_persistences(host: str, port: int = 27017) -> Tuple[PersistencePort, CredentialsPersistencePort]:
+def get_mongo_persistences(
+    host: str, port: int = 27017
+) -> Tuple[PersistencePort, CredentialsPersistencePort]:
     client = MongoClient(host=host, port=port, tz_aware=True)
     return (
         MongoPersistence(client=client, db_name="pictures-manager"),
-        MongoCredentialsPersistence(client=client, db_name="pictures-manager")
+        MongoCredentialsPersistence(client=client, db_name="pictures-manager"),
     )

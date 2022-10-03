@@ -29,11 +29,16 @@ class TestConfigManager(unittest.TestCase):
 
     def test_storage_list(self):
         storage_list = [
-            StorageConfig(**{
-                "id": "id_google_photos",
-                "type": "GOOGLE_PHOTOS",
-                "config": {"config_file":"google.json"},
-            })
+            StorageConfig(
+                **{
+                    "id": "id_google_photos",
+                    "type": "GOOGLE_PHOTOS",
+                    "config": {"config_file": "google.json"},
+                }
+            )
         ]
 
-        self.assertEqual("google.json",ConfigManager.get_google_photos_config_file(storage_list=storage_list))
+        self.assertEqual(
+            "google.json",
+            ConfigManager.get_google_photos_config_file(storage_list=storage_list),
+        )

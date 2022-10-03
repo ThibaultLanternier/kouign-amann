@@ -26,7 +26,11 @@ class ConfigManager:
         return output
 
     def get_google_photos_config_file(storage_list: List[StorageConfig]) -> str:
-        google_photos_config = [storage for storage in storage_list if storage.type == StorageType.GOOGLE_PHOTOS]
+        google_photos_config = [
+            storage
+            for storage in storage_list
+            if storage.type == StorageType.GOOGLE_PHOTOS
+        ]
 
         if len(google_photos_config) > 1:
             raise Exception("only one storage of type GOOGLE_PHOTOS allowed")

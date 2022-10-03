@@ -4,8 +4,8 @@ from datetime import datetime, timedelta, timezone
 from pymongo import MongoClient
 
 from src.app.models import (Backup, BackupRequest, BackupStatus, File,
-                            GoogleAccessToken, GoogleRefreshToken, Picture, PictureCount,
-                            PictureInfo)
+                            GoogleAccessToken, GoogleRefreshToken, Picture,
+                            PictureCount, PictureInfo)
 from src.persistence.adapteurs import (MongoCredentialsPersistence,
                                        MongoPersistence)
 
@@ -29,13 +29,13 @@ class TestMongoCredentialsPersistence(unittest.TestCase):
         token_1 = GoogleRefreshToken(
             refresh_token="aaa",
             scope=[],
-            issued_at=datetime(1980,11,1,13,15,1, tzinfo=timezone.utc)
+            issued_at=datetime(1980, 11, 1, 13, 15, 1, tzinfo=timezone.utc),
         )
 
         token_2 = GoogleRefreshToken(
             refresh_token="aaa",
             scope=[],
-            issued_at=datetime(1980,11,1,13,14,1, tzinfo=timezone.utc)
+            issued_at=datetime(1980, 11, 1, 13, 14, 1, tzinfo=timezone.utc),
         )
 
         self.persistence.record_refresh_token(token_1)
@@ -54,7 +54,7 @@ class TestMongoCredentialsPersistence(unittest.TestCase):
                     "https://www.googleapis.com/auth/photoslibrary.appendonly",
                 ],
                 "token_type": "Bearer",
-                "expires_at": datetime(1980,11,1,13,15,1, tzinfo=timezone.utc),
+                "expires_at": datetime(1980, 11, 1, 13, 15, 1, tzinfo=timezone.utc),
             }
         )
 
@@ -66,7 +66,7 @@ class TestMongoCredentialsPersistence(unittest.TestCase):
                     "https://www.googleapis.com/auth/photoslibrary.appendonly",
                 ],
                 "token_type": "Bearer",
-                "expires_at": datetime(1980,11,1,13,12,1, tzinfo=timezone.utc),
+                "expires_at": datetime(1980, 11, 1, 13, 12, 1, tzinfo=timezone.utc),
             }
         )
 

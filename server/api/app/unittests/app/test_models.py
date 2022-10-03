@@ -4,8 +4,9 @@ from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
 from src.app.models import (Backup, BackupException, BackupStatus, DictFactory,
-                            File, GoogleAccessToken, Picture, PictureInfo, Storage, StorageConfig,
-                            StorageType, google_access_token_factory)
+                            File, GoogleAccessToken, Picture, PictureInfo,
+                            Storage, StorageConfig, StorageType,
+                            google_access_token_factory)
 
 TEST_TIME = datetime(1980, 11, 30, tzinfo=timezone.utc)
 OTHER_TEST_TIME = datetime(1980, 11, 30, 12, tzinfo=timezone.utc)
@@ -289,27 +290,31 @@ class TestFile(unittest.TestCase):
             [self.large_file_c, self.small_file_e, self.small_file_a], test_list
         )
 
+
 class TestGoogleAccessToken(unittest.TestCase):
     def test_google_access_token_factory(self):
         input = {
             "access_token": "ya29",
             "expires_in": 35,
-            "scope": [
-                "https://toto"
-            ],
+            "scope": ["https://toto"],
             "token_type": "Bearer",
-            "expires_at": 1663104574.3838615
+            "expires_at": 1663104574.3838615,
         }
-        now = datetime(1980,11,30,15,0,0, tzinfo=timezone.utc)
-        expected_expiry = datetime(1980,11,30,15,0,35, tzinfo=timezone.utc)
+        now = datetime(1980, 11, 30, 15, 0, 0, tzinfo=timezone.utc)
+        expected_expiry = datetime(1980, 11, 30, 15, 0, 35, tzinfo=timezone.utc)
 
         result = google_access_token_factory(input, now)
 
-        self.assertEqual(GoogleAccessToken(
-            access_token="ya29",
-            scope=["https://toto"],
-            token_type="Bearer", expires_at=expected_expiry
-        ), result)
+        self.assertEqual(
+            GoogleAccessToken(
+                access_token="ya29",
+                scope=["https://toto"],
+                token_type="Bearer",
+                expires_at=expected_expiry,
+            ),
+            result,
+        )
+
 
 class TestStorageConfig(unittest.TestCase):
     @patch("os.getenv")

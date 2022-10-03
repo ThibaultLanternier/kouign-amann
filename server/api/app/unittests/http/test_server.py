@@ -13,6 +13,7 @@ from src.http.server import get_flask_app
 
 FAKE_CURRENT_TIME = datetime(1980, 11, 30, tzinfo=timezone.utc)
 
+
 class TestSchema(unittest.TestCase):
     def test_google_auth_answer(self):
         input = {
@@ -21,10 +22,10 @@ class TestSchema(unittest.TestCase):
             "refresh_token": "1//03IcJ",
             "scope": [
                 "https://www.googleapis.com/auth/photoslibrary.readonly",
-                "https://www.googleapis.com/auth/photoslibrary.appendonly"
+                "https://www.googleapis.com/auth/photoslibrary.appendonly",
             ],
             "token_type": "Bearer",
-            "expires_at": 1663104574.3838615
+            "expires_at": 1663104574.3838615,
         }
 
         GoogleAuthAccessTokenAnswer().load(input)
@@ -35,10 +36,10 @@ class TestSchema(unittest.TestCase):
             "expires_in": 3599,
             "scope": [
                 "https://www.googleapis.com/auth/photoslibrary.readonly",
-                "https://www.googleapis.com/auth/photoslibrary.appendonly"
+                "https://www.googleapis.com/auth/photoslibrary.appendonly",
             ],
             "token_type": "Bearer",
-            "expires_at": 1663104574.3838615
+            "expires_at": 1663104574.3838615,
         }
 
         GoogleAuthAccessTokenAnswer().load(input)

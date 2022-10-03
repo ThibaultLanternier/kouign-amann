@@ -2,8 +2,8 @@ from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
 from typing import List, Union
 
-from src.app.models import (BackupRequest, GoogleAccessToken, GoogleRefreshToken, Picture,
-                            PictureCount)
+from src.app.models import (BackupRequest, GoogleAccessToken,
+                            GoogleRefreshToken, Picture, PictureCount)
 
 
 class CredentialsPersistencePort(ABC):
