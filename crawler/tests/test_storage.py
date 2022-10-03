@@ -2,7 +2,8 @@ import os
 import secrets
 import shutil
 import unittest
-from unittest.mock import MagicMock
+from typing import Any, Callable, Dict
+from unittest.mock import MagicMock, call
 
 from app.controllers.backup import AbstractStorageConfigProvider
 from app.controllers.picture import PictureAnalyzerFactory
@@ -11,6 +12,11 @@ from app.storage.aws_s3 import AbstractS3Client, S3BackupStorage
 from app.storage.basic import (PictureHashMissmatch, PictureWithNoHash,
                                SimpleFileStorage)
 from app.storage.factory import StorageFactory, StorageFactoryException
+from app.storage.google_photos import (AbstractCaller, AbstractTokenProvider,
+                                       GooglePhotosAPIAuthenficationException,
+                                       GooglePhotosAPIClient,
+                                       GooglePhotosStorage,
+                                       RefreshAccessTokenCaller)
 
 TEST_PICTURE = "tests/files/test-canon-eos70D-exif.jpg"
 TEST_BUCKET = "picture.backup.test"
@@ -121,6 +127,137 @@ class TestS3BackupStorage(unittest.TestCase):
         self.mock_S3_client.delete_object.assert_called_once_with(
             Bucket="picture.backup.test", Prefix="test-directory-backup/AAAA"
         )
+
+
+class SimpleCaller(AbstractCaller):
+    def call(self, func: Callable, params: Dict) -> Any:
+        return func(**params)
+
+
+class TestGoogleStorage(unittest.TestCase):
+    def setUp(self) -> None:
+        self.mock_google_client = MagicMock(spec=GooglePhotosAPIClient)
+        self.simple_caller = SimpleCaller()
+        self.mock_caller = MagicMock(wraps=self.simple_caller)
+        self.google_storage = GooglePhotosStorage(
+            api_client=self.mock_google_client, caller=self.mock_caller
+        )
+
+    def test_check_still_exists_not_exists(self):
+        self.mock_google_client.get_picture_info.return_value = None
+
+        self.assertFalse(
+            self.google_storage.check_still_exists(picture_backup_id="1234")
+        )
+        self.mock_google_client.get_picture_info.assert_called_once_with(
+            picture_id="1234"
+        )
+
+        self.mock_caller.call.assert_called_once_with(
+            func=self.mock_google_client.get_picture_info, params={"picture_id": "1234"}
+        )
+
+    def test_check_still_exists_exists(self):
+        self.mock_google_client.get_picture_info.return_value = None
+
+        self.assertFalse(
+            self.google_storage.check_still_exists(picture_backup_id="1234")
+        )
+        self.mock_google_client.get_picture_info.assert_called_once_with(
+            picture_id="1234"
+        )
+
+        self.mock_caller.call.assert_called_once_with(
+            func=self.mock_google_client.get_picture_info, params={"picture_id": "1234"}
+        )
+
+    def test_backup_ok(self):
+        self.mock_google_client.upload_picture.return_value = "google_backup_id"
+
+        self.assertEqual(
+            "google_backup_id",
+            self.google_storage.backup(
+                picture_local_path="/xxx/test", picture_hash="xxx"
+            ),
+        )
+
+        self.mock_google_client.upload_picture.assert_called_once_with(
+            picture_file_path="/xxx/test", picture_hash="xxx"
+        )
+
+        self.mock_caller.call.assert_called_once_with(
+            func=self.mock_google_client.upload_picture,
+            params={"picture_file_path": "/xxx/test", "picture_hash": "xxx"},
+        )
+
+    def test_delete_ok(self):
+        self.mock_google_client.edit_picture_description.return_value = True
+
+        self.assertEqual(True, self.google_storage.delete(picture_backup_id="xxx"))
+
+        self.mock_google_client.edit_picture_description.assert_called_once_with(
+            picture_id="xxx", new_description="TO BE DELETED"
+        )
+
+        self.mock_caller.call.assert_called_once_with(
+            func=self.mock_google_client.edit_picture_description,
+            params={"picture_id": "xxx", "new_description": "TO BE DELETED"},
+        )
+
+
+class TestRefreshAccessTokenCaller(unittest.TestCase):
+    def setUp(self):
+        self.mock_client = MagicMock(spec=GooglePhotosAPIClient)
+        self.token_provider = MagicMock(spec=AbstractTokenProvider)
+
+    def test_ok_call(self):
+        caller = RefreshAccessTokenCaller(
+            client=self.mock_client, token_provider=self.token_provider
+        )
+
+        func = MagicMock()
+        func.return_value = "Hello"
+
+        self.assertEquals("Hello", caller.call(func=func, params={"param": 1}))
+
+        self.mock_client.refresh_token.assert_not_called()
+        self.token_provider.get_new_token.assert_not_called()
+
+    def test_any_exception_call(self):
+        caller = RefreshAccessTokenCaller(
+            client=self.mock_client, token_provider=self.token_provider
+        )
+
+        func = MagicMock()
+
+        func.side_effect = Exception("N'importe quelle exception !")
+
+        def make_call():
+            caller.call(func=func, params={"param": 1})
+
+        self.assertRaises(Exception, make_call)
+
+        self.mock_client.refresh_token.assert_not_called()
+        self.token_provider.get_new_token.assert_not_called()
+
+    def test_authentification_exception_call(self):
+        caller = RefreshAccessTokenCaller(
+            client=self.mock_client, token_provider=self.token_provider
+        )
+
+        self.token_provider.get_new_token.return_value = "NOUVEAU_TOKEN"
+
+        func = MagicMock()
+        func.side_effect = [GooglePhotosAPIAuthenficationException(), "Hello"]
+
+        self.assertEquals("Hello", caller.call(func=func, params={"param": 1}))
+
+        self.mock_client.refresh_token.assert_called_once_with(
+            new_token="NOUVEAU_TOKEN"
+        )
+        self.token_provider.get_new_token.assert_called_once_with()
+
+        self.assertEquals([call(param=1), call(param=1)], func.call_args_list)
 
 
 class TestStorageFactory(unittest.TestCase):
