@@ -3,7 +3,7 @@ import secrets
 import shutil
 import unittest
 from typing import Any, Callable, Dict
-from unittest.mock import MagicMock, call
+from unittest.mock import MagicMock, call, patch
 
 from app.controllers.backup import AbstractStorageConfigProvider
 from app.controllers.picture import PictureAnalyzerFactory
@@ -15,7 +15,7 @@ from app.storage.factory import StorageFactory, StorageFactoryException
 from app.storage.google_photos import (AbstractCaller, AbstractTokenProvider,
                                        GooglePhotosAPIAuthenficationException,
                                        GooglePhotosAPIClient,
-                                       GooglePhotosStorage,
+                                       GooglePhotosStorage, RESTTokenProvider,
                                        RefreshAccessTokenCaller)
 
 TEST_PICTURE = "tests/files/test-canon-eos70D-exif.jpg"
@@ -280,6 +280,31 @@ class TestStorageFactory(unittest.TestCase):
 
         self.mock_config_provider.get_storage_config.assert_called_once_with(
             storage_id="xxx"
+        )
+
+    @patch("app.storage.google_photos.RESTTokenProvider")
+    def test_create_from_id_google_photos(self, mock_RESTTokenProvider):
+        mock_RESTTokenProvider.return_value = MagicMock(spec=RESTTokenProvider)
+        mock_RESTTokenProvider.get_current_token.return_value = "abcdef"
+
+        storage_config_google_photos = StorageConfig(
+            id="yyy",
+            type=StorageType.GOOGLE_PHOTOS,
+            config = {
+                "config_file": "config.json",
+                "token_url": "http://token_url"
+            }
+        )
+        self.mock_config_provider.get_storage_config.return_value = storage_config_google_photos
+
+        factory = StorageFactory(self.mock_config_provider)
+
+        google_photos_storage = factory.create_from_id("yyy")
+
+        self.assertIsInstance(google_photos_storage, GooglePhotosStorage)
+
+        self.mock_config_provider.get_storage_config.assert_called_once_with(
+            storage_id="yyy"
         )
 
     def test_create_from_id_not_implemented(self):

@@ -1,9 +1,11 @@
+from functools import partial
 import requests
+from app.models.backup import StorageConfig
 
+from marshmallow import Schema, fields, EXCLUDE
 from typing import Callable, Dict
 from abc import ABC, abstractmethod
 from app.storage.basic import AbstractStorage, BackupResult
-
 
 class GooglePhotosAPIException(Exception):
     pass
@@ -128,6 +130,36 @@ class AbstractTokenProvider(ABC):
         pass
 
 
+class AccessTokenResponse(Schema):
+    class Meta:
+        unknown = EXCLUDE
+
+    access_token = fields.String()
+
+class RESTTokenProvider(AbstractTokenProvider):
+    def __init__(self, url: str) -> None:
+        self._url = url
+
+    def get_new_token(self) -> str:
+        resp = requests.patch(url=f"{self._url}")
+
+        if resp.status_code != 200:
+            raise Exception(f"Error refreshing token : {resp.status_code} - {resp.text}")
+
+        result = AccessTokenResponse().load(resp.json(), partial=True)
+
+        return result["access_token"]
+
+    def get_current_token(self) -> str:
+        resp = requests.get(url=f"{self._url}")
+
+        if resp.status_code != 200:
+            raise Exception(f"Error refreshing token : {resp.status_code} - {resp.text}")
+
+        result = AccessTokenResponse().load(resp.json(), partial=True)
+
+        return result["access_token"]
+
 class RefreshAccessTokenCaller(AbstractCaller):
     def __init__(
         self, client: GooglePhotosAPIClient, token_provider: AbstractTokenProvider
@@ -178,3 +210,19 @@ class GooglePhotosStorage(AbstractStorage):
                 "new_description": "TO BE DELETED",
             },
         )
+
+class GooglePhotosConfig(Schema):
+    class Meta:
+        unknown = EXCLUDE
+
+    token_url = fields.String()
+
+def GOOGLE_PHOTOS_FACTORY(config: StorageConfig):
+    config_dict = GooglePhotosConfig().load(config.config)
+
+    token_provider = RESTTokenProvider(url=config_dict["token_url"])
+    google_api_client = GooglePhotosAPIClient(access_token=token_provider.get_current_token())
+    refresh_caller = RefreshAccessTokenCaller(client=google_api_client, token_provider=token_provider)
+
+    return GooglePhotosStorage(api_client=google_api_client, caller=refresh_caller)
+

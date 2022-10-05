@@ -18,7 +18,7 @@ from app.controllers.recorder import PictureRESTRecorder
 from app.controllers.backup import BackupHandler
 from app.controllers.file import FileCrawler
 from app.tools.logger import init_console
-from app.storage.basic import StorageFactory
+from app.storage.factory import StorageFactory
 
 FILE_PATH = "/home/thibault/Images"
 REST_API_URL = "http://localhost:5000"

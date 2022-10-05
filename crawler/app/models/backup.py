@@ -24,6 +24,7 @@ class BackupRequest:
 class StorageType(Enum):
     AWS_GLACIER = "AWS_GLACIER"
     AWS_S3 = "AWS_S3"
+    GOOGLE_PHOTOS = "GOOGLE_PHOTOS"
 
 
 @dataclass
