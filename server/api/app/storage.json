@@ -17,7 +17,8 @@
             "id": "google_photos_backup_thl",
             "type": "GOOGLE_PHOTOS",
             "config": {
-                "config_file": "google_api_oauth.json"
+                "config_file": "google_api_oauth.json",
+                "token_url": "http://app.kouignamann.bzh:5000/auth/google/access_token"
             }
         }
     ]
