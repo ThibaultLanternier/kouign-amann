@@ -87,6 +87,7 @@ class TestMongoPersistence(unittest.TestCase):
             file_path="/file",
             status=status,
             creation_time=CURRENT_TIME,
+            backup_id=None
         )
 
     def _create_backup_request(self, backup: Backup, picture: Picture) -> BackupRequest:
@@ -96,6 +97,7 @@ class TestMongoPersistence(unittest.TestCase):
             file_path=backup.file_path,
             picture_hash=picture.hash,
             status=backup.status,
+            backup_id=None
         )
 
     def _create_file(self) -> File:

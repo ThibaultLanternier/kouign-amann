@@ -81,6 +81,10 @@ class MongoPersistence(PersistencePort):
     def _to_backup_request(self, mongo_dict: Dict) -> BackupRequest:
         mongo_dict.pop("_id")
         mongo_dict["status"] = BackupStatus(mongo_dict["status"])
+
+        if not "backup_id" in mongo_dict:
+            mongo_dict["backup_id"] = None
+
         return BackupRequest(**mongo_dict)
 
     def get_picture(self, hash: str) -> Union[Picture, None]:

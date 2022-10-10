@@ -47,6 +47,7 @@ class TestPicture(unittest.TestCase):
             file_path="/picture_1_large",
             status=BackupStatus.PENDING,
             creation_time=OTHER_TEST_TIME,
+            backup_id=None
         )
 
         self.maxDiff = None
@@ -68,6 +69,7 @@ class TestPicture(unittest.TestCase):
             file_path="/picture_1_large",
             status=BackupStatus.PENDING_DELETE,
             creation_time=OTHER_TEST_TIME,
+            backup_id=None
         )
         self.test_picture.backup_list = [self.pending_backup, pending_backup_2]
 
@@ -110,6 +112,7 @@ class TestPicture(unittest.TestCase):
                     file_path="/picture_1_large",
                     status=BackupStatus.PENDING,
                     creation_time=TEST_TIME,
+                    backup_id=None
                 )
             ],
         )
@@ -384,3 +387,46 @@ class TestStorageConfig(unittest.TestCase):
         expected_config = {"key": "key", "bucket": "toto"}
 
         self.assertEqual(expected_config, result.config)
+
+FAKE_CURRENT_TIME = datetime(1980, 11, 30, tzinfo=timezone.utc)
+class TestBackup(unittest.TestCase):
+    def test_asdict_none_value(self):
+        backup = Backup(
+            crawler_id="AAAA",
+            storage_id="XXX",
+            status=BackupStatus.PENDING,
+            creation_time=FAKE_CURRENT_TIME,
+            file_path="/file",
+            backup_id=None
+        )
+
+        expected_dict = {
+            "crawler_id": "AAAA",
+            "storage_id": "XXX",
+            "status": "PENDING",
+            "creation_time": "1980-11-30T00:00:00.000000Z",
+            "file_path": "/file"
+        }
+
+        self.assertEqual(expected_dict, asdict(backup, dict_factory=DictFactory))
+
+    def test_asdict_with_value(self):
+        backup = Backup(
+            crawler_id="AAAA",
+            storage_id="XXX",
+            status=BackupStatus.PENDING,
+            creation_time=FAKE_CURRENT_TIME,
+            file_path="/file",
+            backup_id="xyz"
+        )
+
+        expected_dict = {
+            "crawler_id": "AAAA",
+            "storage_id": "XXX",
+            "status": "PENDING",
+            "creation_time": "1980-11-30T00:00:00.000000Z",
+            "file_path": "/file",
+            "backup_id": "xyz"
+        }
+
+        self.assertEqual(expected_dict, asdict(backup, dict_factory=DictFactory))

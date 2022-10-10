@@ -9,6 +9,7 @@ from src.tools.date import DateTimeConverter, DateTimeFormatException
 
 class DictFactory(dict):
     def __init__(self, data):
+        data = [x for x in data if x[1] is not None]
         super().__init__(self._format_value(key=x[0], value=x[1]) for x in data)
 
     def _format_value(self, key: str, value: Any) -> Tuple[str, Any]:
@@ -19,7 +20,6 @@ class DictFactory(dict):
             value = value.name
 
         return (key, value)
-
 
 class BackupStatus(str, Enum):
     PENDING = "PENDING"
@@ -76,6 +76,7 @@ class BackupRequest:
     file_path: str
     picture_hash: str
     status: BackupStatus
+    backup_id: str
 
 
 @dataclass
@@ -85,6 +86,7 @@ class Backup:
     file_path: str
     status: BackupStatus
     creation_time: datetime
+    backup_id: str
 
 
 class StorageType(Enum):
@@ -166,6 +168,7 @@ class Picture:
                             file_path=best_file.picture_path,
                             status=BackupStatus.PENDING,
                             creation_time=current_time,
+                            backup_id=None
                         )
                     )
         else:

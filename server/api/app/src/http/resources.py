@@ -1,5 +1,6 @@
 from dataclasses import asdict
 from datetime import datetime, timedelta, timezone
+from typing import Dict
 
 import flask
 import requests
@@ -158,6 +159,7 @@ class PictureBackupRequest(Resource):
 
 
 class PicturePlanBackup(Resource):
+    # Used to trigger adding new planned backup to a picture based on available storages
     def put(self, hash: str):
         picture_manager = get_picture_manager()
         backup_manager = get_backup_manager()
@@ -175,6 +177,7 @@ class PicturePlanBackup(Resource):
 
         return f"/backup/{hash}", 201
 
+    # Gets the list of available backup for a picture
     def get(self, hash: str):
         picture = get_picture_manager().get_picture(hash)
 
@@ -199,11 +202,17 @@ class CrawlerBackup(Resource):
 
         return backup_request_list_dict, 200
 
+    def _add_missing_backup_id(self, backup_request: Dict):
+        if "backup_id" not in backup_request:
+            backup_request["backup_id"] = None
+
+        return backup_request
+
     # Use to acknowledge completion of a save (PENDING) or delete backup request (PENDING_DELETE)
     def post(self, crawler_id: str):
         picture_manager = get_picture_manager()
 
-        backup_request = BackupRequest(**request.json)
+        backup_request = BackupRequest(**self._add_missing_backup_id(request.json))
 
         if backup_request.status not in [
             BackupStatus.PENDING,
@@ -235,7 +244,7 @@ class CrawlerBackup(Resource):
     def delete(self, crawler_id: str):
         picture_manager = get_picture_manager()
 
-        backup_request = BackupRequest(**request.json)
+        backup_request = BackupRequest(**self._add_missing_backup_id(request.json))
 
         picture = picture_manager.get_picture(backup_request.picture_hash)
 
