@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import Tuple, Union
+from typing import Tuple, Union, Optional
 from datetime import datetime
 
 
@@ -13,7 +13,7 @@ class PictureOrientation(Enum):
 class PictureInfo:
     creation_time: datetime
     thumbnail: str
-    orientation: PictureOrientation
+    orientation: Optional[PictureOrientation]
 
 
 @dataclass

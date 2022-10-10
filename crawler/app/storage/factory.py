@@ -19,7 +19,7 @@ class StorageFactory:
             StorageType, Callable[[StorageConfig], AbstractStorage]
         ] = {
             StorageType.AWS_S3: AWS_S3_factory,
-            StorageType.GOOGLE_PHOTOS: GOOGLE_PHOTOS_FACTORY
+            StorageType.GOOGLE_PHOTOS: GOOGLE_PHOTOS_FACTORY,
         }
 
     def create_from_id(self, storage_id: str) -> AbstractStorage:

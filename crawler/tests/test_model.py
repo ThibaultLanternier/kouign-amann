@@ -15,7 +15,7 @@ class TestBackupRequest(unittest.TestCase):
             "file_path": "/file",
             "picture_hash": "acde",
             "status": "PENDING",
-            "backup_id": None
+            "backup_id": None,
         }
 
     def test_construct_enum_conversion(self):
@@ -81,13 +81,18 @@ class TestPictureData(unittest.TestCase):
         result = asdict(self.picture_data, dict_factory=DictFactory)
 
         self.assertEqual(expected, result)
+
+
 @dataclass
 class TestClass:
     value_1: str
     value_2: str
 
+
 class TestDictFactory(unittest.TestCase):
     def test_none_field(self):
         test_object = TestClass(value_1="A", value_2=None)
 
-        self.assertEqual({"value_1":"A"}, asdict(test_object, dict_factory=DictFactory))
+        self.assertEqual(
+            {"value_1": "A"}, asdict(test_object, dict_factory=DictFactory)
+        )

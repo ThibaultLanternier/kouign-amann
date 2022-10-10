@@ -17,12 +17,11 @@ class TestBackup(unittest.TestCase):
             "storage_id": "BBB",
             "file_path": "/file",
             "picture_hash": "acde",
-            "status": "PENDING"
+            "status": "PENDING",
         }
 
         self.backup_request_object = BackupRequest(
-            backup_id=None,
-            **self.backup_request_dict
+            backup_id=None, **self.backup_request_dict
         )
 
         self.storage_config_dict = {
@@ -66,7 +65,6 @@ class TestBackup(unittest.TestCase):
         self.assertEqual(BackupStatus.PENDING, response[0].status)
         mock_get.assert_called_once_with("BASE_URL/crawler/backup/crawler_id")
 
-
     @patch("requests.get")
     def test_get_backup_request_malformed_answer(self, mock_get):
         self.mock_response.status_code = 200
@@ -108,9 +106,7 @@ class TestBackup(unittest.TestCase):
         mock_post.return_value = self.mock_response
 
         self.assertTrue(
-            self.backup_handler.send_backup_completed(
-                self.backup_request_object
-            )
+            self.backup_handler.send_backup_completed(self.backup_request_object)
         )
         mock_post.assert_called_once_with(
             "BASE_URL/crawler/backup/crawler_id", json=self.backup_request_dict
@@ -123,9 +119,7 @@ class TestBackup(unittest.TestCase):
         mock_delete.return_value = self.mock_response
 
         self.assertTrue(
-            self.backup_handler.send_backup_error(
-                self.backup_request_object
-            )
+            self.backup_handler.send_backup_error(self.backup_request_object)
         )
         mock_delete.assert_called_once_with(
             "BASE_URL/crawler/backup/crawler_id", json=self.backup_request_dict

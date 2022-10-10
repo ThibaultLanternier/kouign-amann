@@ -1,66 +1,24 @@
-import os
-import secrets
-import shutil
 import unittest
 from typing import Any, Callable, Dict
 from unittest.mock import MagicMock, call, patch
 
 from app.controllers.backup import AbstractStorageConfigProvider
 from app.controllers.picture import PictureAnalyzerFactory
-from app.models.backup import BackupRequest, StorageConfig, StorageType
+from app.models.backup import StorageConfig, StorageType
 from app.storage.aws_s3 import AbstractS3Client, S3BackupStorage
-from app.storage.basic import (BackupResult, PictureHashMissmatch, PictureWithNoHash,
-                               SimpleFileStorage)
+from app.storage.basic import BackupResult, PictureHashMissmatch
 from app.storage.factory import StorageFactory, StorageFactoryException
 from app.storage.google_photos import (AbstractCaller, AbstractTokenProvider,
                                        GooglePhotosAPIAuthenficationException,
                                        GooglePhotosAPIClient,
-                                       GooglePhotosStorage, RESTTokenProvider,
-                                       RefreshAccessTokenCaller)
+                                       GooglePhotosStorage,
+                                       RefreshAccessTokenCaller,
+                                       RESTTokenProvider)
 
 TEST_PICTURE = "tests/files/test-canon-eos70D-exif.jpg"
 TEST_BUCKET = "picture.backup.test"
 TEST_DIRECTORY = "test-directory-backup/"
 TEST_PICTURE_HASH = "xxxx"
-
-
-class TestSimpleFileStorage(unittest.TestCase):
-    def setUp(self):
-        uniq_id = secrets.token_hex(8)
-        self.test_file_copy = f"tests/files/{uniq_id}.jpg"
-        shutil.copyfile(TEST_PICTURE, self.test_file_copy)
-
-        self.backup_directory = f"tests/files/bckp_{uniq_id}"
-        os.mkdir(self.backup_directory)
-
-        self.test_storage = SimpleFileStorage(self.backup_directory)
-        self.picture_hash = (
-            PictureAnalyzerFactory()
-            .perception_hash(self.test_file_copy)
-            .get_recorded_hash()
-        )
-
-    def tearDown(self):
-        os.remove(self.test_file_copy)
-        os.rmdir(self.backup_directory)
-
-    def test_backup(self):
-        self.assertTrue(
-            self.test_storage.backup(self.test_file_copy, self.picture_hash)
-        )
-
-        with open(f"{self.backup_directory}/{self.picture_hash}") as backup_file:
-            self.assertIsNotNone(backup_file)
-
-        self.assertTrue(self.test_storage.delete(self.picture_hash))
-
-    def test_backup_incorrect_hash(self):
-        with self.assertRaises(PictureHashMissmatch):
-            self.test_storage.backup(self.test_file_copy, "XXXXXX")
-
-    def test_backup_no_hash(self):
-        with self.assertRaises(PictureWithNoHash):
-            self.test_storage.backup("tests/files/picture-no-exif.jpg", "XXXXXX")
 
 
 class TestS3BackupStorage(unittest.TestCase):
@@ -122,10 +80,10 @@ class TestS3BackupStorage(unittest.TestCase):
         self.assertFalse(self.test_storage.check_still_exists("AAAA"))
 
     def test_delete(self):
-        self.test_storage.delete(picture_hash="AAAA", picture_backup_id="BBBB")
+        self.test_storage.delete(picture_backup_id="BBBB")
 
         self.mock_S3_client.delete_object.assert_called_once_with(
-            Bucket="picture.backup.test", Prefix="test-directory-backup/AAAA"
+            Bucket="picture.backup.test", Prefix="test-directory-backup/BBBB"
         )
 
 
@@ -175,7 +133,7 @@ class TestGoogleStorage(unittest.TestCase):
         self.mock_google_client.upload_picture.return_value = "google_backup_id"
 
         self.assertEqual(
-            BackupResult(status=True,picture_bckup_id="google_backup_id"),
+            BackupResult(status=True, picture_bckup_id="google_backup_id"),
             self.google_storage.backup(
                 picture_local_path="/xxx/test", picture_hash="xxx"
             ),
@@ -290,12 +248,11 @@ class TestStorageFactory(unittest.TestCase):
         storage_config_google_photos = StorageConfig(
             id="yyy",
             type=StorageType.GOOGLE_PHOTOS,
-            config = {
-                "config_file": "config.json",
-                "token_url": "http://token_url"
-            }
+            config={"config_file": "config.json", "token_url": "http://token_url"},
         )
-        self.mock_config_provider.get_storage_config.return_value = storage_config_google_photos
+        self.mock_config_provider.get_storage_config.return_value = (
+            storage_config_google_photos
+        )
 
         factory = StorageFactory(self.mock_config_provider)
 

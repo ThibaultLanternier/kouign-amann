@@ -52,7 +52,10 @@ class BackupHandler(AbstractBackupHandler):
             content = response.json()
 
             try:
-                return [self._backup_request_builder(request_dict=request_dict) for request_dict in content]
+                return [
+                    self._backup_request_builder(request_dict=request_dict)
+                    for request_dict in content
+                ]
             except TypeError:
                 raise BackupHandlerException(
                     "ERROR RETRIEVING BACKUP REQUESTS - MALFORMED ANSWER"

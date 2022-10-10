@@ -21,6 +21,8 @@ pdbpp = "*"
 flake8 = "*"
 black = "*"
 isort = "*"
+types-requests = "*"
+types-pytz = "*"
 
 [requires]
 python_version = "3.8.5"

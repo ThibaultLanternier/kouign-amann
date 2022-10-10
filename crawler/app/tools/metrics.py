@@ -11,6 +11,7 @@ class MetricRecorder:
             self.__get_now_timestamp_ns() if now_ns is None else now_ns
         )
 
+    @staticmethod
     def get_datetime_from_ns_timestamp(timestamp_ns: int) -> datetime:
         timestamp_s = timestamp_ns / 10e9
         return datetime.fromtimestamp(timestamp_s, tz=timezone.utc)
@@ -18,7 +19,7 @@ class MetricRecorder:
     def __get_now_timestamp_ns(self) -> int:
         return int(time_ns())
 
-    def add_step(self, name: str, now_ns: datetime = None) -> None:
+    def add_step(self, name: str, now_ns: int = None) -> None:
         now_ns = self.__get_now_timestamp_ns() if now_ns is None else now_ns
 
         step_duration = now_ns - self.__last_timestamp_ns
@@ -35,7 +36,7 @@ class MetricRecorder:
     def get_steps(self) -> Point:
         return self.__p._fields
 
-    def get_line(self, current_timestamp_ns: datetime = None) -> str:
+    def get_line(self, current_timestamp_ns: int = None) -> str:
         if current_timestamp_ns is None:
             current_timestamp_ns = self.__get_now_timestamp_ns()
 

@@ -1,13 +1,17 @@
-from functools import partial
 import requests
 from app.models.backup import StorageConfig
 
 from marshmallow import Schema, fields, EXCLUDE
-from typing import Callable, Dict
+from typing import Callable, Dict, Any
 from abc import ABC, abstractmethod
 from app.storage.basic import AbstractStorage, BackupResult
 
+
 class GooglePhotosAPIException(Exception):
+    pass
+
+
+class GooglePhotosAPIPictureNotFoundException(GooglePhotosAPIException):
     pass
 
 
@@ -49,7 +53,7 @@ class GooglePhotosAPIClient:
 
         raise GooglePhotosAPIException(res.json())
 
-    def _create_media_item(self, upload_token: str, picture_hash: str) -> str:
+    def _create_media_item(self, upload_token: str, picture_hash: str) -> Dict:
         res = requests.post(
             url="https://photoslibrary.googleapis.com/v1/mediaItems:batchCreate",
             json={
@@ -81,11 +85,13 @@ class GooglePhotosAPIClient:
             upload_token=upload_token, picture_hash=picture_hash
         )
 
-        return result["newMediaItemResults"][0]["mediaItem"]["id"]
+        picture_id: str = result["newMediaItemResults"][0]["mediaItem"]["id"]
+
+        return picture_id
 
     def edit_picture_description(self, picture_id: str, new_description: str) -> bool:
         res = requests.patch(
-            url=f"https://photoslibrary.googleapis.com/v1/mediaItems/{picture_id}?updateMask=description",
+            url=f"https://photoslibrary.googleapis.com/v1/mediaItems/{picture_id}?updateMask=description",  # noqa:E501
             json={"description": new_description},
             headers={
                 "Authorization": f"Bearer {self._access_token}",
@@ -110,7 +116,7 @@ class GooglePhotosAPIClient:
         self._check_authentication(res)
 
         if res.status_code == 400:
-            return None
+            raise GooglePhotosAPIPictureNotFoundException
 
         if res.status_code == 200:
             return res.json()
@@ -120,7 +126,7 @@ class GooglePhotosAPIClient:
 
 class AbstractCaller(ABC):
     @abstractmethod
-    def call(self, func: Callable, params: Dict) -> str:
+    def call(self, func: Callable, params: Dict) -> Any:
         pass
 
 
@@ -136,6 +142,7 @@ class AccessTokenResponse(Schema):
 
     access_token = fields.String()
 
+
 class RESTTokenProvider(AbstractTokenProvider):
     def __init__(self, url: str) -> None:
         self._url = url
@@ -144,7 +151,9 @@ class RESTTokenProvider(AbstractTokenProvider):
         resp = requests.patch(url=f"{self._url}")
 
         if resp.status_code != 200:
-            raise Exception(f"Error refreshing token : {resp.status_code} - {resp.text}")
+            raise Exception(
+                f"Error refreshing token : {resp.status_code} - {resp.text}"
+            )
 
         result = AccessTokenResponse().load(resp.json(), partial=True)
 
@@ -154,11 +163,14 @@ class RESTTokenProvider(AbstractTokenProvider):
         resp = requests.get(url=f"{self._url}")
 
         if resp.status_code != 200:
-            raise Exception(f"Error refreshing token : {resp.status_code} - {resp.text}")
+            raise Exception(
+                f"Error refreshing token : {resp.status_code} - {resp.text}"
+            )
 
         result = AccessTokenResponse().load(resp.json(), partial=True)
 
         return result["access_token"]
+
 
 class RefreshAccessTokenCaller(AbstractCaller):
     def __init__(
@@ -167,7 +179,7 @@ class RefreshAccessTokenCaller(AbstractCaller):
         self._client = client
         self._token_provider = token_provider
 
-    def call(self, func: Callable, params: Dict) -> str:
+    def call(self, func: Callable, params: Dict) -> Any:
         try:
             return func(**params)
         except GooglePhotosAPIAuthenficationException:
@@ -213,18 +225,23 @@ class GooglePhotosStorage(AbstractStorage):
             },
         )
 
+
 class GooglePhotosConfig(Schema):
     class Meta:
         unknown = EXCLUDE
 
     token_url = fields.String()
 
+
 def GOOGLE_PHOTOS_FACTORY(config: StorageConfig):
     config_dict = GooglePhotosConfig().load(config.config)
 
     token_provider = RESTTokenProvider(url=config_dict["token_url"])
-    google_api_client = GooglePhotosAPIClient(access_token=token_provider.get_current_token())
-    refresh_caller = RefreshAccessTokenCaller(client=google_api_client, token_provider=token_provider)
+    google_api_client = GooglePhotosAPIClient(
+        access_token=token_provider.get_current_token()
+    )
+    refresh_caller = RefreshAccessTokenCaller(
+        client=google_api_client, token_provider=token_provider
+    )
 
     return GooglePhotosStorage(api_client=google_api_client, caller=refresh_caller)
-

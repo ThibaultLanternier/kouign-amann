@@ -4,6 +4,7 @@ from datetime import datetime
 from queue import Queue
 from threading import Thread
 from typing import Callable, List
+from uuid import UUID
 
 from progressbar import ProgressBar
 
@@ -97,7 +98,7 @@ class PictureProcessor:
         crawler_id: str,
         crawl_time: datetime,
         metrics_output_path: str,
-        crawl_id: str,
+        crawl_id: UUID,
     ):
         self.picture_factory = picture_factory
         self.picture_recorder = picture_recorder

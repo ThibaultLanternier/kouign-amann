@@ -163,8 +163,10 @@ class PictureAnalyzer(AbstractPictureAnalyzer):
         Returns a JPEG thumbnail of the image
         """
         if self.__thumbnail is None:
-            self.__thumbnail = ImageOps.exif_transpose(self.PILImage)
-            self.__thumbnail.thumbnail(self.thumbnail_size)
+            pivoted_image = ImageOps.exif_transpose(self.PILImage)
+            pivoted_image.thumbnail(self.thumbnail_size)
+
+            self.__thumbnail = pivoted_image
 
         return self.__thumbnail
 
