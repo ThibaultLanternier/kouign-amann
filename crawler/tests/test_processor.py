@@ -115,6 +115,7 @@ class TestBackupProcessor(unittest.TestCase):
             file_path="/file",
             picture_hash="C",
             status=BackupStatus.PENDING,
+            backup_id=None
         )
 
     def test_process_ok(self):
@@ -149,6 +150,7 @@ class TestParallelBackupProcessor(unittest.IsolatedAsyncioTestCase):
                 file_path="/file",
                 picture_hash="C",
                 status=BackupStatus.PENDING,
+                backup_id=None
             )
         ]
 

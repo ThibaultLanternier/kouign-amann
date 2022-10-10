@@ -6,6 +6,7 @@ from app.tools.date import DateTimeConverter
 
 class DictFactory(dict):
     def __init__(self, data):
+        data = [x for x in data if x[1] is not None]
         super().__init__(
             self._format_value(key=x[0], value=x[1]) for x in data
         )  # noqa: E501

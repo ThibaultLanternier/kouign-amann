@@ -17,8 +17,13 @@ class TestBackup(unittest.TestCase):
             "storage_id": "BBB",
             "file_path": "/file",
             "picture_hash": "acde",
-            "status": "PENDING",
+            "status": "PENDING"
         }
+
+        self.backup_request_object = BackupRequest(
+            backup_id=None,
+            **self.backup_request_dict
+        )
 
         self.storage_config_dict = {
             "id": "xxxx",
@@ -40,9 +45,27 @@ class TestBackup(unittest.TestCase):
 
         response = self.backup_handler.get_backup_requests()
 
-        self.assertEqual([BackupRequest(**self.backup_request_dict)], response)
+        self.assertEqual([self.backup_request_object], response)
         self.assertEqual(BackupStatus.PENDING, response[0].status)
         mock_get.assert_called_once_with("BASE_URL/crawler/backup/crawler_id")
+
+    @patch("requests.get")
+    def test_get_backup_request_ok_with_backup_id(self, mock_get):
+        self.mock_response.status_code = 200
+
+        self.backup_request_dict["backup_id"] = 1234
+        self.mock_response.json.return_value = [self.backup_request_dict]
+
+        mock_get.return_value = self.mock_response
+
+        response = self.backup_handler.get_backup_requests()
+
+        self.backup_request_object.backup_id = 1234
+
+        self.assertEqual([self.backup_request_object], response)
+        self.assertEqual(BackupStatus.PENDING, response[0].status)
+        mock_get.assert_called_once_with("BASE_URL/crawler/backup/crawler_id")
+
 
     @patch("requests.get")
     def test_get_backup_request_malformed_answer(self, mock_get):
@@ -86,7 +109,7 @@ class TestBackup(unittest.TestCase):
 
         self.assertTrue(
             self.backup_handler.send_backup_completed(
-                BackupRequest(**self.backup_request_dict)
+                self.backup_request_object
             )
         )
         mock_post.assert_called_once_with(
@@ -101,7 +124,7 @@ class TestBackup(unittest.TestCase):
 
         self.assertTrue(
             self.backup_handler.send_backup_error(
-                BackupRequest(**self.backup_request_dict)
+                self.backup_request_object
             )
         )
         mock_delete.assert_called_once_with(

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Dict
 from dataclasses import asdict
 
 import requests
@@ -37,6 +37,12 @@ class BackupHandler(AbstractBackupHandler):
         self.crawler_id = crawler_id
         self.base_url = base_url
 
+    def _backup_request_builder(self, request_dict: Dict) -> BackupRequest:
+        if "backup_id" not in request_dict:
+            request_dict["backup_id"] = None
+
+        return BackupRequest(**request_dict)
+
     """ Retrieves the list of current backup requests for a given crawler """
 
     def get_backup_requests(self) -> List[BackupRequest]:
@@ -44,8 +50,9 @@ class BackupHandler(AbstractBackupHandler):
 
         if response.status_code == 200:
             content = response.json()
+
             try:
-                return [BackupRequest(**request_dict) for request_dict in content]
+                return [self._backup_request_builder(request_dict=request_dict) for request_dict in content]
             except TypeError:
                 raise BackupHandlerException(
                     "ERROR RETRIEVING BACKUP REQUESTS - MALFORMED ANSWER"

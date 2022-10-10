@@ -15,6 +15,7 @@ class BackupRequest:
     file_path: str
     picture_hash: str
     status: BackupStatus
+    backup_id: str
 
     def __post_init__(self):
         if not isinstance(self.status, BackupStatus):
