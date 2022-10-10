@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 
 from pymongo import MongoClient
 
-from src.app.models import (Backup, BackupRequest, BackupStatus, File,
+from src.app.models import (Backup, BackupRequest, BackupStatus, BackupWithoutBackupId, File,
                             GoogleAccessToken, GoogleRefreshToken, Picture,
                             PictureCount, PictureInfo)
 from src.persistence.adapteurs import (MongoCredentialsPersistence,
@@ -298,6 +298,24 @@ class TestMongoPersistence(unittest.TestCase):
         self.assertEqual(
             [self.test_picture, test_picture_3, self.test_picture_2],
             result,
+        )
+
+    def test_list_picture_missing_backup_id(self):
+        self.test_picture_2.backup_list = [
+            BackupWithoutBackupId(
+                crawler_id="AAA",
+                storage_id="BBB",
+                file_path="/file",
+                status=BackupStatus.PENDING,
+                creation_time=CURRENT_TIME
+            )
+        ]
+
+        self.persistence.record_picture(self.test_picture_2)
+
+        result = self.persistence.list_pictures(
+            start=datetime(2019, 11, 19, 12, 46, 56, tzinfo=timezone.utc),
+            end=datetime(2019, 11, 19, 12, 49, 57, tzinfo=timezone.utc),
         )
 
     def test_list_ok(self):

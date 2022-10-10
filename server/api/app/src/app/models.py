@@ -80,15 +80,15 @@ class BackupRequest:
 
 
 @dataclass
-class Backup:
+class BackupWithoutBackupId:
     crawler_id: str
     storage_id: str
     file_path: str
     status: BackupStatus
     creation_time: datetime
+@dataclass
+class Backup(BackupWithoutBackupId):
     backup_id: str
-
-
 class StorageType(Enum):
     AWS_GLACIER = 0
     AWS_S3 = 1

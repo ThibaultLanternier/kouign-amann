@@ -61,7 +61,7 @@ class MongoPersistence(PersistencePort):
 
         output.info = PictureInfo(**mongo_dict["info"])
         output.file_list = [File(**file) for file in mongo_dict["file_list"]]
-        output.backup_list = [Backup(**backup) for backup in mongo_dict["backup_list"]]
+        output.backup_list = [self._to_backup(backup) for backup in mongo_dict["backup_list"]]
 
         return output
 
@@ -86,6 +86,12 @@ class MongoPersistence(PersistencePort):
             mongo_dict["backup_id"] = None
 
         return BackupRequest(**mongo_dict)
+
+    def _to_backup(self, mongo_dict: Dict) -> Backup:
+        if "backup_id" not in mongo_dict:
+            mongo_dict["backup_id"] = None
+
+        return Backup(**mongo_dict)
 
     def get_picture(self, hash: str) -> Union[Picture, None]:
         pictures = self.db.pictures
