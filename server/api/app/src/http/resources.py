@@ -189,6 +189,7 @@ class PicturePlanBackup(Resource):
 
 
 class CrawlerBackup(Resource):
+    # Used to retrieve the list of pending backup requests for a given crawler
     def get(self, crawler_id: str):
         backup_manager = get_backup_manager()
 
@@ -229,6 +230,7 @@ class CrawlerBackup(Resource):
             picture.record_done(
                 storage_id=backup_request.storage_id,
                 crawler_id=backup_request.crawler_id,
+                backup_id=backup_request.backup_id
             )
         else:
             picture.record_deleted(

@@ -224,8 +224,27 @@ class Picture:
             f"No planned backup for storage {storage_id} and crawler {crawler_id}"
         )
 
-    def record_done(self, storage_id: str, crawler_id: str) -> None:
-        self._set_backup_status(storage_id, crawler_id, BackupStatus.DONE)
+    def _set_backup_id(self, storage_id: str, crawler_id: str, backup_id: str) -> None:
+        for backup in self.backup_list:
+            if backup.storage_id == storage_id and backup.crawler_id == crawler_id:
+                backup.backup_id = backup_id
+                return
+
+        raise BackupException(
+            f"No planned backup for storage {storage_id} and crawler {crawler_id}"
+        )
+
+    def record_done(self, storage_id: str, crawler_id: str, backup_id: str) -> None:
+        self._set_backup_status(
+            storage_id=storage_id,
+            crawler_id=crawler_id,
+            status=BackupStatus.DONE
+        )
+        self._set_backup_id(
+            storage_id=storage_id,
+            crawler_id=crawler_id,
+            backup_id=backup_id
+        )
 
     def record_deleted(self, storage_id: str, crawler_id: str) -> None:
         for backup in self.backup_list:

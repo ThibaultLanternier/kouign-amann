@@ -194,6 +194,7 @@ class MongoPersistence(PersistencePort):
                     "file_path": "$backup_list.file_path",
                     "picture_hash": "$hash",
                     "status": "$backup_list.status",
+                    "backup_id": "$backup_list.backup_id"
                 }
             },
             {"$limit": limit},

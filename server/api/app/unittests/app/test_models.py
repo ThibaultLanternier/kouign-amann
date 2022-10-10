@@ -58,9 +58,11 @@ class TestPicture(unittest.TestCase):
         self.test_picture.record_done(
             storage_id=self.pending_backup.storage_id,
             crawler_id=self.pending_backup.crawler_id,
+            backup_id="ABCDEF"
         )
 
         self.assertEqual(BackupStatus.DONE, self.test_picture.backup_list[0].status)
+        self.assertEqual("ABCDEF", self.test_picture.backup_list[0].backup_id)
 
     def test_record_deleted(self):
         pending_backup_2 = Backup(
@@ -95,6 +97,7 @@ class TestPicture(unittest.TestCase):
             self.test_picture.record_done(
                 storage_id="X",
                 crawler_id="Y",
+                backup_id="ABCDEF"
             )
 
     def test_plan_backup_ok(self):

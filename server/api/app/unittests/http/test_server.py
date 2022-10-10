@@ -424,6 +424,7 @@ class TestServer(unittest.TestCase):
             "file_path": "/file",
             "picture_hash": "acde",
             "status": "PENDING",
+            "backup_id": "ABCDEF"
         }
 
         mock_picture = MagicMock(spec=Picture)
@@ -433,7 +434,7 @@ class TestServer(unittest.TestCase):
 
         self.assertEqual(201, response.status_code)
         mock_picture.record_done.assert_called_once_with(
-            storage_id="BBB", crawler_id="AAA"
+            storage_id="BBB", crawler_id="AAA", backup_id="ABCDEF"
         )
         self.mock_app.record_picture.assert_called_once_with(picture=mock_picture)
 

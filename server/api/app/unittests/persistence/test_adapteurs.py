@@ -80,14 +80,14 @@ class TestMongoCredentialsPersistence(unittest.TestCase):
 
 
 class TestMongoPersistence(unittest.TestCase):
-    def _create_backup(self, status: BackupStatus = BackupStatus.DONE) -> Backup:
+    def _create_backup(self, status: BackupStatus = BackupStatus.DONE, backup_id: str = None) -> Backup:
         return Backup(
             crawler_id="AAA",
             storage_id="BBB",
             file_path="/file",
             status=status,
             creation_time=CURRENT_TIME,
-            backup_id=None
+            backup_id=backup_id
         )
 
     def _create_backup_request(self, backup: Backup, picture: Picture) -> BackupRequest:
@@ -157,7 +157,7 @@ class TestMongoPersistence(unittest.TestCase):
 
     def test_get_pending_backup_request_done_and_pending(self):
         pending_backup = self._create_backup(status=BackupStatus.PENDING)
-        pending_delete_backup = self._create_backup(status=BackupStatus.PENDING_DELETE)
+        pending_delete_backup = self._create_backup(status=BackupStatus.PENDING_DELETE, backup_id="ABCDEF")
 
         self.test_picture.backup_list = [
             self._create_backup(status=BackupStatus.DONE),
@@ -171,6 +171,8 @@ class TestMongoPersistence(unittest.TestCase):
         expected_backup_delete_request = self._create_backup_request(
             backup=pending_delete_backup, picture=self.test_picture
         )
+        expected_backup_delete_request.backup_id = "ABCDEF"
+
         self.persistence.record_picture(self.test_picture)
 
         backup_list = self.persistence.get_pending_backup_request(
