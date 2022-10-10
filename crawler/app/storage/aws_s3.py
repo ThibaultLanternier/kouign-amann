@@ -1,7 +1,7 @@
 from typing import TypedDict, List
 from abc import ABC, abstractmethod
 import boto3
-from app.storage.basic import AbstractStorage, PictureHashMissmatch
+from app.storage.basic import AbstractStorage, BackupResult, PictureHashMissmatch
 from app.models.backup import StorageConfig
 
 
@@ -81,25 +81,27 @@ class S3BackupStorage(AbstractStorage):
     def __del__(self):
         del self._client
 
-    def backup(self, picture_local_path: str, picture_hash) -> bool:
+    def backup(self, picture_local_path: str, picture_hash) -> BackupResult:
         if not self.check_hash(picture_local_path, picture_hash):
             raise PictureHashMissmatch
 
-        return self._client.upload_file(
+        upload_result = self._client.upload_file(
             picture_local_path, self._bucket, f"{self._prefix}{picture_hash}"
         )
 
-    def check_still_exists(self, picture_hash: str) -> bool:
+        return BackupResult(status=upload_result, picture_bckup_id=picture_hash)
+
+    def check_still_exists(self, picture_backup_id: str) -> bool:
         content_list = self._client.list_objects(
             Bucket=self._bucket,
-            Prefix=f"{self._prefix}{picture_hash}",
+            Prefix=f"{self._prefix}{picture_backup_id}",
         )
 
-        return f"{self._prefix}{picture_hash}" in content_list
+        return f"{self._prefix}{picture_backup_id}" in content_list
 
-    def delete(self, picture_hash: str) -> bool:
+    def delete(self, picture_backup_id: str) -> bool:
         self._client.delete_object(
-            Bucket=self._bucket, Prefix=f"{self._prefix}{picture_hash}"
+            Bucket=self._bucket, Prefix=f"{self._prefix}{picture_backup_id}"
         )
 
         return True

@@ -7,9 +7,9 @@ from unittest.mock import MagicMock, call, patch
 
 from app.controllers.backup import AbstractStorageConfigProvider
 from app.controllers.picture import PictureAnalyzerFactory
-from app.models.backup import StorageConfig, StorageType
+from app.models.backup import BackupRequest, StorageConfig, StorageType
 from app.storage.aws_s3 import AbstractS3Client, S3BackupStorage
-from app.storage.basic import (PictureHashMissmatch, PictureWithNoHash,
+from app.storage.basic import (BackupResult, PictureHashMissmatch, PictureWithNoHash,
                                SimpleFileStorage)
 from app.storage.factory import StorageFactory, StorageFactoryException
 from app.storage.google_photos import (AbstractCaller, AbstractTokenProvider,
@@ -93,7 +93,7 @@ class TestS3BackupStorage(unittest.TestCase):
         self.assertFalse(
             self.test_storage.backup(
                 picture_local_path=TEST_PICTURE, picture_hash=self.picture_hash
-            )
+            ).status
         )
 
         self.mock_S3_client.upload_file.assert_called_once_with(
@@ -122,7 +122,7 @@ class TestS3BackupStorage(unittest.TestCase):
         self.assertFalse(self.test_storage.check_still_exists("AAAA"))
 
     def test_delete(self):
-        self.test_storage.delete("AAAA")
+        self.test_storage.delete(picture_hash="AAAA", picture_backup_id="BBBB")
 
         self.mock_S3_client.delete_object.assert_called_once_with(
             Bucket="picture.backup.test", Prefix="test-directory-backup/AAAA"
@@ -175,7 +175,7 @@ class TestGoogleStorage(unittest.TestCase):
         self.mock_google_client.upload_picture.return_value = "google_backup_id"
 
         self.assertEqual(
-            "google_backup_id",
+            BackupResult(status=True,picture_bckup_id="google_backup_id"),
             self.google_storage.backup(
                 picture_local_path="/xxx/test", picture_hash="xxx"
             ),

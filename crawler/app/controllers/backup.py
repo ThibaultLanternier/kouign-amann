@@ -63,9 +63,11 @@ class BackupHandler(AbstractBackupHandler):
     """ Acknowledge that a backup request (save or delete) has been completed """
 
     def send_backup_completed(self, status: BackupRequest) -> bool:
+        json_payload = asdict(status, dict_factory=DictFactory)
+
         response = requests.post(
             f"{self.base_url}/crawler/backup/{self.crawler_id}",
-            json=asdict(status, dict_factory=DictFactory),
+            json=json_payload,
         )
 
         if response.status_code == 201:

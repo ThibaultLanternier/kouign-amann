@@ -49,7 +49,7 @@ class AbstractStorage:
         pass
 
     @abstractmethod
-    def delete(self, picture_hash: str, picture_backup_id) -> bool:
+    def delete(self, picture_backup_id) -> bool:
         pass
 
 

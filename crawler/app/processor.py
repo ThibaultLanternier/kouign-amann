@@ -159,12 +159,13 @@ class BackupProcessor:
 
         try:
             if request.status == BackupStatus.PENDING:
-                storage.backup(
+                backup_result = storage.backup(
                     picture_local_path=request.file_path,
                     picture_hash=request.picture_hash,
                 )
+                request.backup_id = backup_result.picture_bckup_id
             else:
-                storage.delete(picture_hash=request.picture_hash)
+                storage.delete(picture_backup_id=request.backup_id)
 
         except StorageException as e:
             self._logger.warning(
