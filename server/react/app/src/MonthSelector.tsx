@@ -8,6 +8,7 @@ import { getFrenchMonth, buildDateRangeLink } from './Tools';
 
 interface IMonthSelectorProps extends IMonthSelectorContainerProps{
     dateList : IYearDateRange[];
+    googleAuthURL : string;
 }
 
 const MonthSelector : React.FunctionComponent<IMonthSelectorProps> = (props) => {
@@ -34,24 +35,24 @@ const MonthSelector : React.FunctionComponent<IMonthSelectorProps> = (props) => 
                     setActiveMonth(activeYear.dateRangeList[eventKeyNum].start);
                 }
             }
-        }    
+        }
     };
 
     return <Card className="mb-2 sticky-top">
         <Card.Body>
             <Row>
                 <Col>
-                    <DropdownButton 
-                        className="d-inline-block me-2" 
-                        title={activeYear !== undefined ? activeYear?.year : "Année"} 
+                    <DropdownButton
+                        className="d-inline-block me-2"
+                        title={activeYear !== undefined ? activeYear?.year : "Année"}
                         onSelect={yearSelect}
                     >
                         {props.dateList.map((date, index) => (
                             <Dropdown.Item eventKey={index}>{date.year} <Badge bg="secondary">{date.pictureCount}</Badge></Dropdown.Item>
                         ))}
                     </DropdownButton>
-                    <DropdownButton 
-                        className="d-inline-block" 
+                    <DropdownButton
+                        className="d-inline-block"
                         title={activeMonth !== undefined ? getFrenchMonth(activeMonth) : "Mois"}
                         onSelect={monthSelect}
                     >
@@ -63,15 +64,18 @@ const MonthSelector : React.FunctionComponent<IMonthSelectorProps> = (props) => 
                     </DropdownButton>
                 </Col>
                 <Col>
+                    <a href={props.googleAuthURL} target="_blank" rel="noopener noreferrer">Google Authentification</a>
+                </Col>
+                <Col>
                     <PictureSizeSelector
                         minSize={40}
                         maxSize={800}
                         startSize={200}
-                        onSizeChange={props.onPictureSizeChange}    
+                        onSizeChange={props.onPictureSizeChange}
                     />
                 </Col>
             </Row>
-        </Card.Body>    
+        </Card.Body>
     </Card>
 };
 

@@ -8,16 +8,35 @@ export interface IPictureAPI {
     setAndPlanBackup: (pictureHash: string, backup: boolean) => Promise<IPicture>;
     getPictureList: (startTime: Date, endTime: Date) => Promise<IPicture[]>;
 }
+
+export interface IGoogleAuthAPI {
+    getAuthenticationLink: () => Promise<string>;
+}
 interface monthlyPictureCount {
     date: string;
     count: number;
     start_date: string;
     end_date: string;
 }
-  
+
+export class GoogleAuthAPI implements IGoogleAuthAPI {
+    private serverURL: string;
+
+    constructor(serverURL: string) {
+        this.serverURL = serverURL;
+    }
+
+    public getAuthenticationLink() : Promise<string> {
+        return axios.get<string>(
+            `${this.serverURL}/auth/google`
+        ).then((response: AxiosResponse<string>) => {
+            return response.data;
+        })
+    }
+}
 export class PictureAPI implements IPictureAPI {
     private serverURL: string;
-    
+
     constructor(serverURL: string) {
         this.serverURL = serverURL;
     }
@@ -43,7 +62,7 @@ export class PictureAPI implements IPictureAPI {
             const dateRangeList: IDateRange[] = response.data.map((value, index) => {
                 const startDate = new Date(value.start_date);
                 const endDate = new Date(value.end_date);
-                
+
                 return {
                     start: startDate,
                     end: endDate,
@@ -51,7 +70,7 @@ export class PictureAPI implements IPictureAPI {
                     id: index,
                 };
             })
-            
+
             return dateRangeList;
         });
       }
@@ -69,7 +88,7 @@ export class PictureAPI implements IPictureAPI {
             `${this.serverURL}/picture/${pictureHash}`
         ).then((response: AxiosResponse<IPicture>) => {
             return response.data
-        }); 
+        });
     }
 
     public setAndPlanBackup(pictureHash: string, backup: boolean) : Promise<IPicture> {
@@ -95,7 +114,7 @@ export class PictureAPI implements IPictureAPI {
                 params:{
                     start: startTime.toISOString(),
                     end: endTime.toISOString(),
-                }    
+                }
             })
         .then((response: AxiosResponse<IPicture[]>) => {
             return response.data.map(PictureConverter)
