@@ -336,7 +336,6 @@ class Oauth(Resource):
 
         return result, 200
 
-
 class AccessToken(Resource):
     def get(self):
         credentials_storage = get_credentials_storage()

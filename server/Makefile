@@ -55,6 +55,9 @@ helm-package:
 load-secret:
 	kubectl create secret generic aws-creds -n $(HELM_NAMESPACE) --from-literal=AWS_KEY=$(AWS_KEY) --from-literal=AWS_SECRET=$(AWS_SECRET)
 
+load-ssl-certificate:
+	kubectl create secret tls kouign-amann-tls --namespace $(HELM_NAMESPACE) --key ./api/app/MyPrivate.key --cert ./api/app/X509KouignAmann.crt
+
 # Needs to have Helm and kubectl properly configured
 init-helm:
 	helm repo add bitnami https://charts.bitnami.com/bitnami
