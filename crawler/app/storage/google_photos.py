@@ -197,6 +197,9 @@ class GooglePhotosStorage(AbstractStorage):
         self._func_caller = caller
 
     def backup(self, picture_local_path: str, picture_hash: str) -> BackupResult:
+        if not self.check_hash(picture_local_path, picture_hash):
+            return BackupResult(status=False, picture_bckup_id=picture_hash)
+
         google_picture_id = self._func_caller.call(
             func=self._api_client.upload_picture,
             params={

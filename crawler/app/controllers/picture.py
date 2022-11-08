@@ -91,7 +91,8 @@ class PictureAnalyzer(AbstractPictureAnalyzer):
         self.__thumbnail = None
 
     def __del__(self):
-        self.PILImage.close()
+        if self.PILImage is not None:
+            self.PILImage.close()
 
     def record_hash_in_exif(self, picture_hash):
         try:

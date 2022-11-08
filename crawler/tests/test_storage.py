@@ -6,7 +6,7 @@ from app.controllers.backup import AbstractStorageConfigProvider
 from app.controllers.picture import PictureAnalyzerFactory
 from app.models.backup import StorageConfig, StorageType
 from app.storage.aws_s3 import AbstractS3Client, S3BackupStorage
-from app.storage.basic import BackupResult, PictureHashMissmatch
+from app.storage.basic import AbstractStorage, BackupResult
 from app.storage.factory import StorageFactory, StorageFactoryException
 from app.storage.google_photos import (AbstractCaller, AbstractTokenProvider,
                                        GooglePhotosAPIAuthenficationException,
@@ -59,10 +59,11 @@ class TestS3BackupStorage(unittest.TestCase):
         )
 
     def test_backup_hash_missmatch(self):
-        with self.assertRaises(PictureHashMissmatch):
+        self.assertFalse(
             self.test_storage.backup(
                 picture_local_path=TEST_PICTURE, picture_hash="xxxx"
-            )
+            ).status
+        )
 
     def test_check_still_exists_file_not_exists(self):
         self.mock_S3_client.list_objects.return_value = []
@@ -87,6 +88,37 @@ class TestS3BackupStorage(unittest.TestCase):
         )
 
 
+class BasicStorage(AbstractStorage):
+    def backup(self, picture_local_path: str, picture_hash: str) -> BackupResult:
+        pass
+
+    def delete(self, picture_backup_id) -> bool:
+        pass
+
+    def check_still_exists(self, picture_backup_id: str) -> bool:
+        pass
+
+
+class TestAbstractStorage(unittest.TestCase):
+    def setUp(self) -> None:
+        self.test_storage = BasicStorage()
+
+        self.picture_hash = (
+            PictureAnalyzerFactory().perception_hash(TEST_PICTURE).get_recorded_hash()
+        )
+
+    def test_check_hash_file_not_found(self):
+        self.assertFalse(
+            self.test_storage.check_hash("test/this-file-does-not-exists", "xxxx")
+        )
+
+    def test_check_hash_ok(self):
+        self.assertTrue(self.test_storage.check_hash(TEST_PICTURE, self.picture_hash))
+
+    def test_check_hash_not_ok(self):
+        self.assertFalse(self.test_storage.check_hash(TEST_PICTURE, "incorrect_hash"))
+
+
 class SimpleCaller(AbstractCaller):
     def call(self, func: Callable, params: Dict) -> Any:
         return func(**params)
@@ -100,6 +132,11 @@ class TestGoogleStorage(unittest.TestCase):
         self.google_storage = GooglePhotosStorage(
             api_client=self.mock_google_client, caller=self.mock_caller
         )
+
+        self.mock_check_hash = MagicMock()
+        self.mock_check_hash.return_value = True
+
+        self.google_storage.check_hash = self.mock_check_hash
 
     def test_check_still_exists_not_exists(self):
         self.mock_google_client.get_picture_info.return_value = None
@@ -147,6 +184,20 @@ class TestGoogleStorage(unittest.TestCase):
             func=self.mock_google_client.upload_picture,
             params={"picture_file_path": "/xxx/test", "picture_hash": "xxx"},
         )
+
+        self.mock_check_hash.assert_called_once_with("/xxx/test", "xxx")
+
+    def test_backup_check_hash_failed(self):
+        self.mock_check_hash.return_value = False
+
+        self.assertEqual(
+            BackupResult(status=False, picture_bckup_id="xxx"),
+            self.google_storage.backup(
+                picture_local_path="/xxx/test", picture_hash="xxx"
+            ),
+        )
+
+        self.mock_check_hash.assert_called_once_with("/xxx/test", "xxx")
 
     def test_delete_ok(self):
         self.mock_google_client.edit_picture_description.return_value = True

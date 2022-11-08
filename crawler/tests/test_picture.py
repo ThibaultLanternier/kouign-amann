@@ -214,3 +214,14 @@ class TestPicture(unittest.TestCase):
             datetime(1970, 1, 1, tzinfo=timezone.utc), test_picture.creation_time
         )
         self.assertEqual((-1, -1), test_picture.resolution)
+
+    def test_file_not_found(self):
+        def create_picture():
+            PictureAnalyzer(
+                "tests/files/this-file-does-not-exists.jpg",
+                perception_hashing_function,
+                600,
+                timezone(timedelta(0, 3600)),
+            )
+
+        self.assertRaises(FileNotFoundError, create_picture)
