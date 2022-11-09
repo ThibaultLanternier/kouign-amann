@@ -16,9 +16,6 @@ from src.app.ports import (AbstractBackupManager, AbstractPictureManager,
                            MissingPictureException)
 from src.persistence.ports import CredentialsPersistencePort
 
-OAUTH_HOST = "https://app.kouignamann.bzh:5000"
-GOOGLE_OAUTH_SECRET_FILENAME = "google_api_oauth.json"
-
 
 def get_google_oauth_secret_filename() -> str:
     return current_app.config["google_auth_config_file"]
@@ -282,6 +279,7 @@ GOOGLE_PHOTO_API_SCOPES = [
 
 
 class Authentification(Resource):
+    # Returns the URL needed to authenticate with Google API
     def get(self):
         if get_google_oauth_secret_filename() is None:
             return "Google Photos not enabled", 404
@@ -291,7 +289,10 @@ class Authentification(Resource):
             scopes=GOOGLE_PHOTO_API_SCOPES,
             state=get_credentials_storage().get_current_state(),
         )
-        flow.redirect_uri = f"{OAUTH_HOST}/auth/google/callback"
+
+        ROOT_URL = request.root_url
+
+        flow.redirect_uri = f"{ROOT_URL}auth/google/callback"
 
         authorization_url, state = flow.authorization_url(
             access_type="offline", include_granted_scopes="true"
@@ -313,7 +314,9 @@ class Oauth(Resource):
             state=credentials_storage.get_current_state(),
         )
 
-        flow.redirect_uri = f"{OAUTH_HOST}/auth/google/callback"
+        ROOT_URL = request.root_url
+
+        flow.redirect_uri = f"{ROOT_URL}auth/google/callback"
 
         authorization_response = flask.request.url
         result = flow.fetch_token(authorization_response=authorization_response)
