@@ -10,6 +10,6 @@ spec:
   - ReadWriteOnce
   glusterfs:
     endpoints: gluster-cluster
-    path: /volume50g
+    path: /volume50g-single
     readOnly: false
   persistentVolumeReclaimPolicy: Retain

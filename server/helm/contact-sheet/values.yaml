@@ -46,13 +46,13 @@ ingress:
     kubernetes.io/ingress.class: public
     # kubernetes.io/tls-acme: "true"
   hosts:
-    - host: app.kouignamann.bzh
+    - host: photos.kerjeannic.com
       paths:
       - path: /
   tls:
-    - secretName: kouign-amann-tls
+    - secretName: kerjeannic-tls
       hosts:
-        - app.kouignamann.bzh
+        - photos.kerjeannic.com
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious

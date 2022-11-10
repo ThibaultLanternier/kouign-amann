@@ -20,6 +20,15 @@ data:
                     },
                     "bucket" : "picture.backup.test"
                 }
+            },
+            {
+                "id": "google_photos_backup_thl",
+                "type": "GOOGLE_PHOTOS",
+                "config": {
+                    "config_file": "google_api_oauth.json",
+                    "token_url": "https://photos.kerjeannic.com/api/auth/google/access_token",
+                    "callback_url": "https://photos.kerjeannic.com/api/auth/google/callback"
+                }
             }
         ]
     }
