@@ -1,6 +1,6 @@
 from dataclasses import asdict
 from datetime import datetime, timedelta, timezone
-from typing import Dict
+from typing import Dict, cast
 
 import flask
 import requests
@@ -115,7 +115,9 @@ class Picture(Resource):
             return "NOT FOUND", 404
 
     def post(self, hash: str):
-        picture_info = PictureInfo(**request.json)
+        request_payload = cast(Dict, request.json)
+
+        picture_info = PictureInfo(**request_payload)
 
         get_picture_manager().record_picture_info(hash, picture_info)
 
@@ -124,7 +126,9 @@ class Picture(Resource):
 
 class PictureFile(Resource):
     def put(self, hash: str):
-        picture_file = File(**request.json)
+        request_payload = cast(Dict, request.json)
+
+        picture_file = File(**request_payload)
 
         try:
             get_picture_manager().record_picture_file(hash, picture_file)
@@ -206,11 +210,13 @@ class CrawlerBackup(Resource):
 
         return backup_request
 
-    # Use to acknowledge completion of a save (PENDING) or delete backup request (PENDING_DELETE)
+    # Use to acknowledge completion of a backup request (PENDING or PENDING_DELETE)
     def post(self, crawler_id: str):
         picture_manager = get_picture_manager()
 
-        backup_request = BackupRequest(**self._add_missing_backup_id(request.json))
+        backup_request = BackupRequest(
+            **self._add_missing_backup_id(cast(Dict, request.json))
+        )
 
         if backup_request.status not in [
             BackupStatus.PENDING,
@@ -227,7 +233,7 @@ class CrawlerBackup(Resource):
             picture.record_done(
                 storage_id=backup_request.storage_id,
                 crawler_id=backup_request.crawler_id,
-                backup_id=backup_request.backup_id
+                backup_id=backup_request.backup_id,
             )
         else:
             picture.record_deleted(
@@ -243,7 +249,9 @@ class CrawlerBackup(Resource):
     def delete(self, crawler_id: str):
         picture_manager = get_picture_manager()
 
-        backup_request = BackupRequest(**self._add_missing_backup_id(request.json))
+        backup_request = BackupRequest(
+            **self._add_missing_backup_id(cast(Dict, request.json))
+        )
 
         picture = picture_manager.get_picture(backup_request.picture_hash)
 
@@ -338,6 +346,7 @@ class Oauth(Resource):
         credentials_storage.record_access_token(access_token)
 
         return result, 200
+
 
 class AccessToken(Resource):
     def get(self):

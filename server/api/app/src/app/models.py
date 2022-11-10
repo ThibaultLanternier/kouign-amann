@@ -2,7 +2,7 @@ import os
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Union
 
 from src.tools.date import DateTimeConverter, DateTimeFormatException
 
@@ -20,6 +20,7 @@ class DictFactory(dict):
             value = value.name
 
         return (key, value)
+
 
 class BackupStatus(str, Enum):
     PENDING = "PENDING"
@@ -86,9 +87,13 @@ class BackupWithoutBackupId:
     file_path: str
     status: BackupStatus
     creation_time: datetime
+
+
 @dataclass
 class Backup(BackupWithoutBackupId):
-    backup_id: str
+    backup_id: Union[str, None]
+
+
 class StorageType(Enum):
     AWS_GLACIER = 0
     AWS_S3 = 1
@@ -124,9 +129,7 @@ class StorageConfig(Storage):
                 self.config[key] = value
 
             if not isinstance(value, str):
-                raise Exception(
-                    f"Config key {key} is of type {type(value)}, only string are allowed"
-                )
+                raise Exception(f"Config key {key} is of type {type(value)} not string")
 
 
 class BackupException(Exception):
@@ -168,7 +171,7 @@ class Picture:
                             file_path=best_file.picture_path,
                             status=BackupStatus.PENDING,
                             creation_time=current_time,
-                            backup_id=None
+                            backup_id=None,
                         )
                     )
         else:
@@ -236,14 +239,10 @@ class Picture:
 
     def record_done(self, storage_id: str, crawler_id: str, backup_id: str) -> None:
         self._set_backup_status(
-            storage_id=storage_id,
-            crawler_id=crawler_id,
-            status=BackupStatus.DONE
+            storage_id=storage_id, crawler_id=crawler_id, status=BackupStatus.DONE
         )
         self._set_backup_id(
-            storage_id=storage_id,
-            crawler_id=crawler_id,
-            backup_id=backup_id
+            storage_id=storage_id, crawler_id=crawler_id, backup_id=backup_id
         )
 
     def record_deleted(self, storage_id: str, crawler_id: str) -> None:

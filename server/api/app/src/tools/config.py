@@ -1,15 +1,15 @@
 import json
-from typing import Dict, List
+from typing import List, Union
 
 from src.app.models import StorageConfig, StorageType
 
 
 class ConfigManager:
-    def __init__(self, config_file: str) -> None:
-        with open(config_file, "r") as config_file:
+    def __init__(self, config_file_name: str) -> None:
+        with open(config_file_name, "r") as config_file:
             self._config = json.load(config_file)
 
-    def storage_config_list(self) -> List[Dict]:
+    def storage_config_list(self) -> List[StorageConfig]:
         if "storage_list" not in self._config:
             raise Exception("missing storage_list key in config")
 
@@ -25,7 +25,10 @@ class ConfigManager:
 
         return output
 
-    def get_google_photos_config_file(storage_list: List[StorageConfig]) -> str:
+    @staticmethod
+    def get_google_photos_config_file(
+        storage_list: List[StorageConfig],
+    ) -> Union[str, None]:
         google_photos_config = [
             storage
             for storage in storage_list

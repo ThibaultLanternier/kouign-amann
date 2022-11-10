@@ -47,7 +47,7 @@ class TestPicture(unittest.TestCase):
             file_path="/picture_1_large",
             status=BackupStatus.PENDING,
             creation_time=OTHER_TEST_TIME,
-            backup_id=None
+            backup_id=None,
         )
 
         self.maxDiff = None
@@ -58,7 +58,7 @@ class TestPicture(unittest.TestCase):
         self.test_picture.record_done(
             storage_id=self.pending_backup.storage_id,
             crawler_id=self.pending_backup.crawler_id,
-            backup_id="ABCDEF"
+            backup_id="ABCDEF",
         )
 
         self.assertEqual(BackupStatus.DONE, self.test_picture.backup_list[0].status)
@@ -71,7 +71,7 @@ class TestPicture(unittest.TestCase):
             file_path="/picture_1_large",
             status=BackupStatus.PENDING_DELETE,
             creation_time=OTHER_TEST_TIME,
-            backup_id=None
+            backup_id=None,
         )
         self.test_picture.backup_list = [self.pending_backup, pending_backup_2]
 
@@ -95,9 +95,7 @@ class TestPicture(unittest.TestCase):
     def test_done_missing_backup(self):
         with self.assertRaises(BackupException):
             self.test_picture.record_done(
-                storage_id="X",
-                crawler_id="Y",
-                backup_id="ABCDEF"
+                storage_id="X", crawler_id="Y", backup_id="ABCDEF"
             )
 
     def test_plan_backup_ok(self):
@@ -115,7 +113,7 @@ class TestPicture(unittest.TestCase):
                     file_path="/picture_1_large",
                     status=BackupStatus.PENDING,
                     creation_time=TEST_TIME,
-                    backup_id=None
+                    backup_id=None,
                 )
             ],
         )
@@ -351,7 +349,7 @@ class TestStorageConfig(unittest.TestCase):
             StorageConfig(**input)
 
         self.assertRaisesRegex(
-            Exception, "only string are allowed", incorrect_dict_in_config
+            Exception, "not string", incorrect_dict_in_config
         )
 
     def test_int_in_config(self):
@@ -360,7 +358,7 @@ class TestStorageConfig(unittest.TestCase):
 
             StorageConfig(**input)
 
-        self.assertRaisesRegex(Exception, "only string are allowed", int_in_config)
+        self.assertRaisesRegex(Exception, "not string", int_in_config)
 
     def test_incorrect_storage_type(self):
         def incorrect_storage_type_init():
@@ -391,7 +389,10 @@ class TestStorageConfig(unittest.TestCase):
 
         self.assertEqual(expected_config, result.config)
 
+
 FAKE_CURRENT_TIME = datetime(1980, 11, 30, tzinfo=timezone.utc)
+
+
 class TestBackup(unittest.TestCase):
     def test_asdict_none_value(self):
         backup = Backup(
@@ -400,7 +401,7 @@ class TestBackup(unittest.TestCase):
             status=BackupStatus.PENDING,
             creation_time=FAKE_CURRENT_TIME,
             file_path="/file",
-            backup_id=None
+            backup_id=None,
         )
 
         expected_dict = {
@@ -408,7 +409,7 @@ class TestBackup(unittest.TestCase):
             "storage_id": "XXX",
             "status": "PENDING",
             "creation_time": "1980-11-30T00:00:00.000000Z",
-            "file_path": "/file"
+            "file_path": "/file",
         }
 
         self.assertEqual(expected_dict, asdict(backup, dict_factory=DictFactory))
@@ -420,7 +421,7 @@ class TestBackup(unittest.TestCase):
             status=BackupStatus.PENDING,
             creation_time=FAKE_CURRENT_TIME,
             file_path="/file",
-            backup_id="xyz"
+            backup_id="xyz",
         )
 
         expected_dict = {
@@ -429,7 +430,7 @@ class TestBackup(unittest.TestCase):
             "status": "PENDING",
             "creation_time": "1980-11-30T00:00:00.000000Z",
             "file_path": "/file",
-            "backup_id": "xyz"
+            "backup_id": "xyz",
         }
 
         self.assertEqual(expected_dict, asdict(backup, dict_factory=DictFactory))

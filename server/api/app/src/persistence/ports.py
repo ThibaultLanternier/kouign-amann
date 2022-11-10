@@ -12,7 +12,7 @@ class CredentialsPersistencePort(ABC):
         pass
 
     @abstractmethod
-    def get_refresh_token(self) -> GoogleRefreshToken:
+    def get_refresh_token(self) -> Union[GoogleRefreshToken, None]:
         pass
 
     @abstractmethod
@@ -20,7 +20,7 @@ class CredentialsPersistencePort(ABC):
         pass
 
     @abstractmethod
-    def get_access_token(self) -> GoogleAccessToken:
+    def get_access_token(self) -> Union[GoogleAccessToken, None]:
         pass
 
     @abstractmethod

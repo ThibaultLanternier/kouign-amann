@@ -3,9 +3,10 @@ from datetime import datetime, timedelta, timezone
 
 from pymongo import MongoClient
 
-from src.app.models import (Backup, BackupRequest, BackupStatus, BackupWithoutBackupId, File,
-                            GoogleAccessToken, GoogleRefreshToken, Picture,
-                            PictureCount, PictureInfo)
+from src.app.models import (Backup, BackupRequest, BackupStatus,
+                            BackupWithoutBackupId, File, GoogleAccessToken,
+                            GoogleRefreshToken, Picture, PictureCount,
+                            PictureInfo)
 from src.persistence.adapteurs import (MongoCredentialsPersistence,
                                        MongoPersistence)
 
@@ -80,14 +81,16 @@ class TestMongoCredentialsPersistence(unittest.TestCase):
 
 
 class TestMongoPersistence(unittest.TestCase):
-    def _create_backup(self, status: BackupStatus = BackupStatus.DONE, backup_id: str = None) -> Backup:
+    def _create_backup(
+        self, status: BackupStatus = BackupStatus.DONE, backup_id: str = None
+    ) -> Backup:
         return Backup(
             crawler_id="AAA",
             storage_id="BBB",
             file_path="/file",
             status=status,
             creation_time=CURRENT_TIME,
-            backup_id=backup_id
+            backup_id=backup_id,
         )
 
     def _create_backup_request(self, backup: Backup, picture: Picture) -> BackupRequest:
@@ -97,7 +100,7 @@ class TestMongoPersistence(unittest.TestCase):
             file_path=backup.file_path,
             picture_hash=picture.hash,
             status=backup.status,
-            backup_id=None
+            backup_id=None,
         )
 
     def _create_file(self) -> File:
@@ -157,7 +160,9 @@ class TestMongoPersistence(unittest.TestCase):
 
     def test_get_pending_backup_request_done_and_pending(self):
         pending_backup = self._create_backup(status=BackupStatus.PENDING)
-        pending_delete_backup = self._create_backup(status=BackupStatus.PENDING_DELETE, backup_id="ABCDEF")
+        pending_delete_backup = self._create_backup(
+            status=BackupStatus.PENDING_DELETE, backup_id="ABCDEF"
+        )
 
         self.test_picture.backup_list = [
             self._create_backup(status=BackupStatus.DONE),
@@ -307,13 +312,13 @@ class TestMongoPersistence(unittest.TestCase):
                 storage_id="BBB",
                 file_path="/file",
                 status=BackupStatus.PENDING,
-                creation_time=CURRENT_TIME
+                creation_time=CURRENT_TIME,
             )
         ]
 
         self.persistence.record_picture(self.test_picture_2)
 
-        result = self.persistence.list_pictures(
+        self.persistence.list_pictures(
             start=datetime(2019, 11, 19, 12, 46, 56, tzinfo=timezone.utc),
             end=datetime(2019, 11, 19, 12, 49, 57, tzinfo=timezone.utc),
         )

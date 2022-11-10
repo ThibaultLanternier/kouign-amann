@@ -316,7 +316,7 @@ class TestServer(unittest.TestCase):
             status=BackupStatus.PENDING,
             creation_time=FAKE_CURRENT_TIME,
             file_path="/file",
-            backup_id=None
+            backup_id=None,
         )
 
         picture = Picture(
@@ -343,7 +343,7 @@ class TestServer(unittest.TestCase):
                     "storage_id": "XXX",
                     "status": "PENDING",
                     "creation_time": "1980-11-30T00:00:00.000000Z",
-                    "file_path": "/file"
+                    "file_path": "/file",
                 }
             ],
             response.get_json(),
@@ -403,7 +403,7 @@ class TestServer(unittest.TestCase):
             "storage_id": "BBB",
             "file_path": "/file",
             "picture_hash": "acde",
-            "status": "PENDING"
+            "status": "PENDING",
         }
 
         backup_request = BackupRequest(backup_id=None, **backup_request_dict)
@@ -424,7 +424,7 @@ class TestServer(unittest.TestCase):
             "file_path": "/file",
             "picture_hash": "acde",
             "status": "PENDING",
-            "backup_id": "ABCDEF"
+            "backup_id": "ABCDEF",
         }
 
         mock_picture = MagicMock(spec=Picture)

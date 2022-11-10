@@ -1,6 +1,6 @@
 from dataclasses import asdict
 from datetime import datetime, timedelta, timezone
-from typing import Dict, List, Tuple, Union
+from typing import Any, Dict, List, Mapping, Sequence, Tuple, Union
 
 from bson.objectid import ObjectId
 from pymongo import ASCENDING, DESCENDING, MongoClient
@@ -21,7 +21,7 @@ class MongoCredentialsPersistence(CredentialsPersistencePort):
     def record_refresh_token(self, refresh_token: GoogleRefreshToken):
         self.db.refresh_tokens.insert_one(asdict(refresh_token))
 
-    def get_refresh_token(self) -> GoogleRefreshToken:
+    def get_refresh_token(self) -> Union[GoogleRefreshToken, None]:
         refresh_token_list = self.db.refresh_tokens.find().sort("issued_at", DESCENDING)
 
         for refresh_token in refresh_token_list:
@@ -33,7 +33,7 @@ class MongoCredentialsPersistence(CredentialsPersistencePort):
     def record_access_token(self, creds: GoogleAccessToken):
         self.db.access_tokens.insert_one(asdict(creds))
 
-    def get_access_token(self) -> GoogleAccessToken:
+    def get_access_token(self) -> Union[GoogleAccessToken, None]:
         access_token_list = self.db.access_tokens.find().sort("expires_at", DESCENDING)
 
         for access_token in access_token_list:
@@ -61,7 +61,9 @@ class MongoPersistence(PersistencePort):
 
         output.info = PictureInfo(**mongo_dict["info"])
         output.file_list = [File(**file) for file in mongo_dict["file_list"]]
-        output.backup_list = [self._to_backup(backup) for backup in mongo_dict["backup_list"]]
+        output.backup_list = [
+            self._to_backup(backup) for backup in mongo_dict["backup_list"]
+        ]
 
         return output
 
@@ -82,7 +84,7 @@ class MongoPersistence(PersistencePort):
         mongo_dict.pop("_id")
         mongo_dict["status"] = BackupStatus(mongo_dict["status"])
 
-        if not "backup_id" in mongo_dict:
+        if "backup_id" not in mongo_dict:
             mongo_dict["backup_id"] = None
 
         return BackupRequest(**mongo_dict)
@@ -133,7 +135,9 @@ class MongoPersistence(PersistencePort):
 
         return [self._mongo_dict_to_picture(picture) for picture in picture_list]
 
-    def record_picture(self, picture: Picture, updated_on: datetime = None) -> None:
+    def record_picture(
+        self, picture: Picture, updated_on: Union[datetime, None] = None
+    ) -> None:
         pictures = self.db.pictures
 
         new_picture = asdict(picture)
@@ -153,7 +157,7 @@ class MongoPersistence(PersistencePort):
     def count_picture(self) -> List[PictureCount]:
         pictures = self.db.pictures
 
-        count_query = [
+        count_query: Sequence[Mapping[str, Any]] = [
             {
                 "$group": {
                     "_id": {
@@ -185,7 +189,7 @@ class MongoPersistence(PersistencePort):
     ) -> List[BackupRequest]:
         pictures = self.db.pictures
 
-        query = [
+        query: Sequence[Mapping[str, Any]] = [
             {"$unwind": {"path": "$backup_list"}},
             {
                 "$match": {
@@ -200,7 +204,7 @@ class MongoPersistence(PersistencePort):
                     "file_path": "$backup_list.file_path",
                     "picture_hash": "$hash",
                     "status": "$backup_list.status",
-                    "backup_id": "$backup_list.backup_id"
+                    "backup_id": "$backup_list.backup_id",
                 }
             },
             {"$limit": limit},
@@ -214,7 +218,7 @@ class MongoPersistence(PersistencePort):
 def get_mongo_persistences(
     host: str, port: int = 27017
 ) -> Tuple[PersistencePort, CredentialsPersistencePort]:
-    client = MongoClient(host=host, port=port, tz_aware=True)
+    client: MongoClient = MongoClient(host=host, port=port, tz_aware=True)
     return (
         MongoPersistence(client=client, db_name="pictures-manager"),
         MongoCredentialsPersistence(client=client, db_name="pictures-manager"),
