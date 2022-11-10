@@ -1,6 +1,7 @@
 import os
 
 from src.app.adapteurs import BackupManager, PictureManager
+from src.app.models import StorageType
 from src.http.server import get_flask_app
 from src.persistence.adapteurs import get_mongo_persistences
 from src.tools.config import ConfigManager
@@ -13,12 +14,8 @@ STORAGE_CONFIG = os.getenv("STORAGE_CONFIG", "storage.json")
 
 app = get_flask_app()
 
-storage_list = ConfigManager(STORAGE_CONFIG).storage_config_list()
-
-google_auth_config_file = ConfigManager.get_google_photos_config_file(
-    storage_list=storage_list
-)
-app.config["google_auth_config_file"] = google_auth_config_file
+config_manager = ConfigManager(STORAGE_CONFIG)
+storage_list = config_manager.storage_config_list()
 
 persistence, credentials_storage = get_mongo_persistences(host=MONGO_HOST)
 picture_manager = PictureManager(persistence=persistence)
@@ -26,6 +23,17 @@ backup_manager = BackupManager(
     persistence=persistence,
     storage_config_list=storage_list,
 )
+
+google_storage_id = config_manager.get_storage_first_id_by_type(
+    StorageType.GOOGLE_PHOTOS
+)
+
+if google_storage_id is not None:
+    app.config["google_storage_config"] = backup_manager.get_storage_config(
+        storage_id=google_storage_id
+    )
+else:
+    app.config["google_storage_config"] = None
 
 app.config["picture_manager"] = picture_manager
 app.config["backup_manager"] = backup_manager

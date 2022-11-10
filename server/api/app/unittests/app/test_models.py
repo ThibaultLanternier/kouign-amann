@@ -348,9 +348,7 @@ class TestStorageConfig(unittest.TestCase):
 
             StorageConfig(**input)
 
-        self.assertRaisesRegex(
-            Exception, "not string", incorrect_dict_in_config
-        )
+        self.assertRaisesRegex(Exception, "not string", incorrect_dict_in_config)
 
     def test_int_in_config(self):
         def int_in_config():

@@ -1,6 +1,8 @@
 import unittest
 from unittest.mock import patch
 
+from marshmallow.exceptions import ValidationError
+
 from src.app.models import StorageConfig
 from src.tools.config import ConfigManager
 
@@ -14,7 +16,7 @@ class TestConfigManager(unittest.TestCase):
             **{
                 "id": "id_test",
                 "type": "AWS_S3",
-                "config": {"key": "toto", "bucket": "bucket_test"},
+                "config": {"key": "toto", "bucket": "bucket_test", "secret": "xx"},
             }
         )
 
@@ -26,6 +28,22 @@ class TestConfigManager(unittest.TestCase):
 
         self.assertEqual(expected_list, actual_list)
         mock_getenv.assert_called_once_with("TEST_KEY")
+
+    def test_check_config_incorrect(self):
+        config_manager = ConfigManager("unittests/files/test_config.json")
+
+        test_config = StorageConfig(
+            **{
+                "id": "id_test",
+                "type": "AWS_S3",
+                "config": {"key": "toto", "bucket": "bucket_test"},
+            }
+        )
+
+        def call_check_config():
+            config_manager.check_config(test_config)
+
+        self.assertRaises(ValidationError, call_check_config)
 
     def test_storage_list(self):
         storage_list = [

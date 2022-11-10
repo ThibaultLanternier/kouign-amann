@@ -1,6 +1,6 @@
 from dataclasses import asdict
 from datetime import datetime, timedelta, timezone
-from typing import Dict, cast
+from typing import Dict, Union, cast
 
 import flask
 import requests
@@ -10,15 +10,15 @@ from google_auth_oauthlib.flow import Flow
 from marshmallow import Schema, fields, post_load
 
 from src.app.models import (BackupRequest, BackupStatus, DictFactory, File,
-                            GoogleRefreshToken, PictureInfo,
+                            GoogleRefreshToken, PictureInfo, StorageConfig,
                             google_access_token_factory)
 from src.app.ports import (AbstractBackupManager, AbstractPictureManager,
                            MissingPictureException)
 from src.persistence.ports import CredentialsPersistencePort
 
 
-def get_google_oauth_secret_filename() -> str:
-    return current_app.config["google_auth_config_file"]
+def get_google_storage_config() -> Union[StorageConfig, str]:
+    return current_app.config["google_storage_config"]
 
 
 def get_picture_manager() -> AbstractPictureManager:
@@ -267,7 +267,7 @@ class CrawlerBackup(Resource):
         return f"/picture/{backup_request.picture_hash}", 201
 
 
-class StorageConfig(Resource):
+class StorageConfigProvider(Resource):
     def get(self, storage_id: str):
         backup_manager = get_backup_manager()
 
@@ -286,21 +286,22 @@ GOOGLE_PHOTO_API_SCOPES = [
 ]
 
 
-class Authentification(Resource):
+class GoogleOAuthURLProvider(Resource):
     # Returns the URL needed to authenticate with Google API
     def get(self):
-        if get_google_oauth_secret_filename() is None:
+        if get_google_storage_config() is None:
             return "Google Photos not enabled", 404
 
+        google_storage_config = get_google_storage_config()
+        google_oauth_config_filename = google_storage_config.config["config_file"]
+
         flow = Flow.from_client_secrets_file(
-            get_google_oauth_secret_filename(),
+            google_oauth_config_filename,
             scopes=GOOGLE_PHOTO_API_SCOPES,
             state=get_credentials_storage().get_current_state(),
         )
 
-        ROOT_URL = request.root_url
-
-        flow.redirect_uri = f"{ROOT_URL}auth/google/callback"
+        flow.redirect_uri = google_storage_config.config["callback_url"]
 
         authorization_url, state = flow.authorization_url(
             access_type="offline", include_granted_scopes="true"
@@ -309,22 +310,23 @@ class Authentification(Resource):
         return authorization_url, 200
 
 
-class Oauth(Resource):
+class GoogleOauthCallBack(Resource):
     def get(self):
-        if get_google_oauth_secret_filename() is None:
+        if get_google_storage_config() is None:
             return "Google Photos not enabled", 404
+
+        google_storage_config = get_google_storage_config()
+        google_oauth_config_filename = google_storage_config.config["config_file"]
 
         credentials_storage = get_credentials_storage()
 
         flow = Flow.from_client_secrets_file(
-            get_google_oauth_secret_filename(),
+            google_oauth_config_filename,
             scopes=GOOGLE_PHOTO_API_SCOPES,
             state=credentials_storage.get_current_state(),
         )
 
-        ROOT_URL = request.root_url
-
-        flow.redirect_uri = f"{ROOT_URL}auth/google/callback"
+        flow.redirect_uri = google_storage_config.config["callback_url"]
 
         authorization_response = flask.request.url
         result = flow.fetch_token(authorization_response=authorization_response)
@@ -348,8 +350,11 @@ class Oauth(Resource):
         return result, 200
 
 
-class AccessToken(Resource):
+class GoogleAccessTokenProvider(Resource):
     def get(self):
+        if get_google_storage_config() is None:
+            return "Google Photos not enabled", 404
+
         credentials_storage = get_credentials_storage()
 
         return (
@@ -358,10 +363,15 @@ class AccessToken(Resource):
         )
 
     def patch(self):
+        if get_google_storage_config() is None:
+            return "Google Photos not enabled", 404
+
+        google_oauth_config_filename = get_google_storage_config().config["config_file"]
+
         credentials_storage = get_credentials_storage()
 
         flow = Flow.from_client_secrets_file(
-            get_google_oauth_secret_filename(),
+            google_oauth_config_filename,
             scopes=GOOGLE_PHOTO_API_SCOPES,
             state=credentials_storage.get_current_state(),
         )

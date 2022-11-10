@@ -7,7 +7,8 @@
                 "key" : {
                     "from_env": "TEST_KEY"
                 },
-                "bucket" : "bucket_test"
+                "bucket" : "bucket_test",
+                "secret" : "xx"
             }
         }
     ]

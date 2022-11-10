@@ -19,6 +19,7 @@
             "config": {
                 "config_file": "google_api_oauth.json",
                 "token_url": "http://app.kouignamann.bzh:5000/auth/google/access_token",
+                "callback_url": "http://app.kouignamann.bzh:5000/auth/google/callback"
             }
         }
     ]
