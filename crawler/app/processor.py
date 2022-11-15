@@ -165,18 +165,29 @@ class BackupProcessor:
                     picture_hash=request.picture_hash,
                 )
                 request.backup_id = backup_result.picture_bckup_id
+
+                if backup_result.status:
+                    self._backup_handler.send_backup_completed(request)
+                else:
+                    self._backup_handler.send_backup_error(request)
+
+                return backup_result.status
+
             else:
                 storage.delete(picture_backup_id=request.backup_id)
+                self._backup_handler.send_backup_completed(request)
 
-        except StorageException as e:
+                return True
+
+        except Exception as e:
             self._logger.warning(
-                f"Processing of picture {request.picture_hash} failed : {e}"
+                f"Processing of picture {request.picture_hash} failed for {request.backup_id}: {e}"
             )
             self._backup_handler.send_backup_error(request)
+
             return False
 
-        self._backup_handler.send_backup_completed(request)
-        return True
+
 
     def get_backup_requests(self) -> List[BackupRequest]:
         return self._backup_handler.get_backup_requests()
@@ -247,16 +258,21 @@ class ParallelBackupProcessor:
             loop = asyncio.get_event_loop()
             backup_request: BackupRequest = await self._backup_queue.get()
             self._logger.debug(
-                f"{name} retrieved backup request for {backup_request.picture_hash}"  # noqa: E501
+                f"{name} retrieved backup request for {backup_request.picture_hash} on {backup_request.backup_id}"  # noqa: E501
             )
 
             try:
                 result = await loop.run_in_executor(
                     None, self._backup_processor.process, backup_request
                 )
-                if result:
-                    self._progressbar.update(
-                        self._requests_count - self._backup_queue.qsize()
+
+                self._progressbar.update(
+                    self._requests_count - self._backup_queue.qsize()
+                )
+
+                if not result:
+                    self._logger.error(
+                        f"backup failed for {backup_request.picture_hash}"
                     )
 
             except Exception as e:

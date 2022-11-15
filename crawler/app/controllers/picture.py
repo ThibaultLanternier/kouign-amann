@@ -59,6 +59,7 @@ class PictureAnalyzer(AbstractPictureAnalyzer):
         self.thumbnail_size = thumbnail_size, thumbnail_size
         self.current_timezone = current_timezone
 
+        self.PILImage = None
         self.PILImage = Image.open(self.picture_path)
         self.__recorder.add_step("open_picture")
 
