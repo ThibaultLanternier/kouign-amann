@@ -3,7 +3,7 @@ import unittest
 import uuid
 
 from app.storage.google_photos import (GooglePhotosAPIAuthenficationException,
-                                       GooglePhotosAPIClient)
+                                       GooglePhotosAPIClient, GooglePhotosAPIPictureNotFoundException)
 
 TEST_PICTURE="tests/files/test_image_1_3000.JPG"
 
@@ -36,7 +36,8 @@ class TestGooglePhotosAPIClient(unittest.TestCase):
         self.assertEqual(picture_info['description'], "TO BE DELETED")
 
     def test_get_not_exists(self):
-        fake_picture_id = "BLeY-QmJN3aBViPBuryTnj6odBuLQYfbahR1m4cs02D96MTdx52urlM8AxoDe0nrpQzqX1WWw1XBbpBW2Gt2hf_YDO80IIgqKQ"
-        picture_info = self.google_client.get_picture_info(picture_id=fake_picture_id)
+        def get_picture_info():
+            fake_picture_id = "BLeY-QmJN3aBViPBuryTnj6odBuLQYfbahR1m4cs02D96MTdx52urlM8AxoDe0nrpQzqX1WWw1XBbpBW2Gt2hf_YDO80IIgqKQ"
+            picture_info = self.google_client.get_picture_info(picture_id=fake_picture_id)
 
-        self.assertEqual(picture_info, None)
+        self.assertRaises(GooglePhotosAPIPictureNotFoundException, get_picture_info)

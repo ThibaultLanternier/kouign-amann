@@ -1,5 +1,7 @@
 include test.env
 
+API_URL="https://photos.kerjeannic.com/api"
+
 init:
 	pipenv install --dev
 	pipenv shell
@@ -17,7 +19,7 @@ test-unit:
 	python -m unittest discover tests -v
 
 test-integration:
-	TEST_AWS_KEY=$(AWS_KEY) TEST_AWS_SECRET=$(AWS_SECRET) GOOGLE_AUTH_ACCESS_TOKEN=$(GOOGLE_AUTH_ACCESS_TOKEN) python -m unittest discover integration_tests
+	TEST_AWS_KEY=$(AWS_KEY) TEST_AWS_SECRET=$(AWS_SECRET) GOOGLE_AUTH_ACCESS_TOKEN=$(GOOGLE_AUTH_ACCESS_TOKEN) API_URL=$(API_URL) python -m unittest discover integration_tests
 
 clean:
 	pipenv --rm

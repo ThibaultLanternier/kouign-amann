@@ -1,14 +1,17 @@
 import unittest
+import os
 from datetime import datetime, timezone
 
 from app.controllers.picture import PictureData
 from app.controllers.recorder import PictureRESTRecorder
 from app.models.picture import PictureOrientation
 
-BASE_URL = "http://app.kouignamann.bzh:5000"
-
+BASE_URL = os.getenv("API_URL")
 
 class TestPictureRESTRecorder(unittest.TestCase):
+    def setUp(self) -> None:
+        self.assertIsNotNone(os.getenv("API_URL"))
+
     def test_record(self):
         picture_dict = {
             "hash": "c643dbe5e4d60e0a",
