@@ -1,5 +1,0 @@
-.venv
-.vscode
-*.pyc
-dev.env
-google_api_oauth.json

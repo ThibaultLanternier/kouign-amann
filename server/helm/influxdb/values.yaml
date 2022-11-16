@@ -1,4 +1,0 @@
-service:
-  type: NodePort
-persistence:
-  storageClass: microk8s-hostpath
