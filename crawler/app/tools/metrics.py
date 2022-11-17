@@ -1,10 +1,11 @@
 from influxdb_client import Point
 from datetime import datetime, timezone
 from time import time_ns
+from typing import Union
 
 
 class MetricRecorder:
-    def __init__(self, measurement_name: str, now_ns: int = None) -> None:
+    def __init__(self, measurement_name: str, now_ns: Union[int, None] = None) -> None:
         self.__p = Point(measurement_name)
 
         self.__last_timestamp_ns = (
@@ -19,7 +20,7 @@ class MetricRecorder:
     def __get_now_timestamp_ns(self) -> int:
         return int(time_ns())
 
-    def add_step(self, name: str, now_ns: int = None) -> None:
+    def add_step(self, name: str, now_ns: Union[int, None] = None) -> None:
         now_ns = self.__get_now_timestamp_ns() if now_ns is None else now_ns
 
         step_duration = now_ns - self.__last_timestamp_ns
@@ -36,7 +37,7 @@ class MetricRecorder:
     def get_steps(self) -> Point:
         return self.__p._fields
 
-    def get_line(self, current_timestamp_ns: int = None) -> str:
+    def get_line(self, current_timestamp_ns: Union[int, None] = None) -> str:
         if current_timestamp_ns is None:
             current_timestamp_ns = self.__get_now_timestamp_ns()
 

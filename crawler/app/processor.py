@@ -12,7 +12,6 @@ from app.controllers.backup import AbstractBackupHandler
 from app.controllers.picture import AbstractPictureAnalyzer
 from app.controllers.recorder import PictureRESTRecorder
 from app.models.backup import BackupRequest, BackupStatus
-from app.storage.basic import StorageException
 from app.storage.factory import StorageFactory
 from app.tools.metrics import MetricRecorder
 
@@ -181,13 +180,11 @@ class BackupProcessor:
 
         except Exception as e:
             self._logger.warning(
-                f"Processing of picture {request.picture_hash} failed for {request.backup_id}: {e}"
+                f"Picture {request.picture_hash} failed for {request.backup_id}: {e}"
             )
             self._backup_handler.send_backup_error(request)
 
             return False
-
-
 
     def get_backup_requests(self) -> List[BackupRequest]:
         return self._backup_handler.get_backup_requests()

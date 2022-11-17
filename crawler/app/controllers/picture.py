@@ -59,7 +59,6 @@ class PictureAnalyzer(AbstractPictureAnalyzer):
         self.thumbnail_size = thumbnail_size, thumbnail_size
         self.current_timezone = current_timezone
 
-        self.PILImage = None
         self.PILImage = Image.open(self.picture_path)
         self.__recorder.add_step("open_picture")
 
@@ -92,7 +91,7 @@ class PictureAnalyzer(AbstractPictureAnalyzer):
         self.__thumbnail = None
 
     def __del__(self):
-        if self.PILImage is not None:
+        if hasattr(self, "PILImage"):
             self.PILImage.close()
 
     def record_hash_in_exif(self, picture_hash):

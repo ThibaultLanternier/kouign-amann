@@ -1,8 +1,9 @@
-import unittest
 import os
+import unittest
 from datetime import datetime, timezone
 
 from app.storage.google_photos import RESTTokenProvider
+
 
 class TestRESTTokenProvider(unittest.TestCase):
     def setUp(self) -> None:

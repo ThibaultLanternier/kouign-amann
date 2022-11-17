@@ -3,7 +3,8 @@ import unittest
 import uuid
 
 from app.storage.google_photos import (GooglePhotosAPIAuthenficationException,
-                                       GooglePhotosAPIClient, GooglePhotosAPIPictureNotFoundException)
+                                       GooglePhotosAPIClient,
+                                       GooglePhotosAPIPictureNotFoundException)
 
 TEST_PICTURE="tests/files/test_image_1_3000.JPG"
 
