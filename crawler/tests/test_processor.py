@@ -1,5 +1,6 @@
 import unittest
 from datetime import datetime
+from pathlib import Path
 from unittest.mock import MagicMock
 
 from progressbar import ProgressBar
@@ -125,7 +126,7 @@ class TestBackupProcessor(unittest.TestCase):
             self.backup_request
         )
         self.mock_storage.backup.assert_called_once_with(
-            picture_local_path="/file", picture_hash="C"
+            picture_local_path=Path("/file"), picture_hash="C"
         )
 
     def test_process_storage_exception(self):

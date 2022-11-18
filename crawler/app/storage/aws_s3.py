@@ -1,5 +1,6 @@
 from typing import TypedDict, List
 from abc import ABC, abstractmethod
+from pathlib import Path
 import boto3
 from app.storage.basic import AbstractStorage, BackupResult
 from app.models.backup import StorageConfig
@@ -81,12 +82,12 @@ class S3BackupStorage(AbstractStorage):
     def __del__(self):
         del self._client
 
-    def backup(self, picture_local_path: str, picture_hash) -> BackupResult:
+    def backup(self, picture_local_path: Path, picture_hash) -> BackupResult:
         if not self.check_hash(picture_local_path, picture_hash):
             return BackupResult(status=False, picture_bckup_id=picture_hash)
 
         upload_result = self._client.upload_file(
-            picture_local_path, self._bucket, f"{self._prefix}{picture_hash}"
+            str(picture_local_path), self._bucket, f"{self._prefix}{picture_hash}"
         )
 
         return BackupResult(status=upload_result, picture_bckup_id=picture_hash)

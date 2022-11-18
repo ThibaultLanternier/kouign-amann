@@ -3,6 +3,8 @@ from typing import Tuple, Any
 from datetime import datetime
 from app.tools.date import DateTimeConverter
 
+from pathlib import Path
+
 
 class DictFactory(dict):
     def __init__(self, data):
@@ -17,5 +19,8 @@ class DictFactory(dict):
 
         if isinstance(value, Enum):
             value = value.name
+
+        if isinstance(value, Path):
+            value = str(value)
 
         return (key, value)

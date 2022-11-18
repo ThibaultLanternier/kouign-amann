@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from pathlib import Path
 
 from abc import ABC, abstractmethod
 
@@ -24,7 +25,7 @@ class BackupResult:
 
 
 class AbstractStorage(ABC):
-    def check_hash(self, picture_local_path: str, picture_hash: str) -> bool:
+    def check_hash(self, picture_local_path: Path, picture_hash: str) -> bool:
         try:
             recorded_picture_hash = (
                 PictureAnalyzerFactory()
@@ -40,7 +41,7 @@ class AbstractStorage(ABC):
         return picture_hash == recorded_picture_hash
 
     @abstractmethod
-    def backup(self, picture_local_path: str, picture_hash: str) -> BackupResult:
+    def backup(self, picture_local_path: Path, picture_hash: str) -> BackupResult:
         pass
 
     @abstractmethod

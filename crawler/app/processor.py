@@ -1,6 +1,7 @@
 import asyncio
 from asyncio import Task
 from datetime import datetime
+from pathlib import Path
 from queue import Queue
 from threading import Thread
 from typing import Callable, List
@@ -19,7 +20,7 @@ from app.tools.metrics import MetricRecorder
 class ParalellPictureProcessor:
     def __init__(
         self,
-        picture_path_list: List[str],
+        picture_path_list: List[Path],
         picture_processor: Callable[[str], bool],
         logger,
         progressbar: ProgressBar,
@@ -92,7 +93,7 @@ def record_metric_file(recorder: MetricRecorder, file_name: str) -> None:
 class PictureProcessor:
     def __init__(
         self,
-        picture_factory: Callable[[str], AbstractPictureAnalyzer],
+        picture_factory: Callable[[Path], AbstractPictureAnalyzer],
         picture_recorder: PictureRESTRecorder,
         crawler_id: str,
         crawl_time: datetime,
@@ -160,7 +161,7 @@ class BackupProcessor:
         try:
             if request.status == BackupStatus.PENDING:
                 backup_result = storage.backup(
-                    picture_local_path=request.file_path,
+                    picture_local_path=Path(request.file_path),
                     picture_hash=request.picture_hash,
                 )
                 request.backup_id = backup_result.picture_bckup_id

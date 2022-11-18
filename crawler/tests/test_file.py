@@ -1,15 +1,19 @@
 import unittest
+import platform
+from pathlib import Path
 
 from app.controllers.file import FileCrawler
 
 
 class TestFileCrawler(unittest.TestCase):
+    @unittest.skipIf(platform.system() == "Windows", "Not relevant as Windows is not Case Sensitive")
     def test_get_file_list(self):
         self.assertEqual(
-            ["tests/files/crawl/sub-directory/small-2.JPG"],
+            [Path("tests/files/crawl/sub-directory/small-2.JPG")],
             list(
                 FileCrawler(
-                    "tests/files/crawl", extension_list=["JPG"], use_absolute_path=False
+                    start_path="tests/files/crawl",
+                    pattern_match_list=["**/*.JPG"],
                 ).get_file_list()
             ),
         )
@@ -17,17 +21,16 @@ class TestFileCrawler(unittest.TestCase):
     def test_get_file_list_2_extensions(self):
         actual_list = list(
             FileCrawler(
-                "tests/files/crawl",
-                extension_list=["jpg", "JPG", "png"],
-                use_absolute_path=False,
+                start_path="tests/files/crawl",
+                pattern_match_list=["**/*.JPG", "**/*.jpg"],
             ).get_file_list()
         )
 
         self.assertEqual(
-            [
-                "tests/files/crawl/small-1.jpg",
-                "tests/files/crawl/sub-directory/small-3.jpg",
-                "tests/files/crawl/sub-directory/small-2.JPG",
-            ],
-            actual_list,
+            set([
+                Path("tests/files/crawl/sub-directory/small-2.JPG"),
+                Path("tests/files/crawl/small-1.jpg"),
+                Path("tests/files/crawl/sub-directory/small-3.jpg"),
+            ]),
+            set(actual_list),
         )

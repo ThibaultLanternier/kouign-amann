@@ -1,6 +1,7 @@
 import dataclasses
 import unittest
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 from imagehash import ImageHash
 from PIL import Image
@@ -47,13 +48,13 @@ HORIZONTAL_IMAGE_NAME = "tests/files/IMG_7095-300px.JPG"
 class TestPicture(unittest.TestCase):
     def test_factory(self):
         test_picture = PictureAnalyzerFactory().perception_hash(
-            "tests/files/test-canon-eos70D.jpg"
+            Path("tests/files/test-canon-eos70D.jpg")
         )
         self.assertIsInstance(test_picture, PictureAnalyzer)
 
     def test_get_base64_thumbnail(self):
         test_picture = PictureAnalyzer(
-            "tests/files/test-canon-eos70D.jpg", perception_hashing_function, 5
+            Path("tests/files/test-canon-eos70D.jpg"), perception_hashing_function, 5
         )
         base64_thumbnail = test_picture.get_base64_thumbnail()
 
@@ -105,7 +106,7 @@ class TestPicture(unittest.TestCase):
 
     def test_get_data(self):
         test_picture = PictureAnalyzer(
-            "tests/files/test-canon-eos70D.jpg", perception_hashing_function, 5
+            Path("tests/files/test-canon-eos70D.jpg"), perception_hashing_function, 5
         )
 
         expected_dict = {
@@ -113,7 +114,7 @@ class TestPicture(unittest.TestCase):
             "creation_time": datetime(2019, 11, 19, 12, 46, 56, 0, timezone.utc),
             "resolution": (5472, 3648),
             "thumbnail": CANON_EOS_70D_THUMBNAIL,
-            "picture_path": "tests/files/test-canon-eos70D.jpg",
+            "picture_path": Path("tests/files/test-canon-eos70D.jpg"),
             "orientation": PictureOrientation.LANDSCAPE,
         }
         actual_data = test_picture.get_data()
@@ -122,14 +123,14 @@ class TestPicture(unittest.TestCase):
 
     def test_get_data_missing_date(self):
         test_picture = PictureAnalyzer(
-            "tests/files/0025.jpg", perception_hashing_function, 5
+            Path("tests/files/0025.jpg"), perception_hashing_function, 5
         )
 
         expected_dict = {
             "hash": "dc5a230bcb89ddc8",
             "creation_time": datetime(1970, 1, 1, tzinfo=timezone.utc),
             "resolution": (-1, -1),
-            "picture_path": "tests/files/0025.jpg",
+            "picture_path": Path("tests/files/0025.jpg"),
             "orientation": PictureOrientation.LANDSCAPE,
         }
         actual_dict = dataclasses.asdict(test_picture.get_data())
@@ -139,14 +140,14 @@ class TestPicture(unittest.TestCase):
 
     def test_get_data_no_thumbnail(self):
         test_picture = PictureAnalyzer(
-            "tests/files/test-canon-eos70D.jpg", perception_hashing_function, 5
+            Path("tests/files/test-canon-eos70D.jpg"), perception_hashing_function, 5
         )
 
         expected_dict = {
             "hash": "c643dbe5e4d60e0a",
             "creation_time": datetime(2019, 11, 19, 12, 46, 56, 0, timezone.utc),
             "resolution": (5472, 3648),
-            "picture_path": "tests/files/test-canon-eos70D.jpg",
+            "picture_path": Path("tests/files/test-canon-eos70D.jpg"),
             "thumbnail": None,
             "orientation": None,
         }
@@ -159,10 +160,12 @@ class TestPicture(unittest.TestCase):
         Checks if an image has the same hash as its thumbnail
         """
         test_picture = PictureAnalyzer(
-            "tests/files/test-canon-eos70D.jpg", perception_hashing_function, 600
+            Path("tests/files/test-canon-eos70D.jpg"), perception_hashing_function, 600
         )
         test_picture_small = PictureAnalyzer(
-            "tests/files/test-canon-eos70D-small.jpg", perception_hashing_function, 600
+            Path("tests/files/test-canon-eos70D-small.jpg"),
+            perception_hashing_function,
+            600,
         )
 
         self.assertEqual(test_picture.image_hash, test_picture_small.image_hash)
@@ -172,17 +175,19 @@ class TestPicture(unittest.TestCase):
         Checks if an image has the same hash as its thumbnail
         """
         test_picture = PictureAnalyzer(
-            "tests/files/test-canon-eos70D.jpg", perception_hashing_function, 600
+            Path("tests/files/test-canon-eos70D.jpg"), perception_hashing_function, 600
         )
         test_picture_small = PictureAnalyzer(
-            "tests/files/test-canon-eos70D-bw.jpg", perception_hashing_function, 600
+            Path("tests/files/test-canon-eos70D-bw.jpg"),
+            perception_hashing_function,
+            600,
         )
 
         self.assertEqual(test_picture.image_hash, test_picture_small.image_hash)
 
     def test_resolution(self):
         test_picture = PictureAnalyzer(
-            "tests/files/test-canon-eos70D.jpg",
+            Path("tests/files/test-canon-eos70D.jpg"),
             perception_hashing_function,
             600,
             timezone(timedelta(0, 3600)),
@@ -193,7 +198,7 @@ class TestPicture(unittest.TestCase):
 
     def test_time_extraction(self):
         test_picture = PictureAnalyzer(
-            "tests/files/test-canon-eos70D.jpg",
+            Path("tests/files/test-canon-eos70D.jpg"),
             perception_hashing_function,
             600,
             timezone(timedelta(0, 3600)),
@@ -204,7 +209,7 @@ class TestPicture(unittest.TestCase):
 
     def test_time_extraction_missing_exif(self):
         test_picture = PictureAnalyzer(
-            "tests/files/picture-no-exif.jpg",
+            Path("tests/files/picture-no-exif.jpg"),
             perception_hashing_function,
             600,
             timezone(timedelta(0, 3600)),
@@ -218,7 +223,7 @@ class TestPicture(unittest.TestCase):
     def test_file_not_found(self):
         def create_picture():
             PictureAnalyzer(
-                "tests/files/this-file-does-not-exists.jpg",
+                Path("tests/files/this-file-does-not-exists.jpg"),
                 perception_hashing_function,
                 600,
                 timezone(timedelta(0, 3600)),

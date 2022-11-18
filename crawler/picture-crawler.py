@@ -4,6 +4,8 @@ import configparser
 import asyncio
 import uuid
 
+from pathlib import Path
+
 from datetime import datetime
 from progressbar import ProgressBar
 
@@ -91,7 +93,7 @@ def crawl(config_file: str):
     file_crawler = FileCrawler(FILE_PATH)
     picture_recorder = PictureRESTRecorder(REST_API_URL)
 
-    def picture_with_perception_hash(picture_path: str) -> AbstractPictureAnalyzer:
+    def picture_with_perception_hash(picture_path: Path) -> AbstractPictureAnalyzer:
         return PictureAnalyzerFactory().perception_hash(picture_path)
 
     CRAWL_ID = uuid.uuid4()
@@ -108,7 +110,11 @@ def crawl(config_file: str):
     progressbar = ProgressBar()
 
     paralell_processor = ParalellPictureProcessor(
-        file_crawler.get_file_list(), processor.process, logger, progressbar, WORKER_QTY
+        list(file_crawler.get_file_list()),
+        processor.process,
+        logger,
+        progressbar,
+        WORKER_QTY,
     )
 
     paralell_processor.run()

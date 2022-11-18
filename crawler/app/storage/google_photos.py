@@ -1,4 +1,7 @@
 import requests
+
+from pathlib import Path
+
 from app.models.backup import StorageConfig
 
 from marshmallow import Schema, fields, EXCLUDE
@@ -196,7 +199,7 @@ class GooglePhotosStorage(AbstractStorage):
         self._api_client = api_client
         self._func_caller = caller
 
-    def backup(self, picture_local_path: str, picture_hash: str) -> BackupResult:
+    def backup(self, picture_local_path: Path, picture_hash: str) -> BackupResult:
         if not self.check_hash(picture_local_path, picture_hash):
             return BackupResult(status=False, picture_bckup_id=picture_hash)
 

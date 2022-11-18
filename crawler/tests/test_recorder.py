@@ -1,6 +1,7 @@
 import logging
 import unittest
 from datetime import datetime, timezone
+from pathlib import Path
 from unittest.mock import MagicMock, call, patch
 
 from requests import Response
@@ -18,7 +19,7 @@ class TestPictureRESTRecorder(unittest.TestCase):
             "creation_time": datetime(2019, 11, 19, 12, 46, 56, 0, timezone.utc),
             "resolution": (5472, 3648),
             "thumbnail": "THUMBNAIL",
-            "picture_path": "fake/path",
+            "picture_path": Path("fake/path"),
             "orientation": PictureOrientation.LANDSCAPE,
         }
 
@@ -33,7 +34,7 @@ class TestPictureRESTRecorder(unittest.TestCase):
             "creation_time": "2019-11-19T12:46:56.000000Z",
             "resolution": (5472, 3648),
             "thumbnail": "THUMBNAIL",
-            "picture_path": "fake/path",
+            "picture_path": str(Path("fake/path")),
             "crawl_time": "2019-11-19T12:46:56.000000Z",
             "crawler_id": "xxx",
         }
@@ -46,7 +47,7 @@ class TestPictureRESTRecorder(unittest.TestCase):
 
         self.expected_file_payload = {
             "resolution": (5472, 3648),
-            "picture_path": "fake/path",
+            "picture_path": str(Path("fake/path")),
             "last_seen": "2019-11-19T12:46:56.000000Z",
             "crawler_id": "xxx",
         }

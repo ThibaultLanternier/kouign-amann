@@ -4,6 +4,7 @@ import logging
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta, timezone
 from typing import List, Tuple
+from pathlib import Path
 
 import imagehash
 import piexif
@@ -45,7 +46,7 @@ DEFAULT_THUMBNAIL_SIZE = 800
 class PictureAnalyzer(AbstractPictureAnalyzer):
     def __init__(
         self,
-        picture_path: str,
+        picture_path: Path,
         hashing_function,
         thumbnail_size: int = DEFAULT_THUMBNAIL_SIZE,
         current_timezone: timezone = timezone.utc,
@@ -212,7 +213,7 @@ class PictureAnalyzer(AbstractPictureAnalyzer):
 
 class PictureAnalyzerFactory:
     def perception_hash(
-        self, picture_path: str, thumbnail_size: int = DEFAULT_THUMBNAIL_SIZE
+        self, picture_path: Path, thumbnail_size: int = DEFAULT_THUMBNAIL_SIZE
     ) -> AbstractPictureAnalyzer:
         return PictureAnalyzer(
             picture_path, perception_hashing_function, thumbnail_size
