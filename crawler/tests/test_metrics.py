@@ -1,5 +1,5 @@
-import unittest
 import platform
+import unittest
 from time import time_ns
 
 from app.tools.metrics import MetricRecorder
@@ -33,7 +33,10 @@ class TestMetricRecorder(unittest.TestCase):
             recorder.get_line(end_time),
         )
 
-    @unittest.skipIf(platform.system() == "Windows", "No correct implementation of NanoSecond counter on Windows")
+    @unittest.skipIf(
+        platform.system() == "Windows",
+        "No correct implementation of NanoSecond counter on Windows",
+    )
     def test_record_metric_without_time_injection(self):
         recorder = MetricRecorder(measurement_name="test")
         recorder.add_step("step_1")
