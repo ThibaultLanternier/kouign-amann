@@ -3,6 +3,7 @@ import logging
 import configparser
 import asyncio
 import uuid
+import platform
 
 from pathlib import Path
 
@@ -42,7 +43,29 @@ def init():
     """
     To come generate a config.ini file with a unique id
     """
-    raise NotImplementedError()
+    config_file_path = Path("config.ini")
+
+    if config_file_path.is_file():
+        raise Exception("config.ini already exists please delete it first")
+
+    new_config = configparser.ConfigParser()
+
+    default_id = platform.node() + "-" + str(uuid.uuid4())
+
+    new_config["crawler"] = {}
+    new_config["crawler"]["id"] = click.prompt("Enter Crawler Id", default=default_id)
+    new_config["crawler"]["worker_qty"] = "4"
+    new_config["crawler"]["picture_path"] = click.prompt(
+        "Enter absolute path to your pictures directory"
+    )
+
+    new_config["server"] = {}
+    new_config["server"]["url"] = click.prompt(
+        "Enter API URL", default="https://photos.kerjeannic.com/api"
+    )
+
+    with open("config.ini", "w") as config_file:
+        new_config.write(config_file)
 
 
 @cli.command()
