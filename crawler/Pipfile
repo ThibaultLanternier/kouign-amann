@@ -25,6 +25,7 @@ types-requests = "*"
 types-pytz = "*"
 pyinstaller = "*"
 pywin32-ctypes = "*"
+pefile = "*"
 
 [requires]
 python_version = "3.11"
