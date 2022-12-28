@@ -40,10 +40,10 @@ test-unit:
 test-integration:
 	TEST_AWS_KEY=$(AWS_KEY) TEST_AWS_SECRET=$(AWS_SECRET) GOOGLE_AUTH_ACCESS_TOKEN=$(GOOGLE_AUTH_ACCESS_TOKEN) API_URL=$(API_URL) python -m unittest discover integration_tests
 
-build:
-	pyinstaller --name kouign-amann-$(SEMVER_APP) -F --clean ./picture-crawler.py
-	
 publish: test-unit style-check
+	pyinstaller --name kouign-amann-$(SEMVER_APP) -F --clean ./picture-crawler.py
+
+publish-windows: test-unit
 	pyinstaller --name kouign-amann-$(SEMVER_APP) -F --clean ./picture-crawler.py
 
 clean:
