@@ -1,0 +1,34 @@
+[[source]]
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+requests = "*"
+imagehash = "*"
+piexif = "*"
+pytz = "*"
+pillow = "*"
+click = "*"
+mypy = "*"
+boto3 = "*"
+influxdb-client = "*"
+progressbar2 = "*"
+marshmallow = "*"
+
+[dev-packages]
+pdbpp = "*"
+flake8 = "*"
+black = "*"
+isort = "*"
+types-requests = "*"
+types-pytz = "*"
+pyinstaller = "*"
+pywin32-ctypes = "*"
+pefile = "*"
+
+[requires]
+python_version = "3.11"
+
+[pipenv]
+allow_prereleases = true

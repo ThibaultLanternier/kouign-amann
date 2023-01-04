@@ -1,0 +1,147 @@
+import click
+import logging
+import configparser
+import asyncio
+import uuid
+import platform
+
+from pathlib import Path
+
+from datetime import datetime
+from progressbar import ProgressBar
+
+from app.processor import (
+    PictureProcessor,
+    ParalellPictureProcessor,
+    BackupProcessor,
+    ParallelBackupProcessor,
+)
+from app.controllers.picture import AbstractPictureAnalyzer, PictureAnalyzerFactory
+from app.controllers.recorder import PictureRESTRecorder
+from app.controllers.backup import BackupHandler
+from app.controllers.file import FileCrawler
+from app.tools.logger import init_console
+from app.storage.factory import StorageFactory
+
+FILE_PATH = "/home/thibault/Images"
+REST_API_URL = "http://localhost:5000"
+CRAWLER_ID = "debug-local"
+CRAWL_TIME = datetime.utcnow()
+WORKER_QTY = 10
+
+init_console(logging.INFO)
+logger = logging.getLogger("app.crawl")
+
+
+@click.group()
+def cli():
+    pass
+
+
+@cli.command()
+def init():
+    """
+    To come generate a config.ini file with a unique id
+    """
+    config_file_path = Path("config.ini")
+
+    if config_file_path.is_file():
+        raise Exception("config.ini already exists please delete it first")
+
+    new_config = configparser.ConfigParser()
+
+    default_id = platform.node() + "-" + str(uuid.uuid4())
+
+    new_config["crawler"] = {}
+    new_config["crawler"]["id"] = click.prompt("Enter Crawler Id", default=default_id)
+    new_config["crawler"]["worker_qty"] = "4"
+    new_config["crawler"]["picture_path"] = click.prompt(
+        "Enter absolute path to your pictures directory"
+    )
+
+    new_config["server"] = {}
+    new_config["server"]["url"] = click.prompt(
+        "Enter API URL", default="https://photos.kerjeannic.com/api"
+    )
+
+    with open("config.ini", "w") as config_file:
+        new_config.write(config_file)
+
+
+@cli.command()
+@click.option(
+    "--config-file", default="config.ini", help="Location of the configuration file"
+)
+def backup(config_file):
+    """
+    Start processing backup requests
+    """
+    config = configparser.ConfigParser()
+    config.read(config_file)
+
+    CRAWLER_ID = config["crawler"]["id"]
+    REST_API_URL = config["server"]["url"]
+
+    handler = BackupHandler(crawler_id=CRAWLER_ID, base_url=REST_API_URL)
+    storage_factory = StorageFactory(handler)
+    backup_processor = BackupProcessor(handler, storage_factory, logger)
+
+    progressbar = ProgressBar()
+
+    parallel_backup_processor = ParallelBackupProcessor(
+        backup_processor, logger, progressbar
+    )
+
+    asyncio.run(parallel_backup_processor.run_forever())
+
+
+@cli.command()
+@click.option(
+    "--config-file", default="config.ini", help="Location of the configuration file"
+)
+def crawl(config_file: str):
+    """
+    Start crawling for pictures
+    """
+    config = configparser.ConfigParser()
+    config.read(config_file)
+
+    FILE_PATH = config["crawler"]["picture_path"]
+    REST_API_URL = config["server"]["url"]
+    CRAWL_TIME = datetime.utcnow()
+    CRAWLER_ID = config["crawler"]["id"]
+    WORKER_QTY = int(config["crawler"].get("worker_qty", "5"))
+    METRICS_OUTPUT_PATH = config["crawler"].get("metrics_output_path", None)
+
+    file_crawler = FileCrawler(FILE_PATH)
+    picture_recorder = PictureRESTRecorder(REST_API_URL)
+
+    def picture_with_perception_hash(picture_path: Path) -> AbstractPictureAnalyzer:
+        return PictureAnalyzerFactory().perception_hash(picture_path)
+
+    CRAWL_ID = uuid.uuid4()
+
+    processor = PictureProcessor(
+        picture_with_perception_hash,
+        picture_recorder,
+        CRAWLER_ID,
+        CRAWL_TIME,
+        METRICS_OUTPUT_PATH,
+        CRAWL_ID,
+    )
+
+    progressbar = ProgressBar()
+
+    paralell_processor = ParalellPictureProcessor(
+        list(file_crawler.get_file_list()),
+        processor.process,
+        logger,
+        progressbar,
+        WORKER_QTY,
+    )
+
+    paralell_processor.run()
+
+
+if __name__ == "__main__":
+    cli()
