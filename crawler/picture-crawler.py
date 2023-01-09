@@ -20,7 +20,7 @@ from app.controllers.picture import AbstractPictureAnalyzer, PictureAnalyzerFact
 from app.controllers.recorder import PictureRESTRecorder
 from app.controllers.backup import BackupHandler
 from app.controllers.file import FileCrawler
-from app.tools.logger import init_console
+from app.tools.logger import init_console, init_file_log
 from app.storage.factory import StorageFactory
 
 FILE_PATH = "/home/thibault/Images"
@@ -30,6 +30,7 @@ CRAWL_TIME = datetime.utcnow()
 WORKER_QTY = 10
 
 init_console(logging.INFO)
+
 logger = logging.getLogger("app.crawl")
 
 
@@ -114,6 +115,10 @@ def crawl(config_file: str):
     CRAWLER_ID = config["crawler"]["id"]
     WORKER_QTY = int(config["crawler"].get("worker_qty", "5"))
     METRICS_OUTPUT_PATH = config["crawler"].get("metrics_output_path", None)
+    FILE_LOGS_PATH = config["crawler"].get("file_logs_path", None)
+
+    if FILE_LOGS_PATH is not None:
+        init_file_log(logging.DEBUG, FILE_LOGS_PATH)
 
     file_crawler = FileCrawler(directory_list=DIRECTORY_LIST)
     picture_recorder = PictureRESTRecorder(REST_API_URL)
