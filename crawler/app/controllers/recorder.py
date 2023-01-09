@@ -77,6 +77,9 @@ class PictureRESTRecorder:
             if picture_data.thumbnail is not None:
                 self._record_info(picture_data)
                 self.record_metric.add_step("recording_thumbnail")
+                self.record_metric.add_tag("picture_type", "new")
+            else:
+                self.record_metric.add_tag("picture_type", "existing")
 
             self._record_file(picture_data, crawl_time, crawler_id)
             self.record_metric.add_step("recording_file_location")
@@ -87,9 +90,6 @@ class PictureRESTRecorder:
             return False
 
     def picture_already_exists(self, picture_hash: str):
-        self.picture_exists_metric = MetricRecorder(measurement_name="picture_check")
-        self.picture_exists_metric.set_hash(picture_hash)
         response = requests.get(f"{self.base_url}/picture/exists/{picture_hash}")
-        self.picture_exists_metric.add_step("checking_picture_exists")
 
         return response.status_code == 200

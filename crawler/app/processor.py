@@ -133,10 +133,6 @@ class PictureProcessor:
                 self.picture_recorder.record_metric,
                 self._get_file_name(worker_id, "record"),
             )
-            record_metric_file(
-                self.picture_recorder.picture_exists_metric,
-                self._get_file_name(worker_id, "check"),
-            )
 
         return record_result
 

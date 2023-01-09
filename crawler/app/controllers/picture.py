@@ -69,11 +69,12 @@ class PictureAnalyzer(AbstractPictureAnalyzer):
             self.__recorder.add_tag("hash_origin", "compute")
             self.image_hash = str(hashing_function(self.PILImage))
             self.record_hash_in_exif(self.image_hash)
+            self.__recorder.add_step("hash_generation")
         else:
             self.__recorder.add_tag("hash_origin", "retrieve")
+            self.__recorder.add_step("hash_retrieval")
 
         self.__recorder.set_hash(self.image_hash)
-        self.__recorder.add_step("hash_generation")
 
         self.logger.debug(
             "Opening picture %s hash:%s, thumbnail size %s, timezone %s",
