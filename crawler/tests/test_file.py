@@ -14,7 +14,7 @@ class TestFileCrawler(unittest.TestCase):
             [Path("tests/files/crawl/sub-directory/small-2.JPG")],
             list(
                 FileCrawler(
-                    start_path="tests/files/crawl",
+                    directory_list=["tests/files/crawl"],
                     pattern_match_list=["**/*.JPG"],
                 ).get_file_list()
             ),
@@ -23,7 +23,7 @@ class TestFileCrawler(unittest.TestCase):
     def test_get_file_list_2_extensions(self):
         actual_list = list(
             FileCrawler(
-                start_path="tests/files/crawl",
+                directory_list=["tests/files/crawl"],
                 pattern_match_list=["**/*.JPG", "**/*.jpg"],
             ).get_file_list()
         )

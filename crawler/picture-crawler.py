@@ -106,14 +106,16 @@ def crawl(config_file: str):
     config = configparser.ConfigParser()
     config.read(config_file)
 
-    FILE_PATH = config["crawler"]["picture_path"]
+    DIRECTORY_SECTION = config.items("picture_directories")
+    DIRECTORY_LIST = [x[1] for x in DIRECTORY_SECTION]
+
     REST_API_URL = config["server"]["url"]
     CRAWL_TIME = datetime.utcnow()
     CRAWLER_ID = config["crawler"]["id"]
     WORKER_QTY = int(config["crawler"].get("worker_qty", "5"))
     METRICS_OUTPUT_PATH = config["crawler"].get("metrics_output_path", None)
 
-    file_crawler = FileCrawler(FILE_PATH)
+    file_crawler = FileCrawler(directory_list=DIRECTORY_LIST)
     picture_recorder = PictureRESTRecorder(REST_API_URL)
 
     def picture_with_perception_hash(picture_path: Path) -> AbstractPictureAnalyzer:
