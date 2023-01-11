@@ -98,7 +98,11 @@ class PictureAnalyzer(AbstractPictureAnalyzer):
 
     def record_hash_in_exif(self, picture_hash):
         try:
-            exif_dict = piexif.load(self.PILImage.info["exif"])
+            if "exif" in self.PILImage.info:
+                exif_dict = piexif.load(self.PILImage.info["exif"])
+            else:
+                exif_dict = piexif.load(self.picture_path)
+
             exif_dict["0th"][piexif.ImageIFD.ImageID] = f"phash:{picture_hash}"
 
             exif_bytes = piexif.dump(exif_dict)
