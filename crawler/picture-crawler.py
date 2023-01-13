@@ -4,6 +4,7 @@ import configparser
 import asyncio
 import uuid
 import platform
+import random
 
 from pathlib import Path
 
@@ -139,8 +140,11 @@ def crawl(config_file: str):
 
     progressbar = ProgressBar()
 
+    file_list = list(file_crawler.get_file_list())
+    random.shuffle(file_list)
+
     paralell_processor = ParalellPictureProcessor(
-        list(file_crawler.get_file_list()),
+        file_list,
         processor.process,
         logger,
         progressbar,
