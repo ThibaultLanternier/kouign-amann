@@ -1,18 +1,66 @@
 import logging
+import csv
+import os
+
 from datetime import datetime, timedelta
-from typing import List, Tuple
+from typing import List, Tuple, Dict, Iterator
 
 import requests
 
 from app.models.picture import PictureData
 from app.models.shared import DictFactory
+from app.models.file import LocalFile
 from app.tools.metrics import MetricRecorder
 
 from dataclasses import asdict
+from pathlib import Path
 
 
 class RecorderException(Exception):
     pass
+
+
+class LocalPathStore:
+    def __init__(self, file_directory: Path) -> None:
+        self._directory_path = file_directory
+        self._storage_file_list = self._get_storage_file_list()
+
+    def _get_storage_file_list(self) -> List[Path]:
+        return [path for path in self._directory_path.glob("*-localstore.csv")]
+
+    def _get_file_name(self, worker_id: int):
+        return self._directory_path / f"{worker_id}-localstore.csv"
+
+    def _get_raw_data_list(self) -> Iterator[Tuple[str, str]]:
+        for path in self._get_storage_file_list():
+            with open(path, "r") as file:
+                csv_file = csv.reader(file, delimiter=";")
+                for csv_line in csv_file:
+                    yield (csv_line[0], csv_line[1])
+
+    def get_file_list(self) -> Dict[Path, LocalFile]:
+        output: Dict[Path, LocalFile] = {}
+
+        for data in self._get_raw_data_list():
+            path = Path(data[0])
+            last_modified = datetime.fromisoformat(data[1])
+
+            if path not in output.keys():
+                output[path] = LocalFile(path=path, last_modified=last_modified)
+
+        return output
+
+    def add_file(self, path: Path, worker_id: int):
+        last_modified_ts = os.path.getmtime(path)
+        last_modified = datetime.fromtimestamp(last_modified_ts)
+
+        with open(self._get_file_name(worker_id=worker_id), "a+") as f:
+            csv_writer = csv.writer(f, delimiter=";")
+            csv_writer.writerow([str(path), last_modified.isoformat()])
+
+    def reset(self):
+        for storage_file in self._get_storage_file_list():
+            os.remove(storage_file)
 
 
 class PictureRESTRecorder:

@@ -1,12 +1,14 @@
 import logging
+import os
+import secrets
 import unittest
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest.mock import MagicMock, call, patch
 
 from requests import Response
 
-from app.controllers.recorder import PictureRESTRecorder
+from app.controllers.recorder import LocalPathStore, PictureRESTRecorder
 from app.models.picture import PictureData, PictureOrientation
 
 
@@ -127,3 +129,42 @@ class TestPictureRESTRecorder(unittest.TestCase):
         )
 
         self.assertFalse(result)
+
+
+class TestLocalPathStore(unittest.TestCase):
+    def setUp(self) -> None:
+        self.file_name_list = [
+            Path(f"tests/files/local_recorder/{secrets.token_hex(8)}.txt"),
+            Path(f"tests/files/local_recorder/{secrets.token_hex(8)}.txt"),
+            Path(f"tests/files/local_recorder/{secrets.token_hex(8)}.txt"),
+        ]
+
+        for file_name in self.file_name_list:
+            with open(str(file_name), "w+") as f:
+                f.write("Fichier de test")
+
+        self.recorder = LocalPathStore(
+            file_directory=Path("tests/files/local_recorder/")
+        )
+
+    def tearDown(self) -> None:
+        for file_name in self.file_name_list:
+            os.remove(file_name)
+
+        self.recorder.reset()
+
+    def test_add_get_file(self):
+        self.recorder.add_file(path=self.file_name_list[0], worker_id=1)
+        self.recorder.add_file(path=self.file_name_list[1], worker_id=1)
+        self.recorder.add_file(path=self.file_name_list[1], worker_id=2)
+        self.recorder.add_file(path=self.file_name_list[2], worker_id=2)
+
+        file_list = set(self.recorder.get_file_list().keys())
+
+        self.assertEqual(set(self.file_name_list), file_list)
+
+        current_time = datetime.now()
+
+        for value in self.recorder.get_file_list().values():
+            delta = current_time - value.last_modified
+            self.assertLess(delta, timedelta(seconds=1))
