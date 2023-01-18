@@ -1,6 +1,8 @@
 import logging
-from typing import List, Iterator
+from typing import List, Iterator, Dict
 from pathlib import Path
+
+from app.models.file import LocalFile
 
 
 class FileCrawler:
@@ -18,7 +20,7 @@ class FileCrawler:
             f"Creating FileCrawler with following directories : {directory_list_str}"
         )
 
-    def get_file_list(self) -> Iterator[Path]:
+    def get_file_list(self) -> Iterator[LocalFile]:
         unique_path_list = set()
 
         for pattern in self._pattern_match_list:
@@ -26,4 +28,15 @@ class FileCrawler:
                 for path in _path.glob(pattern):
                     if path not in unique_path_list:
                         unique_path_list.add(path)
-                        yield path
+                        yield LocalFile.from_path(path=path)
+
+    @classmethod
+    def get_relevant_files(
+        cls, file_list: Iterator[LocalFile], crawl_history: Dict[Path, LocalFile]
+    ) -> Iterator[LocalFile]:
+        for file in file_list:
+            if file.path in crawl_history.keys():
+                if file.last_modified > crawl_history[file.path].last_modified:
+                    yield file
+            else:
+                yield file

@@ -10,8 +10,9 @@ from uuid import UUID
 from progressbar import ProgressBar
 
 from app.controllers.backup import AbstractBackupHandler
-from app.controllers.picture import AbstractPictureAnalyzer
-from app.controllers.recorder import PictureRESTRecorder
+from app.controllers.picture import (AbstractPictureAnalyzer,
+                                     CorruptedPictureFileError)
+from app.controllers.recorder import CrawlHistoryStore, PictureRESTRecorder
 from app.models.backup import BackupRequest, BackupStatus
 from app.storage.factory import StorageFactory
 from app.tools.metrics import MetricRecorder
@@ -21,7 +22,7 @@ class ParalellPictureProcessor:
     def __init__(
         self,
         picture_path_list: List[Path],
-        picture_processor: Callable[[str], bool],
+        picture_processor: Callable[[Path, int], bool],
         logger,
         progressbar: ProgressBar,
         worker_qty: int = 4,
@@ -99,6 +100,7 @@ class PictureProcessor:
         crawl_time: datetime,
         metrics_output_path: str,
         crawl_id: UUID,
+        crawl_history: CrawlHistoryStore,
     ):
         self.picture_factory = picture_factory
         self.picture_recorder = picture_recorder
@@ -106,24 +108,29 @@ class PictureProcessor:
         self.crawl_time = crawl_time
         self.metrics_path = metrics_output_path
         self.crawl_id = crawl_id
+        self.crawl_history = crawl_history
 
     def _get_file_name(self, worker_id, name) -> str:
         influx_file = f"picture-{name}-{self.crawl_id}-{worker_id}.influx"
         return f"{self.metrics_path}/{influx_file}"
 
-    def process(self, picture_path, worker_id=1):
-        picture = self.picture_factory(picture_path)
+    def process(self, picture_path: Path, worker_id: int) -> bool:
+        try:
+            picture = self.picture_factory(picture_path)
 
-        if self.picture_recorder.picture_already_exists(picture.image_hash):
-            picture_data = picture.get_data(create_thumbnail=False)
-        else:
-            picture_data = picture.get_data(create_thumbnail=True)
+            if self.picture_recorder.picture_already_exists(picture.get_hash()):
+                picture_data = picture.get_data(create_thumbnail=False)
+            else:
+                picture_data = picture.get_data(create_thumbnail=True)
 
-        record_result = self.picture_recorder.record(
-            picture_data=picture_data,
-            crawler_id=self.crawler_id,
-            crawl_time=self.crawl_time,
-        )
+            record_result = self.picture_recorder.record(
+                picture_data=picture_data,
+                crawler_id=self.crawler_id,
+                crawl_time=self.crawl_time,
+            )
+        except CorruptedPictureFileError:
+            self.crawl_history.add_file(path=picture_path, worker_id=worker_id)
+            return False
 
         if self.metrics_path is not None:
             record_metric_file(
@@ -133,6 +140,9 @@ class PictureProcessor:
                 self.picture_recorder.record_metric,
                 self._get_file_name(worker_id, "record"),
             )
+
+        if record_result:
+            self.crawl_history.add_file(path=picture_path, worker_id=worker_id)
 
         return record_result
 

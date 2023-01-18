@@ -20,10 +20,9 @@ class RecorderException(Exception):
     pass
 
 
-class LocalPathStore:
-    def __init__(self, file_directory: Path) -> None:
+class CrawlHistoryStore:
+    def __init__(self, file_directory: Path = Path("")) -> None:
         self._directory_path = file_directory
-        self._storage_file_list = self._get_storage_file_list()
 
     def _get_storage_file_list(self) -> List[Path]:
         return [path for path in self._directory_path.glob("*-localstore.csv")]
@@ -38,15 +37,20 @@ class LocalPathStore:
                 for csv_line in csv_file:
                     yield (csv_line[0], csv_line[1])
 
-    def get_file_list(self) -> Dict[Path, LocalFile]:
+    def get_crawl_history(self) -> Dict[Path, LocalFile]:
         output: Dict[Path, LocalFile] = {}
 
         for data in self._get_raw_data_list():
             path = Path(data[0])
             last_modified = datetime.fromisoformat(data[1])
 
+            local_file = LocalFile(path=path, last_modified=last_modified)
+
             if path not in output.keys():
-                output[path] = LocalFile(path=path, last_modified=last_modified)
+                output[path] = local_file
+            else:
+                if output[path].last_modified < local_file.last_modified:
+                    output[path] = local_file
 
         return output
 

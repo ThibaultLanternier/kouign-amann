@@ -18,7 +18,7 @@ from app.processor import (
     ParallelBackupProcessor,
 )
 from app.controllers.picture import AbstractPictureAnalyzer, PictureAnalyzerFactory
-from app.controllers.recorder import PictureRESTRecorder
+from app.controllers.recorder import PictureRESTRecorder, CrawlHistoryStore
 from app.controllers.backup import BackupHandler
 from app.controllers.file import FileCrawler
 from app.tools.logger import init_console, init_file_log
@@ -129,6 +129,8 @@ def crawl(config_file: str):
 
     CRAWL_ID = uuid.uuid4()
 
+    crawl_history_store = CrawlHistoryStore()
+
     processor = PictureProcessor(
         picture_with_perception_hash,
         picture_recorder,
@@ -136,15 +138,21 @@ def crawl(config_file: str):
         CRAWL_TIME,
         METRICS_OUTPUT_PATH,
         CRAWL_ID,
+        crawl_history_store,
     )
 
     progressbar = ProgressBar()
 
-    file_list = list(file_crawler.get_file_list())
-    random.shuffle(file_list)
+    local_file_list = FileCrawler.get_relevant_files(
+        file_list=file_crawler.get_file_list(),
+        crawl_history=crawl_history_store.get_crawl_history(),
+    )
+
+    path_list = [local_file.path for local_file in local_file_list]
+    random.shuffle(path_list)
 
     paralell_processor = ParalellPictureProcessor(
-        file_list,
+        path_list,
         processor.process,
         logger,
         progressbar,

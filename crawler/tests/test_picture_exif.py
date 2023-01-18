@@ -36,7 +36,7 @@ class TestPictureExif(unittest.TestCase):
         self, hash: str, picture_file: str
     ) -> AbstractPictureAnalyzer:
         picture = PictureAnalyzerFactory().perception_hash(picture_file)
-        picture.record_hash_in_exif(hash)
+        picture._record_hash_in_exif(hash)
 
         new_picture = PictureAnalyzerFactory().perception_hash(picture_file)
         return new_picture
@@ -47,7 +47,7 @@ class TestPictureExif(unittest.TestCase):
             test_hash, self.__class__.test_file_camera
         )
 
-        self.assertEqual(test_hash, picture_with_hash.get_recorded_hash())
+        self.assertEqual(test_hash, picture_with_hash._get_recorded_hash())
 
     def test_record_hash_in_exif_scan_picture(self):
         test_hash = secrets.token_hex(8)
@@ -55,7 +55,7 @@ class TestPictureExif(unittest.TestCase):
             test_hash, self.__class__.test_file_old_scan
         )
 
-        self.assertEqual(test_hash, picture_with_hash.get_recorded_hash())
+        self.assertEqual(test_hash, picture_with_hash._get_recorded_hash())
 
     def test_record_hash_in_exif_fuji_picture(self):
         test_hash = secrets.token_hex(8)
@@ -63,4 +63,4 @@ class TestPictureExif(unittest.TestCase):
             test_hash, self.__class__.test_file_fuji_camera
         )
 
-        self.assertEqual(test_hash, picture_with_hash.get_recorded_hash())
+        self.assertEqual(test_hash, picture_with_hash._get_recorded_hash())

@@ -6,7 +6,8 @@ from pathlib import Path
 from imagehash import ImageHash
 from PIL import Image
 
-from app.controllers.picture import (PictureAnalyzer, PictureAnalyzerFactory,
+from app.controllers.picture import (CorruptedPictureFileError,
+                                     PictureAnalyzer, PictureAnalyzerFactory,
                                      perception_hashing_function)
 from app.models.picture import PictureOrientation
 
@@ -51,6 +52,12 @@ class TestPicture(unittest.TestCase):
             Path("tests/files/test-canon-eos70D.jpg")
         )
         self.assertIsInstance(test_picture, PictureAnalyzer)
+
+    def test_uncorrect_picture_file_error(self):
+        def create_picture():
+            PictureAnalyzerFactory().perception_hash(Path("tests/files/not_a_jpeg.jpg"))
+
+        self.assertRaises(CorruptedPictureFileError, create_picture)
 
     def test_get_base64_thumbnail(self):
         test_picture = PictureAnalyzer(

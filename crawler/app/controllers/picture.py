@@ -9,7 +9,7 @@ from pathlib import Path
 import imagehash
 import piexif
 from imagehash import ImageHash
-from PIL import Image, ImageOps
+from PIL import Image, ImageOps, UnidentifiedImageError
 
 from app.tools.hash import HashExtractor
 from app.models.picture import PictureData, PictureOrientation
@@ -30,17 +30,25 @@ class AbstractPictureAnalyzer(ABC):
         pass
 
     @abstractmethod
-    def get_recorded_hash(self) -> str:
+    def _get_recorded_hash(self) -> str:
         pass
 
     @abstractmethod
     def get_metric(self) -> MetricRecorder:
         pass
 
+    @abstractmethod
+    def get_hash(self) -> str:
+        pass
+
 
 DEFAULT_DATETIME = datetime(1970, 1, 1, tzinfo=timezone.utc)
 
 DEFAULT_THUMBNAIL_SIZE = 800
+
+
+class CorruptedPictureFileError(Exception):
+    pass
 
 
 class PictureAnalyzer(AbstractPictureAnalyzer):
@@ -60,15 +68,21 @@ class PictureAnalyzer(AbstractPictureAnalyzer):
         self.thumbnail_size = thumbnail_size, thumbnail_size
         self.current_timezone = current_timezone
 
-        self.PILImage = Image.open(self.picture_path)
+        try:
+            self.PILImage = Image.open(self.picture_path)
+        except UnidentifiedImageError:
+            raise CorruptedPictureFileError(
+                f"File {self.picture_path} is not a correct image file"
+            )
+
         self.__recorder.add_step("open_picture")
 
-        self.image_hash = self.get_recorded_hash()
+        self.image_hash = self._get_recorded_hash()
 
         if self.image_hash is None:
             self.__recorder.add_tag("hash_origin", "compute")
             self.image_hash = str(hashing_function(self.PILImage))
-            self.record_hash_in_exif(self.image_hash)
+            self._record_hash_in_exif(self.image_hash)
             self.__recorder.add_step("hash_generation")
         else:
             self.__recorder.add_tag("hash_origin", "retrieve")
@@ -96,7 +110,7 @@ class PictureAnalyzer(AbstractPictureAnalyzer):
         if hasattr(self, "PILImage"):
             self.PILImage.close()
 
-    def record_hash_in_exif(self, picture_hash):
+    def _record_hash_in_exif(self, picture_hash):
         try:
             if "exif" in self.PILImage.info:
                 exif_dict = piexif.load(self.PILImage.info["exif"])
@@ -112,7 +126,7 @@ class PictureAnalyzer(AbstractPictureAnalyzer):
         except Exception:
             return None
 
-    def get_recorded_hash(self):
+    def _get_recorded_hash(self):
         try:
             exif_dict = piexif.load(self.PILImage.info["exif"])
             hash = exif_dict["0th"][piexif.ImageIFD.ImageID].decode("ASCII")
@@ -214,6 +228,9 @@ class PictureAnalyzer(AbstractPictureAnalyzer):
 
     def get_metric(self) -> MetricRecorder:
         return self.__recorder
+
+    def get_hash(self) -> str:
+        return self.image_hash
 
 
 class PictureAnalyzerFactory:

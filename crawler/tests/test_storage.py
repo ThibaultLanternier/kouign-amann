@@ -30,7 +30,7 @@ class TestS3BackupStorage(unittest.TestCase):
         )
 
         self.picture_hash = (
-            PictureAnalyzerFactory().perception_hash(TEST_PICTURE).get_recorded_hash()
+            PictureAnalyzerFactory().perception_hash(TEST_PICTURE)._get_recorded_hash()
         )
 
     def test_backup_ok(self):
@@ -104,7 +104,7 @@ class TestAbstractStorage(unittest.TestCase):
         self.test_storage = BasicStorage()
 
         self.picture_hash = (
-            PictureAnalyzerFactory().perception_hash(TEST_PICTURE).get_recorded_hash()
+            PictureAnalyzerFactory().perception_hash(TEST_PICTURE)._get_recorded_hash()
         )
 
     def test_check_hash_file_not_found(self):

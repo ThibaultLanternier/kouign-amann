@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, call, patch
 
 from requests import Response
 
-from app.controllers.recorder import LocalPathStore, PictureRESTRecorder
+from app.controllers.recorder import CrawlHistoryStore, PictureRESTRecorder
 from app.models.picture import PictureData, PictureOrientation
 
 
@@ -143,7 +143,7 @@ class TestLocalPathStore(unittest.TestCase):
             with open(str(file_name), "w+") as f:
                 f.write("Fichier de test")
 
-        self.recorder = LocalPathStore(
+        self.recorder = CrawlHistoryStore(
             file_directory=Path("tests/files/local_recorder/")
         )
 
@@ -159,12 +159,12 @@ class TestLocalPathStore(unittest.TestCase):
         self.recorder.add_file(path=self.file_name_list[1], worker_id=2)
         self.recorder.add_file(path=self.file_name_list[2], worker_id=2)
 
-        file_list = set(self.recorder.get_file_list().keys())
+        file_list = set(self.recorder.get_crawl_history().keys())
 
         self.assertEqual(set(self.file_name_list), file_list)
 
         current_time = datetime.now()
 
-        for value in self.recorder.get_file_list().values():
+        for value in self.recorder.get_crawl_history().values():
             delta = current_time - value.last_modified
             self.assertLess(delta, timedelta(seconds=1))
