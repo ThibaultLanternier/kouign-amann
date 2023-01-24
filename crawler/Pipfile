@@ -15,6 +15,7 @@ boto3 = "*"
 influxdb-client = "*"
 progressbar2 = "*"
 marshmallow = "*"
+aiohttp = "*"
 
 [dev-packages]
 pdbpp = "*"
