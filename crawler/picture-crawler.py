@@ -16,9 +16,14 @@ from app.processor import (
     ParalellPictureProcessor,
     BackupProcessor,
     ParallelBackupProcessor,
+    AsyncPictureProcessor,
 )
 from app.controllers.picture import AbstractPictureAnalyzer, PictureAnalyzerFactory
-from app.controllers.recorder import PictureRESTRecorder, CrawlHistoryStore
+from app.controllers.recorder import (
+    PictureRESTRecorder,
+    CrawlHistoryStore,
+    AsyncRecorder,
+)
 from app.controllers.backup import BackupHandler
 from app.controllers.file import FileCrawler
 from app.tools.logger import init_console, init_file_log
@@ -101,6 +106,34 @@ def backup(config_file):
 @click.option(
     "--config-file", default="config.ini", help="Location of the configuration file"
 )
+def crawlasync(config_file):
+    config = configparser.ConfigParser()
+    config.read(config_file)
+
+    CRAWLER_ID = config["crawler"]["id"]
+    REST_API_URL = config["server"]["url"]
+    CRAWL_TIME = datetime.utcnow()
+
+    DIRECTORY_SECTION = config.items("picture_directories")
+    DIRECTORY_LIST = [x[1] for x in DIRECTORY_SECTION]
+
+    file_crawler = FileCrawler(DIRECTORY_LIST)
+    path_list = [local_file.path for local_file in file_crawler.get_file_list()]
+
+    async_processor = AsyncPictureProcessor(
+        picture_path_list=path_list,
+        crawler_id=CRAWLER_ID,
+        crawl_time=CRAWL_TIME,
+        async_recorder=AsyncRecorder(base_url=REST_API_URL),
+    )
+
+    asyncio.run(async_processor.process())
+
+
+@cli.command()
+@click.option(
+    "--config-file", default="config.ini", help="Location of the configuration file"
+)
 def crawl(config_file: str):
     """
     Start crawling for pictures
@@ -143,8 +176,10 @@ def crawl(config_file: str):
 
     progressbar = ProgressBar()
 
+    file_list = file_crawler.get_file_list()
+
     local_file_list = FileCrawler.get_relevant_files(
-        file_list=file_crawler.get_file_list(),
+        file_list=file_list,
         crawl_history=crawl_history_store.get_crawl_history(),
     )
 
