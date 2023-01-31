@@ -1,4 +1,5 @@
 import asyncio
+import aiofiles
 import logging
 import os
 import secrets
@@ -9,9 +10,10 @@ from typing import Awaitable
 from unittest.mock import MagicMock, Mock, call, patch
 
 from aiohttp import ClientResponse, ClientSession
+from aiofiles import os as async_os
 from requests import Response
 
-from app.controllers.recorder import (AsyncRecorder, CrawlHistoryStore,
+from app.controllers.recorder import (AsyncRecorder, AsyncCrawlHistoryStore, CrawlHistoryStore,
                                       PictureRESTRecorder)
 from app.models.picture import (PictureData, PictureFile, PictureInfo,
                                 PictureOrientation)
@@ -212,6 +214,48 @@ class TestPictureRESTRecorder(unittest.TestCase):
         )
 
         self.assertFalse(result)
+
+class TestAsyncCrawlHistoryStore(unittest.IsolatedAsyncioTestCase):
+    async def asyncSetUp(self) -> None:
+        self.file_name_list = [
+            Path(f"tests/files/local_recorder/{secrets.token_hex(8)}.txt"),
+            Path(f"tests/files/local_recorder/{secrets.token_hex(8)}.txt"),
+            Path(f"tests/files/local_recorder/{secrets.token_hex(8)}.txt"),
+        ]
+
+        for file_name in self.file_name_list:
+            async with aiofiles.open(str(file_name), "w+") as f:
+                await f.write("Fichier de test")
+
+        self.recorder = AsyncCrawlHistoryStore(
+            file_directory=Path("tests/files/local_recorder/")
+        )
+
+    async def test_async_add_get_file(self):
+        await asyncio.gather(
+            self.recorder.add_file(path=self.file_name_list[0]),
+            self.recorder.add_file(path=self.file_name_list[1]),
+            self.recorder.add_file(path=self.file_name_list[1]),
+            self.recorder.add_file(path=self.file_name_list[2])
+        )
+
+        crawl_history = self.recorder.get_crawl_history()
+
+        file_list = set(crawl_history.keys())
+
+        self.assertEqual(set(self.file_name_list), file_list)
+
+        current_time = datetime.now()
+
+        for value in crawl_history.values():
+            delta = current_time - value.last_modified
+            self.assertLess(delta, timedelta(seconds=1))
+
+    async def asyncTearDown(self) -> None:
+        for file_name in self.file_name_list:
+            await async_os.remove(file_name)
+
+        await self.recorder.reset()
 
 
 class TestLocalPathStore(unittest.TestCase):
