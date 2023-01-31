@@ -16,8 +16,9 @@ from app.controllers.exif import (ExifException, ExifImageImpossibleToOpen,
 from app.controllers.hashing import Hasher, HasherException
 from app.controllers.picture import (AbstractPictureAnalyzer,
                                      CorruptedPictureFileError)
-from app.controllers.recorder import (AsyncRecorder, CrawlHistoryStore,
+from app.controllers.recorder import (AsyncRecorder, CrawlHistoryStore, AsyncCrawlHistoryStore,
                                       PictureRESTRecorder, RecorderException)
+from app.controllers.file import FileCrawler
 from app.controllers.thumbnail import ThumbnailImage
 from app.models.backup import BackupRequest, BackupStatus
 from app.models.picture import PictureFile, PictureInfo
@@ -319,11 +320,13 @@ class AsyncPictureProcessor:
         self,
         picture_path_list: List[Path],
         async_recorder: AsyncRecorder,
+        file_history_recorder: AsyncCrawlHistoryStore,
         crawler_id: str,
         crawl_time: datetime,
     ) -> None:
         self._picture_path_list = picture_path_list
         self._async_recorder = async_recorder
+        self._file_history_recorder = file_history_recorder
         self._crawl_time = crawl_time
         self._crawler_id = crawler_id
 
@@ -375,6 +378,7 @@ class AsyncPictureProcessor:
 
             except ExifImageImpossibleToOpen:
                 self._update_progress_bar()
+                await self._file_history_recorder.add_file(path)
                 return path
             except HasherException:
                 raise HasherException(str(path))
@@ -385,6 +389,7 @@ class AsyncPictureProcessor:
 
             self._update_progress_bar()
 
+            await self._file_history_recorder.add_file(path)
             return path
 
     def _count_exception(self, result_list: List[Any], exception: Type) -> int:

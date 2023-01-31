@@ -23,6 +23,7 @@ from app.controllers.recorder import (
     PictureRESTRecorder,
     CrawlHistoryStore,
     AsyncRecorder,
+    AsyncCrawlHistoryStore
 )
 from app.controllers.backup import BackupHandler
 from app.controllers.file import FileCrawler
@@ -117,14 +118,24 @@ def crawlasync(config_file):
     DIRECTORY_SECTION = config.items("picture_directories")
     DIRECTORY_LIST = [x[1] for x in DIRECTORY_SECTION]
 
+    file_history_recorder = AsyncCrawlHistoryStore()
+
     file_crawler = FileCrawler(DIRECTORY_LIST)
-    path_list = [local_file.path for local_file in file_crawler.get_file_list()]
+    file_list = file_crawler.get_file_list()
+
+    new_modified_files = FileCrawler.get_relevant_files(
+        file_list=file_list,
+        crawl_history=file_history_recorder.get_crawl_history(),
+    )
+
+    path_list = [local_file.path for local_file in new_modified_files]
 
     async_processor = AsyncPictureProcessor(
         picture_path_list=path_list,
         crawler_id=CRAWLER_ID,
         crawl_time=CRAWL_TIME,
         async_recorder=AsyncRecorder(base_url=REST_API_URL),
+        file_history_recorder=file_history_recorder
     )
 
     asyncio.run(async_processor.process())
@@ -184,6 +195,7 @@ def crawl(config_file: str):
     )
 
     path_list = [local_file.path for local_file in local_file_list]
+
     random.shuffle(path_list)
 
     paralell_processor = ParalellPictureProcessor(
