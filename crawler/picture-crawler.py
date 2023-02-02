@@ -63,9 +63,27 @@ def init():
     new_config["crawler"] = {}
     new_config["crawler"]["id"] = click.prompt("Enter Crawler Id", default=default_id)
     new_config["crawler"]["worker_qty"] = "4"
-    new_config["crawler"]["picture_path"] = click.prompt(
-        "Enter absolute path to your pictures directory"
-    )
+
+    adding_path_directory = True
+
+    path_directory_list = []
+
+    while adding_path_directory:
+        new_path = click.prompt("Enter absolute path to picture directory")
+        path_directory_list.append(new_path)
+
+        keep_adding_path = click.prompt("Add additional path (Y|N)")
+
+        if keep_adding_path == "N":
+            adding_path_directory = False
+
+    new_config["picture_directories"] = {}
+
+    index = 1
+
+    for path in path_directory_list:
+        new_config["picture_directories"][f"directory_{index}"] = path
+        index = index + 1
 
     new_config["server"] = {}
     new_config["server"]["url"] = click.prompt(
