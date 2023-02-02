@@ -11,17 +11,14 @@ from uuid import UUID
 from progressbar import ProgressBar
 
 from app.controllers.backup import AbstractBackupHandler
-from app.controllers.exif import ExifException, ExifImageImpossibleToOpen, ExifManager
+from app.controllers.exif import (ExifException, ExifImageImpossibleToOpen,
+                                  ExifManager)
 from app.controllers.hashing import Hasher, HasherException
-from app.controllers.picture import AbstractPictureAnalyzer, CorruptedPictureFileError
-from app.controllers.recorder import (
-    AsyncRecorder,
-    CrawlHistoryStore,
-    AsyncCrawlHistoryStore,
-    PictureRESTRecorder,
-    RecorderException,
-)
-from app.controllers.file import FileCrawler
+from app.controllers.picture import (AbstractPictureAnalyzer,
+                                     CorruptedPictureFileError)
+from app.controllers.recorder import (AsyncCrawlHistoryStore, AsyncRecorder,
+                                      CrawlHistoryStore, PictureRESTRecorder,
+                                      RecorderException)
 from app.controllers.thumbnail import ThumbnailImage
 from app.models.backup import BackupRequest, BackupStatus
 from app.models.picture import PictureFile, PictureInfo

@@ -9,12 +9,8 @@ from app.controllers.backup import BackupHandler
 from app.controllers.picture import AbstractPictureAnalyzer
 from app.controllers.recorder import CrawlHistoryStore, PictureRESTRecorder
 from app.models.backup import BackupRequest, BackupStatus
-from app.processor import (
-    BackupProcessor,
-    ParalellPictureProcessor,
-    ParallelBackupProcessor,
-    PictureProcessor,
-)
+from app.processor import (BackupProcessor, ParalellPictureProcessor,
+                           ParallelBackupProcessor, PictureProcessor)
 from app.storage.basic import AbstractStorage, StorageException
 from app.storage.factory import StorageFactory
 

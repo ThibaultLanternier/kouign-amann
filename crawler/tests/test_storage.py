@@ -9,15 +9,12 @@ from app.models.backup import StorageConfig, StorageType
 from app.storage.aws_s3 import AbstractS3Client, S3BackupStorage
 from app.storage.basic import AbstractStorage, BackupResult
 from app.storage.factory import StorageFactory, StorageFactoryException
-from app.storage.google_photos import (
-    AbstractCaller,
-    AbstractTokenProvider,
-    GooglePhotosAPIAuthenficationException,
-    GooglePhotosAPIClient,
-    GooglePhotosStorage,
-    RefreshAccessTokenCaller,
-    RESTTokenProvider,
-)
+from app.storage.google_photos import (AbstractCaller, AbstractTokenProvider,
+                                       GooglePhotosAPIAuthenficationException,
+                                       GooglePhotosAPIClient,
+                                       GooglePhotosStorage,
+                                       RefreshAccessTokenCaller,
+                                       RESTTokenProvider)
 
 TEST_PICTURE = "tests/files/test-canon-eos70D-exif.jpg"
 TEST_BUCKET = "picture.backup.test"

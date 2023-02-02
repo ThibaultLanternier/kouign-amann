@@ -1,5 +1,4 @@
 import asyncio
-import aiofiles
 import logging
 import os
 import secrets
@@ -9,17 +8,15 @@ from pathlib import Path
 from typing import Awaitable
 from unittest.mock import MagicMock, Mock, call, patch
 
-from aiohttp import ClientResponse, ClientSession
+import aiofiles
 from aiofiles import os as async_os
+from aiohttp import ClientResponse, ClientSession
 from requests import Response
 
-from app.controllers.recorder import (
-    AsyncRecorder,
-    AsyncCrawlHistoryStore,
-    CrawlHistoryStore,
-    PictureRESTRecorder,
-)
-from app.models.picture import PictureData, PictureFile, PictureInfo, PictureOrientation
+from app.controllers.recorder import (AsyncCrawlHistoryStore, AsyncRecorder,
+                                      CrawlHistoryStore, PictureRESTRecorder)
+from app.models.picture import (PictureData, PictureFile, PictureInfo,
+                                PictureOrientation)
 
 TEST_TIME = datetime(2019, 11, 19, 12, 46, 56, 0, timezone.utc)
 
