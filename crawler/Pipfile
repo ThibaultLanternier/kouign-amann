@@ -30,7 +30,7 @@ pywin32-ctypes = "*"
 pefile = "*"
 
 [requires]
-python_version = "3.11"
+python_version = "3.9"
 
 [pipenv]
 allow_prereleases = true
