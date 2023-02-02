@@ -1,4 +1,5 @@
 import unittest
+from pathlib import Path
 from typing import Any, Callable, Dict
 from unittest.mock import MagicMock, call, patch
 
@@ -30,7 +31,7 @@ class TestS3BackupStorage(unittest.TestCase):
         )
 
         self.picture_hash = (
-            PictureAnalyzerFactory().perception_hash(TEST_PICTURE).get_recorded_hash()
+            PictureAnalyzerFactory().perception_hash(TEST_PICTURE)._get_recorded_hash()
         )
 
     def test_backup_ok(self):
@@ -89,14 +90,14 @@ class TestS3BackupStorage(unittest.TestCase):
 
 
 class BasicStorage(AbstractStorage):
-    def backup(self, picture_local_path: str, picture_hash: str) -> BackupResult:
-        pass
+    def backup(self, picture_local_path: Path, picture_hash: str) -> BackupResult:
+        raise NotImplementedError()
 
     def delete(self, picture_backup_id) -> bool:
-        pass
+        raise NotImplementedError()
 
     def check_still_exists(self, picture_backup_id: str) -> bool:
-        pass
+        raise NotImplementedError()
 
 
 class TestAbstractStorage(unittest.TestCase):
@@ -104,7 +105,9 @@ class TestAbstractStorage(unittest.TestCase):
         self.test_storage = BasicStorage()
 
         self.picture_hash = (
-            PictureAnalyzerFactory().perception_hash(TEST_PICTURE).get_recorded_hash()
+            PictureAnalyzerFactory()
+            .perception_hash(Path(TEST_PICTURE))
+            ._get_recorded_hash()
         )
 
     def test_check_hash_file_not_found(self):
@@ -136,7 +139,7 @@ class TestGoogleStorage(unittest.TestCase):
         self.mock_check_hash = MagicMock()
         self.mock_check_hash.return_value = True
 
-        self.google_storage.check_hash = self.mock_check_hash
+        self.google_storage.__setattr__("check_hash", self.mock_check_hash)
 
     def test_check_still_exists_not_exists(self):
         self.mock_google_client.get_picture_info.return_value = None

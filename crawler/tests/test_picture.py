@@ -6,7 +6,8 @@ from pathlib import Path
 from imagehash import ImageHash
 from PIL import Image
 
-from app.controllers.picture import (PictureAnalyzer, PictureAnalyzerFactory,
+from app.controllers.picture import (CorruptedPictureFileError,
+                                     PictureAnalyzer, PictureAnalyzerFactory,
                                      perception_hashing_function)
 from app.models.picture import PictureOrientation
 
@@ -52,11 +53,17 @@ class TestPicture(unittest.TestCase):
         )
         self.assertIsInstance(test_picture, PictureAnalyzer)
 
+    def test_uncorrect_picture_file_error(self):
+        def create_picture():
+            PictureAnalyzerFactory().perception_hash(Path("tests/files/not_a_jpeg.jpg"))
+
+        self.assertRaises(CorruptedPictureFileError, create_picture)
+
     def test_get_base64_thumbnail(self):
         test_picture = PictureAnalyzer(
             Path("tests/files/test-canon-eos70D.jpg"), perception_hashing_function, 5
         )
-        base64_thumbnail = test_picture.get_base64_thumbnail()
+        base64_thumbnail = test_picture._get_base64_thumbnail()
 
         self.assertEqual(CANON_EOS_70D_THUMBNAIL, base64_thumbnail)
 
@@ -65,30 +72,30 @@ class TestPicture(unittest.TestCase):
             VERTICAL_IMAGE_NAME, perception_hashing_function, 10
         )
 
-        start_size = test_picture.PILImage.size
-        test_picture.get_base64_thumbnail()
+        start_size = test_picture._PILImage.size
+        test_picture._get_base64_thumbnail()
 
-        self.assertEqual(start_size, test_picture.PILImage.size)
+        self.assertEqual(start_size, test_picture._PILImage.size)
 
     def test_get_orientation_vertical(self):
         test_picture = PictureAnalyzer(VERTICAL_IMAGE_NAME, perception_hashing_function)
 
-        self.assertEqual(PictureOrientation.PORTRAIT, test_picture.get_orientaton())
+        self.assertEqual(PictureOrientation.PORTRAIT, test_picture._get_orientaton())
 
     def test_get_orientation_horizontal(self):
         test_picture = PictureAnalyzer(
             HORIZONTAL_IMAGE_NAME, perception_hashing_function
         )
 
-        self.assertEqual(PictureOrientation.LANDSCAPE, test_picture.get_orientaton())
+        self.assertEqual(PictureOrientation.LANDSCAPE, test_picture._get_orientaton())
 
     def test_get_base64_thumbnail_vertical(self):
         test_picture = PictureAnalyzer(
             VERTICAL_IMAGE_NAME, perception_hashing_function, 10
         )
 
-        test_picture.get_orientaton()
-        base64_thumbnail = test_picture.get_base64_thumbnail()
+        test_picture._get_orientaton()
+        base64_thumbnail = test_picture._get_base64_thumbnail()
 
         self.maxDiff = None
         self.assertEqual(VERTICAL_IMAGE_THUMBNAIL, base64_thumbnail)
@@ -98,8 +105,8 @@ class TestPicture(unittest.TestCase):
             HORIZONTAL_IMAGE_NAME, perception_hashing_function, 10
         )
 
-        test_picture.get_orientaton()
-        base64_thumbnail = test_picture.get_base64_thumbnail()
+        test_picture._get_orientaton()
+        base64_thumbnail = test_picture._get_base64_thumbnail()
 
         self.maxDiff = None
         self.assertEqual(HORIZONTAL_IMAGE_THUMBNAIL, base64_thumbnail)
@@ -168,7 +175,7 @@ class TestPicture(unittest.TestCase):
             600,
         )
 
-        self.assertEqual(test_picture.image_hash, test_picture_small.image_hash)
+        self.assertEqual(test_picture._image_hash, test_picture_small._image_hash)
 
     def test_perception_hash_black_white(self):
         """
@@ -183,7 +190,7 @@ class TestPicture(unittest.TestCase):
             600,
         )
 
-        self.assertEqual(test_picture.image_hash, test_picture_small.image_hash)
+        self.assertEqual(test_picture._image_hash, test_picture_small._image_hash)
 
     def test_resolution(self):
         test_picture = PictureAnalyzer(
@@ -205,7 +212,7 @@ class TestPicture(unittest.TestCase):
         )
         expected = datetime(2019, 11, 19, 11, 46, 56, 0, timezone.utc)
 
-        self.assertEqual(expected, test_picture.creation_time)
+        self.assertEqual(expected, test_picture._creation_time)
 
     def test_time_extraction_missing_exif(self):
         test_picture = PictureAnalyzer(
@@ -216,7 +223,7 @@ class TestPicture(unittest.TestCase):
         )
 
         self.assertEqual(
-            datetime(1970, 1, 1, tzinfo=timezone.utc), test_picture.creation_time
+            datetime(1970, 1, 1, tzinfo=timezone.utc), test_picture._creation_time
         )
         self.assertEqual((-1, -1), test_picture.resolution)
 

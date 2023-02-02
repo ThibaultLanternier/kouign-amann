@@ -7,7 +7,7 @@ from progressbar import ProgressBar
 
 from app.controllers.backup import BackupHandler
 from app.controllers.picture import AbstractPictureAnalyzer
-from app.controllers.recorder import PictureRESTRecorder
+from app.controllers.recorder import CrawlHistoryStore, PictureRESTRecorder
 from app.models.backup import BackupRequest, BackupStatus
 from app.processor import (BackupProcessor, ParalellPictureProcessor,
                            ParallelBackupProcessor, PictureProcessor)
@@ -27,13 +27,21 @@ class TestPictureProcessor(unittest.TestCase):
         mock_picture_recorder.picture_already_exists.return_value = True
         mock_picture_recorder.record.return_value = "RETOUR"
 
+        mock_crawl_history_store = MagicMock(spec=CrawlHistoryStore)
+
         test_time = datetime(1980, 11, 30)
 
         processor = PictureProcessor(
-            mock_picture_factory, mock_picture_recorder, 123, test_time, None, "xxx"
+            mock_picture_factory,
+            mock_picture_recorder,
+            123,
+            test_time,
+            None,
+            "xxx",
+            mock_crawl_history_store,
         )
 
-        self.assertEqual(processor.process("picture_path"), "RETOUR")
+        self.assertEqual(processor.process("picture_path", 1), "RETOUR")
 
         mock_picture_instance.get_data.assert_called_once_with(create_thumbnail=False)
         mock_picture_recorder.record.assert_called_once_with(

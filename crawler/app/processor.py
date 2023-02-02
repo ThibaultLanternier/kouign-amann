@@ -1,18 +1,27 @@
 import asyncio
-from asyncio import Task
+import logging
+from asyncio import Semaphore, Task
 from datetime import datetime
 from pathlib import Path
 from queue import Queue
 from threading import Thread
-from typing import Callable, List
+from typing import Any, Callable, List, Type
 from uuid import UUID
 
 from progressbar import ProgressBar
 
 from app.controllers.backup import AbstractBackupHandler
-from app.controllers.picture import AbstractPictureAnalyzer
-from app.controllers.recorder import PictureRESTRecorder
+from app.controllers.exif import (ExifException, ExifImageImpossibleToOpen,
+                                  ExifManager)
+from app.controllers.hashing import Hasher, HasherException
+from app.controllers.picture import (AbstractPictureAnalyzer,
+                                     CorruptedPictureFileError)
+from app.controllers.recorder import (AsyncCrawlHistoryStore, AsyncRecorder,
+                                      CrawlHistoryStore, PictureRESTRecorder,
+                                      RecorderException)
+from app.controllers.thumbnail import ThumbnailImage
 from app.models.backup import BackupRequest, BackupStatus
+from app.models.picture import PictureFile, PictureInfo
 from app.storage.factory import StorageFactory
 from app.tools.metrics import MetricRecorder
 
@@ -21,7 +30,7 @@ class ParalellPictureProcessor:
     def __init__(
         self,
         picture_path_list: List[Path],
-        picture_processor: Callable[[str], bool],
+        picture_processor: Callable[[Path, int], bool],
         logger,
         progressbar: ProgressBar,
         worker_qty: int = 4,
@@ -99,6 +108,7 @@ class PictureProcessor:
         crawl_time: datetime,
         metrics_output_path: str,
         crawl_id: UUID,
+        crawl_history: CrawlHistoryStore,
     ):
         self.picture_factory = picture_factory
         self.picture_recorder = picture_recorder
@@ -106,24 +116,29 @@ class PictureProcessor:
         self.crawl_time = crawl_time
         self.metrics_path = metrics_output_path
         self.crawl_id = crawl_id
+        self.crawl_history = crawl_history
 
     def _get_file_name(self, worker_id, name) -> str:
         influx_file = f"picture-{name}-{self.crawl_id}-{worker_id}.influx"
         return f"{self.metrics_path}/{influx_file}"
 
-    def process(self, picture_path, worker_id=1):
-        picture = self.picture_factory(picture_path)
+    def process(self, picture_path: Path, worker_id: int) -> bool:
+        try:
+            picture = self.picture_factory(picture_path)
 
-        if self.picture_recorder.picture_already_exists(picture.image_hash):
-            picture_data = picture.get_data(create_thumbnail=False)
-        else:
-            picture_data = picture.get_data(create_thumbnail=True)
+            if self.picture_recorder.picture_already_exists(picture.get_hash()):
+                picture_data = picture.get_data(create_thumbnail=False)
+            else:
+                picture_data = picture.get_data(create_thumbnail=True)
 
-        record_result = self.picture_recorder.record(
-            picture_data=picture_data,
-            crawler_id=self.crawler_id,
-            crawl_time=self.crawl_time,
-        )
+            record_result = self.picture_recorder.record(
+                picture_data=picture_data,
+                crawler_id=self.crawler_id,
+                crawl_time=self.crawl_time,
+            )
+        except CorruptedPictureFileError:
+            self.crawl_history.add_file(path=picture_path, worker_id=worker_id)
+            return False
 
         if self.metrics_path is not None:
             record_metric_file(
@@ -133,10 +148,9 @@ class PictureProcessor:
                 self.picture_recorder.record_metric,
                 self._get_file_name(worker_id, "record"),
             )
-            record_metric_file(
-                self.picture_recorder.picture_exists_metric,
-                self._get_file_name(worker_id, "check"),
-            )
+
+        if record_result:
+            self.crawl_history.add_file(path=picture_path, worker_id=worker_id)
 
         return record_result
 
@@ -299,3 +313,113 @@ class ParallelBackupProcessor:
             self._logger.info("Polling new backup requests")
             await self.run()
             await asyncio.sleep(3)
+
+
+class AsyncPictureProcessor:
+    def __init__(
+        self,
+        picture_path_list: List[Path],
+        async_recorder: AsyncRecorder,
+        file_history_recorder: AsyncCrawlHistoryStore,
+        crawler_id: str,
+        crawl_time: datetime,
+    ) -> None:
+        self._picture_path_list = picture_path_list
+        self._async_recorder = async_recorder
+        self._file_history_recorder = file_history_recorder
+        self._crawl_time = crawl_time
+        self._crawler_id = crawler_id
+
+        self._logger = logging.getLogger("app.crawlasync")
+        self._init_progress_bar()
+
+    def _init_progress_bar(self) -> None:
+        self._progress_bar = ProgressBar()
+        self._progress_counter = 0
+
+    def _update_progress_bar(self) -> None:
+        self._progress_counter = self._progress_counter + 1
+        self._progress_bar.update(self._progress_counter)
+
+    async def _process(self, path: Path, semaphore: Semaphore) -> Path:
+        async with semaphore:
+            try:
+                exif_manager = ExifManager(path=path)
+
+                hash = await exif_manager.get_hash()
+
+                if hash is None:
+                    hash = await Hasher(exif_manager.get_image()).hash()
+                    await exif_manager.record_hash_in_exif(hash=hash)
+
+                already_exists = await self._async_recorder.check_picture_exists(
+                    hash=hash
+                )
+
+                if not already_exists:
+                    thumbnail_manager = ThumbnailImage(exif_manager.get_image())
+
+                    picture_info = PictureInfo(
+                        creation_time=await exif_manager.get_creation_time(),
+                        thumbnail=await thumbnail_manager.get_base64_thumbnail(),
+                        orientation=await thumbnail_manager.get_orientation(),
+                    )
+
+                    await self._async_recorder.record_info(info=picture_info, hash=hash)
+
+                picture_file = PictureFile(
+                    crawler_id=self._crawler_id,
+                    picture_path=str(path),
+                    last_seen=self._crawl_time,
+                    resolution=await exif_manager.get_resolution(),
+                )
+
+                await self._async_recorder.record_file(file=picture_file, hash=hash)
+
+            except ExifImageImpossibleToOpen:
+                self._update_progress_bar()
+                await self._file_history_recorder.add_file(path)
+                return path
+            except HasherException:
+                raise HasherException(str(path))
+
+            except Exception as e:
+                self._update_progress_bar()
+                raise e
+
+            self._update_progress_bar()
+
+            await self._file_history_recorder.add_file(path)
+            return path
+
+    def _count_exception(self, result_list: List[Any], exception: Type) -> int:
+        filtered_list = [value for value in result_list if isinstance(value, exception)]
+        return len(filtered_list)
+
+    async def process(self) -> None:
+        semaphore = asyncio.Semaphore(20)
+
+        self._progress_bar.start(max_value=len(self._picture_path_list))
+
+        task_list = [
+            asyncio.create_task(self._process(path=path, semaphore=semaphore))
+            for path in self._picture_path_list
+        ]
+
+        result = await asyncio.gather(*task_list, return_exceptions=True)
+
+        await self._async_recorder.close_session()
+
+        success = [value for value in result if isinstance(value, Path)]
+        exif_exception_count = self._count_exception(result, ExifException)
+        record_exception_count = self._count_exception(result, RecorderException)
+        hashing_exception_count = self._count_exception(result, HasherException)
+
+        self._logger.info(f"Processed {len(success)} files successfully")
+        self._logger.info(f"Exif processing failed on {exif_exception_count} files")
+        self._logger.info(f"File recording failed on {record_exception_count} files")
+        self._logger.info(f"Hashing failed on {hashing_exception_count} files")
+
+        total = len(success) + exif_exception_count + record_exception_count
+
+        self._logger.info(f"TOTAL files processed : {total}")

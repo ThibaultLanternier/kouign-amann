@@ -28,9 +28,7 @@ class AbstractStorage(ABC):
     def check_hash(self, picture_local_path: Path, picture_hash: str) -> bool:
         try:
             recorded_picture_hash = (
-                PictureAnalyzerFactory()
-                .perception_hash(picture_local_path)
-                .get_recorded_hash()
+                PictureAnalyzerFactory().perception_hash(picture_local_path).get_hash()
             )
         except FileNotFoundError:
             return False
