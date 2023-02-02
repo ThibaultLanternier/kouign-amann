@@ -30,6 +30,7 @@ class RecorderInfoException(RecorderException):
 class RecorderFileException(RecorderException):
     pass
 
+
 class AsyncCrawlHistoryStore:
     def __init__(self, file_directory: Path = Path("")) -> None:
         self._directory_path = file_directory
@@ -41,11 +42,14 @@ class AsyncCrawlHistoryStore:
     def _get_raw_data_list(self) -> List[Tuple[str, str]]:
         output = []
 
-        with open(self._get_storage_file_path(), "r") as file:
-            lines = file.readlines()
-            for line in lines:
-                line_elements = line.split("\n")[0].split(";")
-                output.append((line_elements[0], line_elements[1]))
+        try:
+            with open(self._get_storage_file_path(), "r") as file:
+                lines = file.readlines()
+                for line in lines:
+                    line_elements = line.split("\n")[0].split(";")
+                    output.append((line_elements[0], line_elements[1]))
+        except FileNotFoundError:
+            pass
 
         return output
 
@@ -68,16 +72,19 @@ class AsyncCrawlHistoryStore:
 
         return output
 
-
     async def add_file(self, path: Path):
         last_modified_ts = os.path.getmtime(path)
         last_modified = datetime.fromtimestamp(last_modified_ts)
 
         async with aiofiles.open(self._get_storage_file_path(), "a+") as f:
-            await f.write(str(path)+";"+last_modified.isoformat()+"\n")
+            await f.write(str(path) + ";" + last_modified.isoformat() + "\n")
 
     async def reset(self):
-        await async_os.remove(self._get_storage_file_path())
+        try:
+            await async_os.remove(self._get_storage_file_path())
+        except FileNotFoundError:
+            pass
+
 
 class CrawlHistoryStore:
     def __init__(self, file_directory: Path = Path("")) -> None:
@@ -117,7 +124,7 @@ class CrawlHistoryStore:
         last_modified_ts = os.path.getmtime(path)
         last_modified = datetime.fromtimestamp(last_modified_ts)
 
-        with open(self._get_file_name(worker_id=worker_id), "a+") as f:
+        with open(self._get_file_name(worker_id=worker_id), "a+", newline="") as f:
             csv_writer = csv.writer(f, delimiter=";")
             csv_writer.writerow([str(path), last_modified.isoformat()])
 

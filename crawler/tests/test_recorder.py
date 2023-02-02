@@ -13,10 +13,13 @@ from aiohttp import ClientResponse, ClientSession
 from aiofiles import os as async_os
 from requests import Response
 
-from app.controllers.recorder import (AsyncRecorder, AsyncCrawlHistoryStore, CrawlHistoryStore,
-                                      PictureRESTRecorder)
-from app.models.picture import (PictureData, PictureFile, PictureInfo,
-                                PictureOrientation)
+from app.controllers.recorder import (
+    AsyncRecorder,
+    AsyncCrawlHistoryStore,
+    CrawlHistoryStore,
+    PictureRESTRecorder,
+)
+from app.models.picture import PictureData, PictureFile, PictureInfo, PictureOrientation
 
 TEST_TIME = datetime(2019, 11, 19, 12, 46, 56, 0, timezone.utc)
 
@@ -215,6 +218,7 @@ class TestPictureRESTRecorder(unittest.TestCase):
 
         self.assertFalse(result)
 
+
 class TestAsyncCrawlHistoryStore(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self) -> None:
         self.file_name_list = [
@@ -236,7 +240,7 @@ class TestAsyncCrawlHistoryStore(unittest.IsolatedAsyncioTestCase):
             self.recorder.add_file(path=self.file_name_list[0]),
             self.recorder.add_file(path=self.file_name_list[1]),
             self.recorder.add_file(path=self.file_name_list[1]),
-            self.recorder.add_file(path=self.file_name_list[2])
+            self.recorder.add_file(path=self.file_name_list[2]),
         )
 
         crawl_history = self.recorder.get_crawl_history()
@@ -250,6 +254,11 @@ class TestAsyncCrawlHistoryStore(unittest.IsolatedAsyncioTestCase):
         for value in crawl_history.values():
             delta = current_time - value.last_modified
             self.assertLess(delta, timedelta(seconds=1))
+
+    def test_get_crawl_history_first_time(self):
+        empty_result = self.recorder.get_crawl_history()
+
+        self.assertEqual({}, empty_result)
 
     async def asyncTearDown(self) -> None:
         for file_name in self.file_name_list:

@@ -23,7 +23,7 @@ from app.controllers.recorder import (
     PictureRESTRecorder,
     CrawlHistoryStore,
     AsyncRecorder,
-    AsyncCrawlHistoryStore
+    AsyncCrawlHistoryStore,
 )
 from app.controllers.backup import BackupHandler
 from app.controllers.file import FileCrawler
@@ -135,7 +135,7 @@ def crawlasync(config_file):
         crawler_id=CRAWLER_ID,
         crawl_time=CRAWL_TIME,
         async_recorder=AsyncRecorder(base_url=REST_API_URL),
-        file_history_recorder=file_history_recorder
+        file_history_recorder=file_history_recorder,
     )
 
     asyncio.run(async_processor.process())

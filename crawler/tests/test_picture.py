@@ -6,9 +6,12 @@ from pathlib import Path
 from imagehash import ImageHash
 from PIL import Image
 
-from app.controllers.picture import (CorruptedPictureFileError,
-                                     PictureAnalyzer, PictureAnalyzerFactory,
-                                     perception_hashing_function)
+from app.controllers.picture import (
+    CorruptedPictureFileError,
+    PictureAnalyzer,
+    PictureAnalyzerFactory,
+    perception_hashing_function,
+)
 from app.models.picture import PictureOrientation
 
 

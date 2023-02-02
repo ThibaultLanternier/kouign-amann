@@ -4,8 +4,7 @@ from unittest.mock import MagicMock, patch
 from requests import Response
 
 from app.controllers.backup import BackupHandler, BackupHandlerException
-from app.models.backup import (BackupRequest, BackupStatus, StorageConfig,
-                               StorageType)
+from app.models.backup import BackupRequest, BackupStatus, StorageConfig, StorageType
 
 
 class TestBackup(unittest.TestCase):
