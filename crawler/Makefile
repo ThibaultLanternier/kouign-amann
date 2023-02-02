@@ -28,11 +28,11 @@ style:
 	black app/ tests/ picture-crawler.py
 	isort **/*.py
 	flake8 app/ tests/ picture-crawler.py
-	mypy --ignore-missing-imports picture-crawler.py
+	mypy --ignore-missing-imports picture-crawler.py tests/*.py
 
 style-check:
 	flake8 app/ tests/ picture-crawler.py
-	mypy --ignore-missing-imports picture-crawler.py
+	mypy --ignore-missing-imports picture-crawler.py tests/*.py
 
 test-unit:
 	python -m unittest discover tests -v

@@ -114,7 +114,7 @@ class PictureAnalyzer(AbstractPictureAnalyzer):
             if "exif" in self._PILImage.info:
                 exif_dict = piexif.load(self._PILImage.info["exif"])
             else:
-                exif_dict = piexif.load(self._picture_path)
+                exif_dict = piexif.load(str(self._picture_path))
 
             exif_dict["0th"][piexif.ImageIFD.ImageID] = f"phash:{picture_hash}"
 

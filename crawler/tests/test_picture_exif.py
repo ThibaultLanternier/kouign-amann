@@ -2,9 +2,11 @@ import os
 import secrets
 import shutil
 import unittest
+from pathlib import Path
 
-from app.controllers.picture import (AbstractPictureAnalyzer,
-                                     PictureAnalyzerFactory)
+import imagehash
+
+from app.controllers.picture import PictureAnalyzer
 
 TEST_PICTURE_CAMERA = "tests/files/test-canon-eos70D-exif.jpg"
 TEST_PICTURE_OLD_SCAN = "tests/files/0025.jpg"
@@ -32,19 +34,22 @@ class TestPictureExif(unittest.TestCase):
         os.remove(cls.test_file_old_scan)
         os.remove(cls.test_file_fuji_camera)
 
-    def _record_hash_in_picture(
-        self, hash: str, picture_file: str
-    ) -> AbstractPictureAnalyzer:
-        picture = PictureAnalyzerFactory().perception_hash(picture_file)
+    def _record_hash_in_picture(self, hash: str, picture_file: Path) -> PictureAnalyzer:
+        picture = PictureAnalyzer(
+            picture_path=picture_file, hashing_function=imagehash.phash
+        )
+
         picture._record_hash_in_exif(hash)
 
-        new_picture = PictureAnalyzerFactory().perception_hash(picture_file)
+        new_picture = PictureAnalyzer(
+            picture_path=picture_file, hashing_function=imagehash.phash
+        )
         return new_picture
 
     def test_record_hash_in_exif_camera_picture(self):
         test_hash = secrets.token_hex(8)
         picture_with_hash = self._record_hash_in_picture(
-            test_hash, self.__class__.test_file_camera
+            test_hash, Path(self.__class__.test_file_camera)
         )
 
         self.assertEqual(test_hash, picture_with_hash._get_recorded_hash())
@@ -52,7 +57,7 @@ class TestPictureExif(unittest.TestCase):
     def test_record_hash_in_exif_scan_picture(self):
         test_hash = secrets.token_hex(8)
         picture_with_hash = self._record_hash_in_picture(
-            test_hash, self.__class__.test_file_old_scan
+            test_hash, Path(self.__class__.test_file_old_scan)
         )
 
         self.assertEqual(test_hash, picture_with_hash._get_recorded_hash())
@@ -60,7 +65,7 @@ class TestPictureExif(unittest.TestCase):
     def test_record_hash_in_exif_fuji_picture(self):
         test_hash = secrets.token_hex(8)
         picture_with_hash = self._record_hash_in_picture(
-            test_hash, self.__class__.test_file_fuji_camera
+            test_hash, Path(self.__class__.test_file_fuji_camera)
         )
 
         self.assertEqual(test_hash, picture_with_hash._get_recorded_hash())

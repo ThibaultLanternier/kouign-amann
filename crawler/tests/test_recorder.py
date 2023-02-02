@@ -1,15 +1,100 @@
+import asyncio
 import logging
 import os
 import secrets
 import unittest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from unittest.mock import MagicMock, call, patch
+from typing import Awaitable
+from unittest.mock import MagicMock, Mock, call, patch
 
+import aiofiles
+from aiofiles import os as async_os
+from aiohttp import ClientResponse, ClientSession
 from requests import Response
 
-from app.controllers.recorder import CrawlHistoryStore, PictureRESTRecorder
-from app.models.picture import PictureData, PictureOrientation
+from app.controllers.recorder import (AsyncCrawlHistoryStore, AsyncRecorder,
+                                      CrawlHistoryStore, PictureRESTRecorder)
+from app.models.picture import (PictureData, PictureFile, PictureInfo,
+                                PictureOrientation)
+
+TEST_TIME = datetime(2019, 11, 19, 12, 46, 56, 0, timezone.utc)
+
+
+class TestAsyncRecorder(unittest.IsolatedAsyncioTestCase):
+    def setUp(self) -> None:
+        self.mock_session = MagicMock(spec=ClientSession)
+
+        mock_ctor = Mock()
+        mock_ctor.return_value = self.mock_session
+
+        self.async_recorder = AsyncRecorder(
+            base_url="http://url", client_session_ctor=mock_ctor
+        )
+
+        self.response = MagicMock(spec=ClientResponse)
+        self.response.status = 200
+        self.async_response: Awaitable[ClientResponse] = asyncio.Future()
+        self.async_response.set_result(self.response)
+
+    async def test_async_check_picture_exists(self):
+        case_list = [(200, True), (403, False)]
+        for status_code, expected_result in case_list:
+            with self.subTest():
+                self.response.status = status_code
+                self.mock_session.get.return_value = self.async_response
+
+                self.assertEqual(
+                    expected_result,
+                    await self.async_recorder.check_picture_exists("XXX"),
+                )
+                self.mock_session.get.assert_called_with(
+                    "http://url/picture/exists/XXX"
+                )
+
+    async def test_async_record_info(self):
+        test_picture_info = PictureInfo(
+            creation_time=TEST_TIME,
+            thumbnail="a2d6",
+            orientation=PictureOrientation.PORTRAIT,
+        )
+
+        self.response.status = 201
+        self.mock_session.post.return_value = self.async_response
+
+        await self.async_recorder.record_info(info=test_picture_info, hash="XXXX")
+
+        self.mock_session.post.assert_called_once_with(
+            "http://url/picture/XXXX",
+            json={
+                "creation_time": "2019-11-19T12:46:56.000000Z",
+                "thumbnail": "a2d6",
+                "orientation": "PORTRAIT",
+            },
+        )
+
+    async def test_async_record_file(self):
+        test_picture_file = PictureFile(
+            crawler_id="ABC",
+            resolution=(234, 23),
+            picture_path="/path",
+            last_seen=TEST_TIME,
+        )
+
+        self.response.status = 201
+        self.mock_session.put.return_value = self.async_response
+
+        await self.async_recorder.record_file(file=test_picture_file, hash="XXXX")
+
+        self.mock_session.put.assert_called_once_with(
+            "http://url/picture/file/XXXX",
+            json={
+                "crawler_id": "ABC",
+                "resolution": (234, 23),
+                "picture_path": "/path",
+                "last_seen": "2019-11-19T12:46:56.000000Z",
+            },
+        )
 
 
 class TestPictureRESTRecorder(unittest.TestCase):
@@ -129,6 +214,54 @@ class TestPictureRESTRecorder(unittest.TestCase):
         )
 
         self.assertFalse(result)
+
+
+class TestAsyncCrawlHistoryStore(unittest.IsolatedAsyncioTestCase):
+    async def asyncSetUp(self) -> None:
+        self.file_name_list = [
+            Path(f"tests/files/local_recorder/{secrets.token_hex(8)}.txt"),
+            Path(f"tests/files/local_recorder/{secrets.token_hex(8)}.txt"),
+            Path(f"tests/files/local_recorder/{secrets.token_hex(8)}.txt"),
+        ]
+
+        for file_name in self.file_name_list:
+            async with aiofiles.open(str(file_name), "w+") as f:
+                await f.write("Fichier de test")
+
+        self.recorder = AsyncCrawlHistoryStore(
+            file_directory=Path("tests/files/local_recorder/")
+        )
+
+    async def test_async_add_get_file(self):
+        await asyncio.gather(
+            self.recorder.add_file(path=self.file_name_list[0]),
+            self.recorder.add_file(path=self.file_name_list[1]),
+            self.recorder.add_file(path=self.file_name_list[1]),
+            self.recorder.add_file(path=self.file_name_list[2]),
+        )
+
+        crawl_history = self.recorder.get_crawl_history()
+
+        file_list = set(crawl_history.keys())
+
+        self.assertEqual(set(self.file_name_list), file_list)
+
+        current_time = datetime.now()
+
+        for value in crawl_history.values():
+            delta = current_time - value.last_modified
+            self.assertLess(delta, timedelta(seconds=1))
+
+    def test_get_crawl_history_first_time(self):
+        empty_result = self.recorder.get_crawl_history()
+
+        self.assertEqual({}, empty_result)
+
+    async def asyncTearDown(self) -> None:
+        for file_name in self.file_name_list:
+            await async_os.remove(file_name)
+
+        await self.recorder.reset()
 
 
 class TestLocalPathStore(unittest.TestCase):
