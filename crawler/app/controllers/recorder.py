@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 import logging
 import csv
 import os
@@ -31,7 +32,21 @@ class RecorderFileException(RecorderException):
     pass
 
 
-class AsyncCrawlHistoryStore:
+class iAsyncCrawlHistoryStore(ABC):
+    @abstractmethod
+    async def get_crawl_history(self) -> Dict[Path, LocalFile]:
+        pass
+
+    @abstractmethod
+    async def add_file(self, path: Path):
+        pass
+
+    @abstractmethod
+    async def reset(self):
+        pass
+
+
+class AsyncCrawlHistoryStore(iAsyncCrawlHistoryStore):
     def __init__(self, file_directory: Path = Path("")) -> None:
         self._directory_path = file_directory
         self._file_name = "localstore-async.csv"
@@ -133,7 +148,21 @@ class CrawlHistoryStore:
             os.remove(storage_file)
 
 
-class AsyncRecorder:
+class iAsyncRecorder(ABC):
+    @abstractmethod
+    async def record_info(self, info: PictureInfo, hash: str) -> bool:
+        pass
+
+    @abstractmethod
+    async def record_file(self, file: PictureFile, hash: str) -> bool:
+        pass
+
+    @abstractmethod
+    async def check_picture_exists(self, hash: str) -> bool:
+        pass
+
+
+class AsyncRecorder(iAsyncRecorder):
     def __init__(
         self,
         base_url: str,

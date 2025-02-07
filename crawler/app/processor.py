@@ -18,7 +18,7 @@ from app.controllers.picture import (AbstractPictureAnalyzer,
                                      CorruptedPictureFileError)
 from app.controllers.recorder import (AsyncCrawlHistoryStore, AsyncRecorder,
                                       CrawlHistoryStore, PictureRESTRecorder,
-                                      RecorderException)
+                                      RecorderException, iAsyncRecorder)
 from app.controllers.thumbnail import ThumbnailImage
 from app.models.backup import BackupRequest, BackupStatus
 from app.models.picture import PictureFile, PictureInfo
@@ -319,7 +319,7 @@ class AsyncPictureProcessor:
     def __init__(
         self,
         picture_path_list: List[Path],
-        async_recorder: AsyncRecorder,
+        async_recorder: iAsyncRecorder,
         file_history_recorder: AsyncCrawlHistoryStore,
         crawler_id: str,
         crawl_time: datetime,

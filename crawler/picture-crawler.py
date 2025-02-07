@@ -126,6 +126,9 @@ def backup(config_file):
     "--config-file", default="config.ini", help="Location of the configuration file"
 )
 def crawlasync(config_file):
+    """
+    Starts an async crawl
+    """
     config = configparser.ConfigParser()
     config.read(config_file)
 
