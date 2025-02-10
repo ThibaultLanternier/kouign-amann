@@ -10,15 +10,16 @@ from uuid import UUID
 
 from progressbar import ProgressBar
 
+from app.controllers.async_history_store import iAsyncCrawlHistoryStore
+from app.controllers.async_recorder import iAsyncRecorder
 from app.controllers.backup import AbstractBackupHandler
 from app.controllers.exif import (ExifException, ExifImageImpossibleToOpen,
                                   ExifManager)
 from app.controllers.hashing import Hasher, HasherException
 from app.controllers.picture import (AbstractPictureAnalyzer,
                                      CorruptedPictureFileError)
-from app.controllers.recorder import (AsyncCrawlHistoryStore, AsyncRecorder,
-                                      CrawlHistoryStore, PictureRESTRecorder,
-                                      RecorderException, iAsyncRecorder)
+from app.controllers.recorder import (CrawlHistoryStore, PictureRESTRecorder,
+                                      RecorderException)
 from app.controllers.thumbnail import ThumbnailImage
 from app.models.backup import BackupRequest, BackupStatus
 from app.models.picture import PictureFile, PictureInfo
@@ -320,7 +321,7 @@ class AsyncPictureProcessor:
         self,
         picture_path_list: List[Path],
         async_recorder: iAsyncRecorder,
-        file_history_recorder: AsyncCrawlHistoryStore,
+        file_history_recorder: iAsyncCrawlHistoryStore,
         crawler_id: str,
         crawl_time: datetime,
     ) -> None:

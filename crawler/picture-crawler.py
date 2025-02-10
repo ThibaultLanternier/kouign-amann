@@ -19,12 +19,9 @@ from app.processor import (
     AsyncPictureProcessor,
 )
 from app.controllers.picture import AbstractPictureAnalyzer, PictureAnalyzerFactory
-from app.controllers.recorder import (
-    PictureRESTRecorder,
-    CrawlHistoryStore,
-    AsyncRecorder,
-    AsyncCrawlHistoryStore,
-)
+from app.controllers.recorder import PictureRESTRecorder, CrawlHistoryStore
+from app.controllers.async_recorder import AsyncRecorder
+from app.controllers.async_history_store import AsyncCrawlHistoryStore
 from app.controllers.backup import BackupHandler
 from app.controllers.file import FileCrawler
 from app.tools.logger import init_console, init_file_log
