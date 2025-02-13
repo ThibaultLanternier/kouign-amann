@@ -15,9 +15,9 @@ from app.processor import (
     PictureProcessor,
     ParalellPictureProcessor,
     BackupProcessor,
-    ParallelBackupProcessor,
-    AsyncPictureProcessor,
+    ParallelBackupProcessor
 )
+from app.async_processor import AsyncPictureProcessor
 from app.controllers.picture import AbstractPictureAnalyzer, PictureAnalyzerFactory
 from app.controllers.recorder import PictureRESTRecorder, CrawlHistoryStore
 from app.controllers.async_recorder import AsyncRecorder

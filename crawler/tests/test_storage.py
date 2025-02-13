@@ -230,7 +230,7 @@ class TestRefreshAccessTokenCaller(unittest.TestCase):
         func = MagicMock()
         func.return_value = "Hello"
 
-        self.assertEquals("Hello", caller.call(func=func, params={"param": 1}))
+        self.assertEqual("Hello", caller.call(func=func, params={"param": 1}))
 
         self.mock_client.refresh_token.assert_not_called()
         self.token_provider.get_new_token.assert_not_called()
@@ -262,14 +262,14 @@ class TestRefreshAccessTokenCaller(unittest.TestCase):
         func = MagicMock()
         func.side_effect = [GooglePhotosAPIAuthenficationException(), "Hello"]
 
-        self.assertEquals("Hello", caller.call(func=func, params={"param": 1}))
+        self.assertEqual("Hello", caller.call(func=func, params={"param": 1}))
 
         self.mock_client.refresh_token.assert_called_once_with(
             new_token="NOUVEAU_TOKEN"
         )
         self.token_provider.get_new_token.assert_called_once_with()
 
-        self.assertEquals([call(param=1), call(param=1)], func.call_args_list)
+        self.assertEqual([call(param=1), call(param=1)], func.call_args_list)
 
 
 class TestStorageFactory(unittest.TestCase):
