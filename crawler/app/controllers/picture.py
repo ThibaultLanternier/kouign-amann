@@ -10,6 +10,7 @@ import imagehash
 import piexif
 from imagehash import ImageHash
 from PIL import Image, ImageOps, UnidentifiedImageError
+from PIL.Image import Image as ImageType
 
 from app.tools.hash import HashExtractor
 from app.models.picture import PictureData, PictureOrientation
@@ -178,15 +179,21 @@ class PictureAnalyzer(AbstractPictureAnalyzer):
             current_timezone,
         )
 
-    def _get_thumbnail(self) -> Image:
+    def _get_thumbnail(self) -> ImageType:
         """
         Returns a JPEG thumbnail of the image
         """
         if self._thumbnail is None:
-            pivoted_image = ImageOps.exif_transpose(self._PILImage)
+            pivoted_image: ImageType | None = ImageOps.exif_transpose(self._PILImage)
+            if pivoted_image is None:
+                raise Exception("pivoted_image is not definded")
+
             pivoted_image.thumbnail(self._thumbnail_size)
 
             self._thumbnail = pivoted_image
+
+        if self._thumbnail is None:
+            raise Exception("Thumbnail is not definded")
 
         return self._thumbnail
 

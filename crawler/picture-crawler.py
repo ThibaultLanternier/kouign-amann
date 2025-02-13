@@ -15,7 +15,7 @@ from app.processor import (
     PictureProcessor,
     ParalellPictureProcessor,
     BackupProcessor,
-    ParallelBackupProcessor
+    ParallelBackupProcessor,
 )
 from app.async_processor import AsyncPictureProcessor
 from app.controllers.picture import AbstractPictureAnalyzer, PictureAnalyzerFactory

@@ -16,6 +16,7 @@ from app.controllers.recorder import RecorderException
 from app.controllers.thumbnail import ThumbnailImage
 from app.models.picture import PictureFile, PictureInfo
 
+
 class AsyncPictureProcessor:
     def __init__(
         self,

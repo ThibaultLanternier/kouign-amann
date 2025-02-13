@@ -4,7 +4,7 @@ from datetime import datetime
 from pathlib import Path
 from queue import Queue
 from threading import Thread
-from typing import Any, Callable, List, Type
+from typing import Callable, List
 from uuid import UUID
 
 from progressbar import ProgressBar
