@@ -52,7 +52,8 @@ class AsyncPictureProcessor:
 
                 if hash is None:
                     hash = await Hasher(exif_manager.get_image()).hash()
-                    await exif_manager.record_hash_in_exif(hash=hash)
+                    # Do not record hash in exif to prevent modification of original file
+                    #await exif_manager.record_hash_in_exif(hash=hash)
 
                 already_exists = await self._async_recorder.check_picture_exists(
                     hash=hash

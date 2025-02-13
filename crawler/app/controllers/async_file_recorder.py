@@ -55,4 +55,4 @@ class AsyncFileRecorder(iAsyncRecorder):
         return hash in self._file_dict
 
     async def close_session(self):
-        raise NotImplementedError("Not done yet")
+        pass
