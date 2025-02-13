@@ -3,3 +3,4 @@ secrets.env
 *.tgz
 *.spec
 *.csv
+.DS_Store
