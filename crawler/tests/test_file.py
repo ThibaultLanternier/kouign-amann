@@ -9,7 +9,7 @@ from app.models.file import LocalFile
 
 class TestFileCrawler(unittest.TestCase):
     @unittest.skipIf(
-        platform.system() == "Windows", "Not relevant as Windows is not Case Sensitive"
+        platform.system() != "Linux", "Not relevant as Windows is not Case Sensitive"
     )
     def test_get_file_list(self):
         file_crawler = FileCrawler(
