@@ -47,8 +47,6 @@ class TestMetricRecorder(unittest.TestCase):
 
         steps = recorder.get_steps()
 
-        self.assertEqual('XXX', platform.system())
-
         self.assertGreater(steps["step_1"], 0)
         self.assertGreater(steps["step_2"], 0)
         self.assertGreater(steps["step_3"], 0)
