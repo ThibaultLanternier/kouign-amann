@@ -17,13 +17,19 @@ class AsyncFileRecorder(iAsyncRecorder):
         file_list = [x for x in self._base_file_path.glob("**/*.jpg")]
 
         for file in file_list:
-            self._file_dict[file.name.split(".")[0]] = file
+            full_file_name = file.name.split(".")[0]
+            timpstamp, hash = full_file_name.split("-")
+            
+            self._file_dict[hash] = file
 
     def __get_file_path(self, hash: str, creation_date: datetime):
+        integer_timestamp = int(creation_date.timestamp())
+
         return (
             self._base_file_path
-            / Path(f"{creation_date.year}/{creation_date.month}")
-            / Path(f"{hash}.jpg")
+            / Path(f"{creation_date.year}")
+            / Path(f"{creation_date.year}-{creation_date.month}-{creation_date.day}")
+            / Path(f"{integer_timestamp}-{hash}.jpg")
         )
 
     async def record_info(self, info: PictureInfo, hash: str) -> bool:
