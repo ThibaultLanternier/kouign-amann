@@ -24,9 +24,22 @@ class TestAsyncFileRecorder(unittest.IsolatedAsyncioTestCase):
             last_seen=datetime.datetime.now(),
         )
 
-        fake_hash = uuid.uuid4()
+        fake_hash = uuid.uuid4().hex
 
         self.assertFalse(await test_file_recorder.check_picture_exists(fake_hash))
+
         self.assertTrue(await test_file_recorder.record_info(picture_info, fake_hash))
         self.assertTrue(await test_file_recorder.record_file(picture_file, fake_hash))
+        
         self.assertTrue(await test_file_recorder.check_picture_exists(fake_hash))
+    
+    async def test_async_record_file_check_exists(self):
+        test_file_recorder = AsyncFileRecorder(Path("tests/files/photos/"))
+
+        self.assertTrue(await test_file_recorder.check_picture_exists('e7975821ce2e1a55'))
+    
+    async def test_async_record_file_check_exists_other(self):
+        test_file_recorder = AsyncFileRecorder(Path("tests/files/photos/"))
+
+        self.assertTrue(await test_file_recorder.check_picture_exists('1ad0318cff38424c9d0351837f03e473'))
+    

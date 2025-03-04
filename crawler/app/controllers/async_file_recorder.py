@@ -1,12 +1,17 @@
 from datetime import datetime
+from math import pi
 from pathlib import Path
 from typing import Dict
 from app.controllers.async_recorder import iAsyncRecorder
 from app.models.picture import PictureFile, PictureInfo
 import os
 
+from app.tools.path import PicturePath, PicturePathException
+from app.tools.path_manager import PicturePathManager
+
 
 class AsyncFileRecorder(iAsyncRecorder):
+    _path_manager: PicturePathManager
 
     def __init__(self, base_file_path: Path):
         super().__init__()
@@ -14,21 +19,27 @@ class AsyncFileRecorder(iAsyncRecorder):
         self._creation_time: Dict[str, datetime] = {}
         self._file_dict = {}
 
-        file_list = [x for x in self._base_file_path.glob("**/*.jpg")]
+        path_list = [x for x in self._base_file_path.glob("**/*.jpg")]
+        
+        picture_path_list = []
 
-        for file in file_list:
-            full_file_name = file.name.split(".")[0]
-            timpstamp, hash = full_file_name.split("-")
+
+        for path in path_list:
+            try:
+                picture_path = PicturePath(path)
+                picture_path_list.append(picture_path)
+            except PicturePathException:
+                pass
+        
+        self._path_manager = PicturePathManager(picture_path_list, self._base_file_path)
             
-            self._file_dict[hash] = file
+            
 
     def __get_file_path(self, hash: str, creation_date: datetime):
         integer_timestamp = int(creation_date.timestamp())
 
         return (
-            self._base_file_path
-            / Path(f"{creation_date.year}")
-            / Path(f"{creation_date.year}-{creation_date.month}-{creation_date.day}")
+            self._path_manager.get_folder_path(creation_date.date())
             / Path(f"{integer_timestamp}-{hash}.jpg")
         )
 
@@ -53,12 +64,12 @@ class AsyncFileRecorder(iAsyncRecorder):
                     new_file_path,
                     (creation_time.timestamp(), creation_time.timestamp()),
                 )
-            self._file_dict[hash] = new_file_path
+            self._path_manager.add_picture_path(PicturePath(new_file_path))
 
         return True
 
     async def check_picture_exists(self, hash: str) -> bool:
-        return hash in self._file_dict
-
+        return self._path_manager.check_hash_exists(hash)
+    
     async def close_session(self):
         pass
