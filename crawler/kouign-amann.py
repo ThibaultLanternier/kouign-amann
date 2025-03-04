@@ -18,6 +18,7 @@ init_console(logging.INFO)
 
 logger = logging.getLogger("app.crawl")
 
+
 @click.group()
 def cli():
     pass
@@ -38,16 +39,17 @@ def init(backup_path: str):
 
     new_config["backup"] = {}
     new_config["backup"]["path"] = backup_path
-    
+
     with open("config.ini", "w") as config_file:
         new_config.write(config_file)
+
 
 @cli.command()
 @click.option(
     "--config-file", default="config.ini", help="Location of the configuration file"
 )
 @click.argument("target_path", type=click.Path(exists=True))
-def backup(config_file: Dict[str,str], target_path: str):
+def backup(config_file: Dict[str, str], target_path: str):
     """
     Copy new pictures found in target directory to backup directory
     """
@@ -77,6 +79,7 @@ def backup(config_file: Dict[str,str], target_path: str):
     )
 
     asyncio.run(async_processor.process())
+
 
 if __name__ == "__main__":
     cli()

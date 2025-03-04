@@ -3,7 +3,7 @@ import io
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
-from typing import Tuple
+from typing import Tuple, Union
 from pathlib import Path
 
 import imagehash
@@ -184,7 +184,9 @@ class PictureAnalyzer(AbstractPictureAnalyzer):
         Returns a JPEG thumbnail of the image
         """
         if self._thumbnail is None:
-            pivoted_image: ImageType | None = ImageOps.exif_transpose(self._PILImage)
+            pivoted_image: Union[ImageType, None] = ImageOps.exif_transpose(
+                self._PILImage
+            )
             if pivoted_image is None:
                 raise Exception("pivoted_image is not definded")
 

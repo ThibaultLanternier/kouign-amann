@@ -25,10 +25,10 @@ crawl:
 	REQUESTS_CA_BUNDLE=/home/thibault/Perso/kouign-amann/server/api/CAPrivate.pem python picture-crawler.py crawl
 
 style:
-	black app/ tests/ picture-crawler.py
+	black app/ tests/ kouign-amann.py
 	isort **/*.py
-	flake8 app/ tests/ picture-crawler.py
-	mypy --ignore-missing-imports picture-crawler.py tests/*.py
+	flake8 app/ tests/ kouign-amann.py
+	mypy --ignore-missing-imports kouign-amann.py tests/*.py
 
 style-check:
 	flake8 app/ tests/ picture-crawler.py

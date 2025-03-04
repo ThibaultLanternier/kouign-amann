@@ -1,12 +1,13 @@
 from app.tools.path import abstractPicturePath
-from datetime import date, timedelta
+from datetime import date
 from pathlib import Path
+
 
 class PicturePathManager:
     _by_day: dict[date, Path]
     _by_hash: dict[str, abstractPicturePath]
     _root_folder: Path
-    
+
     def __init__(self, picture_path_list: list[abstractPicturePath], root_folder: Path):
         self._by_day = {}
         self._by_hash = {}
@@ -16,16 +17,16 @@ class PicturePathManager:
 
     def _regroup_adjacent_days(self):
         day_list = sorted(self._by_day.keys())
-        
-        for index in range(1,len(day_list)):
+
+        for index in range(1, len(day_list)):
             previous_day = day_list[index - 1]
             current_day = day_list[index]
-            
+
             time_difference = current_day - previous_day
 
             if time_difference.days <= 1:
                 self._by_day[current_day] = self._by_day[previous_day]
-            
+
     def _add_new_path_if_not_exists(self, picture_path: abstractPicturePath):
         day_list = sorted(self._by_day.keys())
 
@@ -39,22 +40,26 @@ class PicturePathManager:
 
     def add_picture_path(self, picture_path: abstractPicturePath):
         if not isinstance(picture_path, abstractPicturePath):
-            raise Exception('invalid PicturePath object')
-        
+            raise Exception("invalid PicturePath object")
+
         self._by_hash[picture_path.get_hash()] = picture_path
         self._add_new_path_if_not_exists(picture_path)
-        
+
         self._regroup_adjacent_days()
-    
+
     def get_folder_path(self, picture_day: date) -> Path:
         day_list = sorted(self._by_day.keys())
 
         for day in day_list:
             time_difference = picture_day - day
-            if(abs(time_difference.days) <= 1):
+            if abs(time_difference.days) <= 1:
                 return self._by_day[day]
-        
-        return self._root_folder / Path(f'{picture_day.year}') / Path(f'{picture_day} <EVENT_DESCRIPTION>')
-    
-    def check_hash_exists(self, hash: str) -> abstractPicturePath:
+
+        return (
+            self._root_folder
+            / Path(f"{picture_day.year}")
+            / Path(f"{picture_day} <EVENT_DESCRIPTION>")
+        )
+
+    def check_hash_exists(self, hash: str) -> bool:
         return hash in self._by_hash
