@@ -3,3 +3,4 @@ config.ini
 *.influx
 build
 dist
+.venv
