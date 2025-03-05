@@ -3,7 +3,7 @@ include test.env
 GIT_HASH = $(shell git rev-parse --short HEAD)
 GIT_BRANCH = $(shell git rev-parse --symbolic-full-name --abbrev-ref HEAD)
 
-APP_VERSION=2.0.1
+APP_VERSION=2.0.2
 
 ifeq ($(GIT_BRANCH), develop)
 	SEMVER_APP=$(APP_VERSION)-beta.$(GIT_HASH)
