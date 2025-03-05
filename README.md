@@ -1,25 +1,23 @@
-# Kouign-Amann photo crawler
+# Kouign-Amann Photo
 
-Local picture crawler responsible for indexing photo locally, hashing them for deduplication and sending thumbnails to the server
+A simple tool to deduplicate and manage your pictures
 
-# Run the app
+## Setup
 
-## Crawl for pictures
-
-```
-cd crawler
-make init
-python picture-crawler.py crawl
-```
-
-### Enable metrics
-
-In order to have metrics formatted in InfluxDB format you need to make sure that the config.ini config file contains [crawler]metrics_output_path=/path/to/the/metrics
-
-## Handle backup requests
+First you must define in which backup folder your pictures will be stored 
 
 ```
 cd crawler
-make init
-python picture-crawler.py backup
+python kouign-amann.py init /home/user/backup/MyPictures
+```
+
+## Backup pictures
+
+This command will retrieve all .jpg files located in target directoy and will copy them back in your backup folder:
+- If it finds duplicate pictures (even if they have been renamed) it will copy them only once
+- Pictures are grouped by years and by "EVENT" an event is a continuous list of days with pictures
+
+```
+cd crawler
+python kouign-amann.py backup /home/user/MyPictures
 ```

@@ -1,4 +1,5 @@
 from PIL import Image
+from PIL.Image import Image as ImageType
 from pathlib import Path
 from datetime import datetime, timezone
 from typing import Union, Dict, Tuple
@@ -27,11 +28,11 @@ class ExifFailedRecordingHashInExif(ExifException):
 
 class AbstractExifManager(ABC):
     @abstractmethod
-    async def record_hash_in_exif(self, hash: str) -> Image:
+    async def record_hash_in_exif(self, hash: str) -> ImageType:
         pass
 
     @abstractmethod
-    def get_image(self) -> Image:
+    def get_image(self) -> ImageType:
         pass
 
     @abstractmethod
@@ -75,7 +76,7 @@ class ExifManager(AbstractExifManager):
         if hasattr(self, "_image"):
             self._image.close()
 
-    def get_image(self) -> Image:
+    def get_image(self) -> ImageType:
         return self._image
 
     async def _add_hash_to_exif(self, hash: str) -> bytes:
@@ -111,7 +112,7 @@ class ExifManager(AbstractExifManager):
             current_timezone,
         )
 
-    async def record_hash_in_exif(self, hash: str) -> Image:
+    async def record_hash_in_exif(self, hash: str) -> ImageType:
         exif_bytes = await self._add_hash_to_exif(hash=hash)
 
         self._image.save(self._path, "jpeg", exif=exif_bytes)

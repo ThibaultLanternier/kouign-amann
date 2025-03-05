@@ -34,7 +34,7 @@ class TestMetricRecorder(unittest.TestCase):
         )
 
     @unittest.skipIf(
-        platform.system() == "Windows",
+        platform.system() != "Linux",
         "No correct implementation of NanoSecond counter on Windows",
     )
     def test_record_metric_without_time_injection(self):

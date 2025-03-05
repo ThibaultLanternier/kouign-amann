@@ -1,16 +1,13 @@
 import logging
 import csv
 import os
-import aiofiles
 
 from datetime import datetime, timedelta
-from typing import List, Tuple, Dict, Iterator, Callable
-from aiohttp import ClientSession
-from aiofiles import os as async_os
+from typing import List, Tuple, Dict, Iterator
 
 import requests
 
-from app.models.picture import PictureData, PictureFile, PictureInfo
+from app.models.picture import PictureData
 from app.models.shared import DictFactory
 from app.models.file import LocalFile
 from app.tools.metrics import MetricRecorder
@@ -18,72 +15,7 @@ from app.tools.metrics import MetricRecorder
 from dataclasses import asdict
 from pathlib import Path
 
-
-class RecorderException(Exception):
-    pass
-
-
-class RecorderInfoException(RecorderException):
-    pass
-
-
-class RecorderFileException(RecorderException):
-    pass
-
-
-class AsyncCrawlHistoryStore:
-    def __init__(self, file_directory: Path = Path("")) -> None:
-        self._directory_path = file_directory
-        self._file_name = "localstore-async.csv"
-
-    def _get_storage_file_path(self) -> Path:
-        return self._directory_path / self._file_name
-
-    def _get_raw_data_list(self) -> List[Tuple[str, str]]:
-        output = []
-
-        try:
-            with open(self._get_storage_file_path(), "r") as file:
-                lines = file.readlines()
-                for line in lines:
-                    line_elements = line.split("\n")[0].split(";")
-                    output.append((line_elements[0], line_elements[1]))
-        except FileNotFoundError:
-            pass
-
-        return output
-
-    def get_crawl_history(self) -> Dict[Path, LocalFile]:
-        output: Dict[Path, LocalFile] = {}
-
-        raw_data_list = self._get_raw_data_list()
-
-        for data in raw_data_list:
-            path = Path(data[0])
-            last_modified = datetime.fromisoformat(data[1])
-
-            local_file = LocalFile(path=path, last_modified=last_modified)
-
-            if path not in output.keys():
-                output[path] = local_file
-            else:
-                if output[path].last_modified < local_file.last_modified:
-                    output[path] = local_file
-
-        return output
-
-    async def add_file(self, path: Path):
-        last_modified_ts = os.path.getmtime(path)
-        last_modified = datetime.fromtimestamp(last_modified_ts)
-
-        async with aiofiles.open(self._get_storage_file_path(), "a+") as f:
-            await f.write(str(path) + ";" + last_modified.isoformat() + "\n")
-
-    async def reset(self):
-        try:
-            await async_os.remove(self._get_storage_file_path())
-        except FileNotFoundError:
-            pass
+from app.tools.exceptions import RecorderException
 
 
 class CrawlHistoryStore:
@@ -131,59 +63,6 @@ class CrawlHistoryStore:
     def reset(self):
         for storage_file in self._get_storage_file_list():
             os.remove(storage_file)
-
-
-class AsyncRecorder:
-    def __init__(
-        self,
-        base_url: str,
-        client_session_ctor: Callable[[], ClientSession] = ClientSession,
-    ) -> None:
-        self._base_url = base_url
-        self._logger = logging.getLogger("app.async_recorder")
-        self._client_session_ctor = client_session_ctor
-
-    async def _get_session(self):
-        if not hasattr(self, "_session"):
-            self._session = self._client_session_ctor()
-
-        return self._session
-
-    async def close_session(self):
-        if hasattr(self, "_session"):
-            await self._session.close()
-
-    async def record_info(self, info: PictureInfo, hash: str) -> bool:
-        session = await self._get_session()
-        response = await session.post(
-            f"{self._base_url}/picture/{hash}",
-            json=asdict(info, dict_factory=DictFactory),
-        )
-
-        if response.status == 201:
-            return True
-        else:
-            content = await response.text()
-            raise RecorderInfoException(hash, response.status, content)
-
-    async def record_file(self, file: PictureFile, hash: str) -> bool:
-        session = await self._get_session()
-        response = await session.put(
-            f"{self._base_url}/picture/file/{hash}",
-            json=asdict(file, dict_factory=DictFactory),
-        )
-
-        if response.status == 201:
-            return True
-        else:
-            content = await response.text()
-            raise RecorderFileException(hash, response.status, content)
-
-    async def check_picture_exists(self, hash: str) -> bool:
-        session = await self._get_session()
-        response = await session.get(f"{self._base_url}/picture/exists/{hash}")
-
-        return response.status == 200
 
 
 class PictureRESTRecorder:
