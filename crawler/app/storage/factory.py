@@ -4,7 +4,6 @@ from app.controllers.backup import AbstractStorageConfigProvider
 from typing import Dict, Callable
 
 from app.storage.aws_s3 import AWS_S3_factory
-from app.storage.google_photos import GOOGLE_PHOTOS_FACTORY
 
 
 class StorageFactoryException(Exception):
@@ -17,10 +16,7 @@ class StorageFactory:
         self._storages: Dict[str, AbstractStorage] = {}
         self._factories: Dict[
             StorageType, Callable[[StorageConfig], AbstractStorage]
-        ] = {
-            StorageType.AWS_S3: AWS_S3_factory,
-            StorageType.GOOGLE_PHOTOS: GOOGLE_PHOTOS_FACTORY,
-        }
+        ] = {StorageType.AWS_S3: AWS_S3_factory}
 
     def create_from_id(self, storage_id: str) -> AbstractStorage:
         if self._storages.get(storage_id) is None:

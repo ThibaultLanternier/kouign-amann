@@ -179,6 +179,8 @@ class PictureAnalyzer(AbstractPictureAnalyzer):
             current_timezone,
         )
 
+    _thumbnail: Union[ImageType, None]
+
     def _get_thumbnail(self) -> ImageType:
         """
         Returns a JPEG thumbnail of the image
@@ -189,8 +191,8 @@ class PictureAnalyzer(AbstractPictureAnalyzer):
             )
             if pivoted_image is None:
                 raise Exception("pivoted_image is not definded")
-
-            pivoted_image.thumbnail(self._thumbnail_size)
+            else:
+                pivoted_image.thumbnail(self._thumbnail_size)
 
             self._thumbnail = pivoted_image
 
