@@ -16,9 +16,7 @@ class StorageFactory:
         self._storages: Dict[str, AbstractStorage] = {}
         self._factories: Dict[
             StorageType, Callable[[StorageConfig], AbstractStorage]
-        ] = {
-            StorageType.AWS_S3: AWS_S3_factory
-        }
+        ] = {StorageType.AWS_S3: AWS_S3_factory}
 
     def create_from_id(self, storage_id: str) -> AbstractStorage:
         if self._storages.get(storage_id) is None:

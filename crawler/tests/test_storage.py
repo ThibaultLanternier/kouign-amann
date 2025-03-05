@@ -1,7 +1,6 @@
 import unittest
 from pathlib import Path
-from typing import Any, Callable, Dict
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock
 
 from app.controllers.backup import AbstractStorageConfigProvider
 from app.controllers.picture import PictureAnalyzerFactory
@@ -115,6 +114,7 @@ class TestAbstractStorage(unittest.TestCase):
     def test_check_hash_not_ok(self):
         self.assertFalse(self.test_storage.check_hash(TEST_PICTURE, "incorrect_hash"))
 
+
 class TestStorageFactory(unittest.TestCase):
     def setUp(self):
         self.mock_config_provider = MagicMock(spec=AbstractStorageConfigProvider)
@@ -136,7 +136,6 @@ class TestStorageFactory(unittest.TestCase):
         self.mock_config_provider.get_storage_config.assert_called_once_with(
             storage_id="xxx"
         )
-
 
     def test_create_from_id_not_implemented(self):
         factory = StorageFactory(self.mock_config_provider)
