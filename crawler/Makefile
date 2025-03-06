@@ -30,8 +30,8 @@ style:
 	mypy --ignore-missing-imports kouign-amann.py tests/*.py
 
 style-check:
-	flake8 app/ tests/ picture-crawler.py
-	mypy --ignore-missing-imports picture-crawler.py tests/*.py
+	flake8 app/ tests/ kouign-amann.py
+	mypy --ignore-missing-imports kouign-amann.py tests/*.py
 
 test-unit:
 	python -m unittest discover tests -v
@@ -45,8 +45,8 @@ publish: test-unit style-check
 publish-windows: test-unit
 	pyinstaller --windowed -F --clean ./kouign-amann.py
 
-publish-macos: test-unit
-	pyinstaller --specpath spec --console --name kouign-amann-$(SEMVER_APP) -F --clean ./kouign-amann.py
+publish-macos: test-unit style-check
+	pyinstaller --specpath spec --console --name kouign-amann-macos-$(SEMVER_APP) -F --clean ./kouign-amann.py
 
 clean:
 	pipenv --rm
