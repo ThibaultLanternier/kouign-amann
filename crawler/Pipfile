@@ -17,6 +17,7 @@ progressbar2 = "*"
 marshmallow = "*"
 aiohttp = "*"
 aiofiles = "*"
+platformdirs = "*"
 
 [dev-packages]
 pdbpp = "*"
