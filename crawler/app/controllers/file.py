@@ -32,13 +32,13 @@ class FileCrawler:
 
     def get_file_list(self) -> list[LocalFile]:
         file_list = list(self._get_file_list())
-        self.logger.info(f'Found a total of {len(file_list)} picture files to process')
-        
+        self.logger.info(f"Found a total of {len(file_list)} picture files to process")
+
         return file_list
 
     @classmethod
     def get_relevant_files(
-        cls, file_list: Iterator[LocalFile], crawl_history: Dict[Path, LocalFile]
+        cls, file_list: list[LocalFile], crawl_history: Dict[Path, LocalFile]
     ) -> Iterator[LocalFile]:
         for file in file_list:
             if file.path in crawl_history.keys():

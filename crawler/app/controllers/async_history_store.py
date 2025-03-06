@@ -47,7 +47,9 @@ class AsyncCrawlHistoryStore(iAsyncCrawlHistoryStore):
                     line_elements = line.split("\n")[0].split(";")
                     output.append((line_elements[0], line_elements[1]))
         except FileNotFoundError:
-            self._logger.warning(f'No history file found at {self._get_storage_file_path()}')
+            self._logger.warning(
+                f"No history file found at {self._get_storage_file_path()}"
+            )
             pass
 
         return output

@@ -1,4 +1,3 @@
-from csv import Error
 from typing import Dict
 import click
 import logging
@@ -8,8 +7,6 @@ import asyncio
 from pathlib import Path
 
 from datetime import datetime, timezone
-
-from isort import Config
 
 from app.async_processor import AsyncPictureProcessor
 from app.controllers.async_history_store import AsyncCrawlHistoryStore

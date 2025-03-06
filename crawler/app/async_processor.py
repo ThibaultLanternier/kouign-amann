@@ -33,7 +33,7 @@ class AsyncPictureProcessor:
         self._crawler_id = crawler_id
 
         self._logger = logging.getLogger("app.crawlasync")
-        self._logger.info(f'Received {len(picture_path_list)} pictures that have not already been processed')
+        self._logger.info(f"Received {len(picture_path_list)} unprocessed pictures")
         self._init_progress_bar()
 
     def _init_progress_bar(self) -> None:
