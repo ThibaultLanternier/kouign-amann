@@ -33,6 +33,7 @@ class AsyncPictureProcessor:
         self._crawler_id = crawler_id
 
         self._logger = logging.getLogger("app.crawlasync")
+        self._logger.info(f'Received {len(picture_path_list)} pictures that have not already been processed')
         self._init_progress_bar()
 
     def _init_progress_bar(self) -> None:
@@ -118,7 +119,7 @@ class AsyncPictureProcessor:
         record_exception_count = self._count_exception(result, RecorderException)
         hashing_exception_count = self._count_exception(result, HasherException)
 
-        self._logger.info(f"Processed {len(success)} files successfully")
+        self._logger.info(f"Added {len(success)} new files successfully")
         self._logger.info(f"Exif processing failed on {exif_exception_count} files")
         self._logger.info(f"File recording failed on {record_exception_count} files")
         self._logger.info(f"Hashing failed on {hashing_exception_count} files")

@@ -20,7 +20,7 @@ class FileCrawler:
             f"Creating FileCrawler with following directories : {directory_list_str}"
         )
 
-    def get_file_list(self) -> Iterator[LocalFile]:
+    def _get_file_list(self) -> Iterator[LocalFile]:
         unique_path_list = set()
 
         for pattern in self._pattern_match_list:
@@ -29,6 +29,12 @@ class FileCrawler:
                     if path not in unique_path_list:
                         unique_path_list.add(path)
                         yield LocalFile.from_path(path=path)
+
+    def get_file_list(self) -> list[LocalFile]:
+        file_list = list(self._get_file_list())
+        self.logger.info(f'Found a total of {len(file_list)} picture files to process')
+        
+        return file_list
 
     @classmethod
     def get_relevant_files(
