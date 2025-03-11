@@ -39,8 +39,8 @@ test-unit:
 test-integration:
 	TEST_AWS_KEY=$(AWS_KEY) TEST_AWS_SECRET=$(AWS_SECRET) python -m unittest discover integration_tests
 
-publish: test-unit style-check
-	pyinstaller --windowed -F --clean ./kouign-amann.py
+publish-linux: test-unit style-check
+	pyinstaller --name kouign-amann-linux-$(SEMVER_APP) -F --clean ./kouign-amann.py
 
 publish-windows: test-unit
 	pyinstaller --windowed -F --clean ./kouign-amann.py

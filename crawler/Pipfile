@@ -27,7 +27,7 @@ isort = "*"
 types-requests = "*"
 types-pytz = "*"
 types-aiofiles = "*"
-pyinstaller = "*"
+pyinstaller = ">=6.12"
 pywin32-ctypes = "*"
 pefile = "*"
 
