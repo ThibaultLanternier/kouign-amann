@@ -56,5 +56,10 @@ package-deb:
 	cp dist/kouign-amann-linux-$(SEMVER_APP) ../packages/debian/kouign-amann/usr/local/bin/kouign-amann
 	dpkg-deb --build ../packages/debian/kouign-amann
 
+package-macos:
+	mkdir -p ../packages/macos/kouign-amann
+	cp dist/kouign-amann-macos-$(SEMVER_APP) ../packages/macos/kouign-amann/kouign-amann
+	pkgbuild --root ../packages/macos/kouign-amann --identifier com.kouign-amann --version $(SEMVER_APP) --install-location /opt/homebrew/bin ../packages/macos/kouign-amann.pkg
+
 clean:
 	pipenv --rm
