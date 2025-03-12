@@ -57,6 +57,7 @@ package-deb:
 	dpkg-deb --build ../packages/debian/kouign-amann
 
 package-macos:
+	# Warning: need to have homebrew installed otherwise /opt/homebrew/bin won't be in path
 	mkdir -p ../packages/macos/kouign-amann
 	cp dist/kouign-amann-macos-$(SEMVER_APP) ../packages/macos/kouign-amann/kouign-amann
 	pkgbuild --root ../packages/macos/kouign-amann --identifier com.kouign-amann --version $(SEMVER_APP) --install-location /opt/homebrew/bin ../packages/macos/kouign-amann.pkg
