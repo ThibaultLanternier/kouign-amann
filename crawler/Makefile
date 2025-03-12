@@ -3,7 +3,7 @@ include test.env
 GIT_HASH = $(shell git rev-parse --short HEAD)
 GIT_BRANCH = $(shell git rev-parse --symbolic-full-name --abbrev-ref HEAD)
 
-APP_VERSION=2.1.1
+APP_VERSION=2.1.2
 
 ifeq ($(GIT_BRANCH), develop)
 	SEMVER_APP=$(APP_VERSION)-beta.$(GIT_HASH)
@@ -47,6 +47,14 @@ publish-windows: test-unit
 
 publish-macos: test-unit style-check
 	pyinstaller --specpath spec --console --name kouign-amann-macos-$(SEMVER_APP) -F --clean ./kouign-amann.py
+
+package-deb:
+	mkdir -p ../packages/debian/kouign-amann/usr/local/bin
+	mkdir -p ../packages/debian/kouign-amann/DEBIAN
+	cp ../packages/debian/control-template ../packages/debian/kouign-amann/DEBIAN/control
+	sed -i 's/SEMVER/$(SEMVER_APP)/g' ../packages/debian/kouign-amann/DEBIAN/control
+	cp dist/kouign-amann-linux-$(SEMVER_APP) ../packages/debian/kouign-amann/usr/local/bin/kouign-amann
+	dpkg-deb --build ../packages/debian/kouign-amann
 
 clean:
 	pipenv --rm
