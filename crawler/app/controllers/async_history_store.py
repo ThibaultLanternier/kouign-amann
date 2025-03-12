@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+import logging
 import os
 import aiofiles
 
@@ -30,6 +31,9 @@ class AsyncCrawlHistoryStore(iAsyncCrawlHistoryStore):
         self._directory_path = file_directory
         self._file_name = "localstore-async.csv"
 
+        self._logger = logging.getLogger("app.historystore")
+        self._logger.info(f"Using {self._get_storage_file_path()} as storage file")
+
     def _get_storage_file_path(self) -> Path:
         return self._directory_path / self._file_name
 
@@ -43,6 +47,9 @@ class AsyncCrawlHistoryStore(iAsyncCrawlHistoryStore):
                     line_elements = line.split("\n")[0].split(";")
                     output.append((line_elements[0], line_elements[1]))
         except FileNotFoundError:
+            self._logger.warning(
+                f"No history file found at {self._get_storage_file_path()}"
+            )
             pass
 
         return output

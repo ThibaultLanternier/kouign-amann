@@ -1,0 +1,5 @@
+Package: kouign-amann
+Version: SEMVER
+Maintainer: Thibault Lanternier
+Architecture: all
+Description: Command line tool to backup photos

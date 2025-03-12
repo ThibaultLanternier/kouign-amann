@@ -13,6 +13,7 @@ from app.controllers.async_history_store import AsyncCrawlHistoryStore
 from app.controllers.file import FileCrawler
 from app.tools.logger import init_console
 from app.controllers.async_file_recorder import AsyncFileRecorder
+from app.tools.config_file import ConfigFileManager
 
 init_console(logging.INFO)
 
@@ -30,7 +31,7 @@ def init(backup_path: str):
     """
     record backup_path in config.ini
     """
-    config_file_path = Path("config.ini")
+    config_file_path = ConfigFileManager().config_file_path
 
     if config_file_path.is_file():
         raise Exception("config.ini already exists please delete it first")
@@ -40,7 +41,7 @@ def init(backup_path: str):
     new_config["backup"] = {}
     new_config["backup"]["path"] = backup_path
 
-    with open("config.ini", "w") as config_file:
+    with open(config_file_path, "w") as config_file:
         new_config.write(config_file)
 
 
@@ -54,9 +55,11 @@ def backup(config_file: Dict[str, str], target_path: str):
     Copy new pictures found in target directory to backup directory
     """
     config = configparser.ConfigParser()
-    config.read(config_file)
+    config.read(ConfigFileManager().config_file_path)
 
-    file_history_recorder = AsyncCrawlHistoryStore()
+    backup_folder_path = Path(config["backup"]["path"])
+
+    file_history_recorder = AsyncCrawlHistoryStore(file_directory=backup_folder_path)
 
     file_crawler = FileCrawler([target_path])
     file_list = file_crawler.get_file_list()
@@ -68,7 +71,7 @@ def backup(config_file: Dict[str, str], target_path: str):
 
     path_list = [local_file.path for local_file in new_modified_files]
 
-    async_file_recorder = AsyncFileRecorder(Path(config["backup"]["path"]))
+    async_file_recorder = AsyncFileRecorder(base_file_path=backup_folder_path)
 
     async_processor = AsyncPictureProcessor(
         picture_path_list=path_list,
