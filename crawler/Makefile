@@ -3,7 +3,7 @@ include test.env
 GIT_HASH = $(shell git rev-parse --short HEAD)
 GIT_BRANCH = $(shell git rev-parse --symbolic-full-name --abbrev-ref HEAD)
 
-APP_VERSION=2.1.0
+APP_VERSION=2.1.2
 
 ifeq ($(GIT_BRANCH), develop)
 	SEMVER_APP=$(APP_VERSION)-beta.$(GIT_HASH)
@@ -30,8 +30,8 @@ style:
 	mypy --ignore-missing-imports kouign-amann.py tests/*.py
 
 style-check:
-	flake8 app/ tests/ picture-crawler.py
-	mypy --ignore-missing-imports picture-crawler.py tests/*.py
+	flake8 app/ tests/ kouign-amann.py
+	mypy --ignore-missing-imports kouign-amann.py tests/*.py
 
 test-unit:
 	python -m unittest discover tests -v
@@ -39,14 +39,28 @@ test-unit:
 test-integration:
 	TEST_AWS_KEY=$(AWS_KEY) TEST_AWS_SECRET=$(AWS_SECRET) python -m unittest discover integration_tests
 
-publish: test-unit style-check
-	pyinstaller --windowed -F --clean ./kouign-amann.py
+publish-linux: test-unit style-check
+	pyinstaller --name kouign-amann-linux-$(SEMVER_APP) -F --clean ./kouign-amann.py
 
 publish-windows: test-unit
 	pyinstaller --windowed -F --clean ./kouign-amann.py
 
-publish-macos: test-unit
-	pyinstaller --specpath spec --console --name kouign-amann-$(SEMVER_APP) -F --clean ./kouign-amann.py
+publish-macos: test-unit style-check
+	pyinstaller --specpath spec --console --name kouign-amann-macos-$(SEMVER_APP) -F --clean ./kouign-amann.py
+
+package-deb:
+	mkdir -p ../packages/debian/kouign-amann/usr/local/bin
+	mkdir -p ../packages/debian/kouign-amann/DEBIAN
+	cp ../packages/debian/control-template ../packages/debian/kouign-amann/DEBIAN/control
+	sed -i 's/SEMVER/$(SEMVER_APP)/g' ../packages/debian/kouign-amann/DEBIAN/control
+	cp dist/kouign-amann-linux-$(SEMVER_APP) ../packages/debian/kouign-amann/usr/local/bin/kouign-amann
+	dpkg-deb --build ../packages/debian/kouign-amann
+
+package-macos:
+	# Warning: need to have homebrew installed otherwise /opt/homebrew/bin won't be in path
+	mkdir -p ../packages/macos/kouign-amann
+	cp dist/kouign-amann-macos-$(SEMVER_APP) ../packages/macos/kouign-amann/kouign-amann
+	pkgbuild --root ../packages/macos/kouign-amann --identifier com.kouign-amann --version $(SEMVER_APP) --install-location /opt/homebrew/bin ../packages/macos/kouign-amann.pkg
 
 clean:
 	pipenv --rm
