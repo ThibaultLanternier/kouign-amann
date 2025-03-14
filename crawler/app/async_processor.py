@@ -44,75 +44,51 @@ class AsyncPictureProcessor:
         self._progress_counter = self._progress_counter + 1
         self._progress_bar.update(self._progress_counter)
 
-    async def _process(self, path: Path, semaphore: Semaphore) -> Path:
-        async with semaphore:
-            try:
-                exif_manager = ExifManager(path=path)
+    async def _process(self, path: Path) -> Path:
+        try:
+            exif_manager = ExifManager(path=path)
 
-                hash = await exif_manager.get_hash()
+            hash = await Hasher(exif_manager.get_image()).hash()
+            creation_time = await exif_manager.get_creation_time()
 
-                if hash is None:
-                    hash = await Hasher(exif_manager.get_image()).hash()
-                    # Do not record hash in exif to prevent file modification
-                    # await exif_manager.record_hash_in_exif(hash=hash)
+            already_exists = await self._async_recorder.check_picture_exists(
+                hash=hash
+            )
 
-                already_exists = await self._async_recorder.check_picture_exists(
-                    hash=hash
+            if not already_exists:
+                await self._async_recorder.record_file(
+                    picture_path=path, 
+                    hash=hash, 
+                    creation_time=creation_time
                 )
 
-                if not already_exists:
-                    thumbnail_manager = ThumbnailImage(exif_manager.get_image())
-
-                    picture_info = PictureInfo(
-                        creation_time=await exif_manager.get_creation_time(),
-                        thumbnail=await thumbnail_manager.get_base64_thumbnail(),
-                        orientation=await thumbnail_manager.get_orientation(),
-                    )
-
-                    await self._async_recorder.record_info(info=picture_info, hash=hash)
-
-                picture_file = PictureFile(
-                    crawler_id=self._crawler_id,
-                    picture_path=str(path),
-                    last_seen=self._crawl_time,
-                    resolution=await exif_manager.get_resolution(),
-                )
-
-                await self._async_recorder.record_file(file=picture_file, hash=hash)
-
-            except ExifImageImpossibleToOpen:
-                self._update_progress_bar()
-                await self._file_history_recorder.add_file(path)
-                return path
-            except HasherException:
-                raise HasherException(str(path))
-
-            except Exception as e:
-                self._update_progress_bar()
-                raise e
-
+        except ExifImageImpossibleToOpen:
             self._update_progress_bar()
-
             await self._file_history_recorder.add_file(path)
             return path
+        except HasherException:
+            raise HasherException(str(path))
+
+        except Exception as e:
+            self._update_progress_bar()
+            raise e
+
+        self._update_progress_bar()
+
+        await self._file_history_recorder.add_file(path)
+        return path
 
     def _count_exception(self, result_list: List[Any], exception: Type) -> int:
         filtered_list = [value for value in result_list if isinstance(value, exception)]
         return len(filtered_list)
 
     async def process(self) -> None:
-        semaphore = asyncio.Semaphore(20)
-
         self._progress_bar.start(max_value=len(self._picture_path_list))
 
-        task_list = [
-            asyncio.create_task(self._process(path=path, semaphore=semaphore))
-            for path in self._picture_path_list
-        ]
+        result: list[Path] = []
 
-        result = await asyncio.gather(*task_list, return_exceptions=True)
-
-        await self._async_recorder.close_session()
+        for path in self._picture_path_list:
+            result.append(await self._process(path=path))
 
         success = [value for value in result if isinstance(value, Path)]
         exif_exception_count = self._count_exception(result, ExifException)
