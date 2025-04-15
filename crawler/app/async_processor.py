@@ -70,6 +70,10 @@ class AsyncPictureProcessor:
             self._logger.warning(f"Hashing failed for {path} file is propably corrupted")
             self._update_progress_bar()
             return path
+        except ExifException as e:
+            self._logger.warning(f"Exif processing error {type(e)} for file {path}")
+            self._update_progress_bar()
+            return ExifException
 
         except Exception as e:
             self._update_progress_bar()
