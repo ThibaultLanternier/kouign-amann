@@ -67,7 +67,9 @@ class AsyncPictureProcessor:
             await self._file_history_recorder.add_file(path)
             return path
         except HasherException:
-            raise HasherException(str(path))
+            self._logger.warning(f"Hashing failed for {path} file is propably corrupted")
+            self._update_progress_bar()
+            return path
 
         except Exception as e:
             self._update_progress_bar()
