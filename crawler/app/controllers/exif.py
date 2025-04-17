@@ -25,6 +25,9 @@ class ExifImpossibleToLoadException(ExifException):
 class ExifFailedRecordingHashInExif(ExifException):
     pass
 
+class ExifMalformedDateTime(ExifException):
+    pass
+
 
 class AbstractExifManager(ABC):
     @abstractmethod
@@ -96,21 +99,24 @@ class ExifManager(AbstractExifManager):
     def _extract_date_time(
         self, raw_date_time: str, current_timezone: timezone
     ) -> datetime:
-        raw_date_and_time = raw_date_time.split(" ")
-        raw_date_elements = raw_date_and_time[0].split(":")
+        try:
+            raw_date_and_time = raw_date_time.split(" ")
+            raw_date_elements = raw_date_and_time[0].split(":")
 
-        raw_time_elements = raw_date_and_time[1].split(":")
+            raw_time_elements = raw_date_and_time[1].split(":")
 
-        return datetime(
-            int(raw_date_elements[0]),
-            int(raw_date_elements[1]),
-            int(raw_date_elements[2]),
-            int(raw_time_elements[0]),
-            int(raw_time_elements[1]),
-            int(raw_time_elements[2]),
-            0,
-            current_timezone,
-        )
+            return datetime(
+                int(raw_date_elements[0]),
+                int(raw_date_elements[1]),
+                int(raw_date_elements[2]),
+                int(raw_time_elements[0]),
+                int(raw_time_elements[1]),
+                int(raw_time_elements[2]),
+                0,
+                current_timezone,
+            )
+        except:
+            raise ExifMalformedDateTime()
 
     async def record_hash_in_exif(self, hash: str) -> ImageType:
         exif_bytes = await self._add_hash_to_exif(hash=hash)

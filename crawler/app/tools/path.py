@@ -42,7 +42,7 @@ class PicturePath(abstractPicturePath):
     __hash: str
 
     def __extract_infos(self, file_name: str) -> tuple[int, str]:
-        pattern = re.compile(r"^([0-9]{10})-([a-f0-9]+).jpg$")
+        pattern = re.compile(r"^([0-9]{1,10})-([a-f0-9]+).jpg$")
         m = re.match(pattern, file_name)
 
         if m is None:
