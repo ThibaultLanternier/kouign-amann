@@ -37,19 +37,9 @@ class AsyncFileRecorder(iAsyncRecorder):
             f"{integer_timestamp}-{hash}.jpg"
         )
 
-    async def record_info(self, info: PictureInfo, hash: str) -> bool:
-        self._creation_time[hash] = info.creation_time
-
-        return True
-
-    async def record_file(self, file: PictureFile, hash: str) -> bool:
-        if hash not in self._creation_time:
-            raise Exception("Missing creation time")
-
-        creation_time = self._creation_time[hash]
-
-        with open(file.picture_path, "rb") as picture_file:
-            new_file_path = self.__get_file_path(hash, creation_date=creation_time)
+    async def record_file(self, picture_path: Path, hash: str, creation_time: datetime) -> bool:
+        with open(picture_path, "rb") as picture_file:
+            new_file_path = self.__get_file_path(hash=hash, creation_date=creation_time)
 
             os.makedirs(new_file_path.parent, exist_ok=True)
             with open(new_file_path, "wb+") as new_picture_file:
@@ -64,6 +54,3 @@ class AsyncFileRecorder(iAsyncRecorder):
 
     async def check_picture_exists(self, hash: str) -> bool:
         return self._path_manager.check_hash_exists(hash)
-
-    async def close_session(self):
-        pass
