@@ -16,11 +16,11 @@ class TestAsyncFileRecorder(unittest.IsolatedAsyncioTestCase):
 
         self.assertFalse(await test_file_recorder.check_picture_exists(fake_hash))
 
-        self.assertTrue(await test_file_recorder.record_file(
-            hash=fake_hash, 
-            picture_path=picture_path, 
-            creation_time=creation_time
-        ))
+        self.assertTrue(
+            await test_file_recorder.record_file(
+                hash=fake_hash, picture_path=picture_path, creation_time=creation_time
+            )
+        )
         self.assertTrue(await test_file_recorder.check_picture_exists(fake_hash))
 
     async def test_async_record_file_check_exists(self):

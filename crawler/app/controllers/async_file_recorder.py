@@ -2,7 +2,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict
 from app.controllers.async_recorder import iAsyncRecorder
-from app.models.picture import PictureFile, PictureInfo
 import os
 
 from app.tools.path import PicturePath, PicturePathException, abstractPicturePath
@@ -37,7 +36,9 @@ class AsyncFileRecorder(iAsyncRecorder):
             f"{integer_timestamp}-{hash}.jpg"
         )
 
-    async def record_file(self, picture_path: Path, hash: str, creation_time: datetime) -> bool:
+    async def record_file(
+        self, picture_path: Path, hash: str, creation_time: datetime
+    ) -> bool:
         with open(picture_path, "rb") as picture_file:
             new_file_path = self.__get_file_path(hash=hash, creation_date=creation_time)
 
