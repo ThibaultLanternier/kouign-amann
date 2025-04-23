@@ -1,6 +1,4 @@
-import asyncio
 import logging
-from asyncio import Semaphore
 from datetime import datetime
 from pathlib import Path
 from typing import Any, List, Type
@@ -13,8 +11,6 @@ from app.controllers.exif import (ExifException, ExifImageImpossibleToOpen,
                                   ExifManager)
 from app.controllers.hashing import Hasher, HasherException
 from app.controllers.recorder import RecorderException
-from app.controllers.thumbnail import ThumbnailImage
-from app.models.picture import PictureFile, PictureInfo
 
 
 class AsyncPictureProcessor:
@@ -51,15 +47,11 @@ class AsyncPictureProcessor:
             hash = await Hasher(exif_manager.get_image()).hash()
             creation_time = await exif_manager.get_creation_time()
 
-            already_exists = await self._async_recorder.check_picture_exists(
-                hash=hash
-            )
+            already_exists = await self._async_recorder.check_picture_exists(hash=hash)
 
             if not already_exists:
                 await self._async_recorder.record_file(
-                    picture_path=path, 
-                    hash=hash, 
-                    creation_time=creation_time
+                    picture_path=path, hash=hash, creation_time=creation_time
                 )
 
         except ExifImageImpossibleToOpen:
@@ -67,13 +59,15 @@ class AsyncPictureProcessor:
             await self._file_history_recorder.add_file(path)
             return path
         except HasherException:
-            self._logger.warning(f"Hashing failed for {path} file is propably corrupted")
+            self._logger.warning(
+                f"Hashing failed for {path} file is propably corrupted"
+            )
             self._update_progress_bar()
             return path
         except ExifException as e:
             self._logger.warning(f"Exif processing error {type(e)} for file {path}")
             self._update_progress_bar()
-            return ExifException
+            return path
 
         except Exception as e:
             self._update_progress_bar()

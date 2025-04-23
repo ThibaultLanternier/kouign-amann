@@ -20,9 +20,6 @@ init:
 	pipenv install --dev
 	pipenv shell
 
-crawl:
-	REQUESTS_CA_BUNDLE=/home/thibault/Perso/kouign-amann/server/api/CAPrivate.pem python picture-crawler.py crawl
-
 style:
 	black app/ tests/ kouign-amann.py
 	isort **/*.py

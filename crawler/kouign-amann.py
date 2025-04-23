@@ -27,14 +27,17 @@ def cli():
 
 @cli.command()
 @click.argument("backup_path", type=click.Path(exists=True))
-def init(backup_path: str):
+@click.option("--force", default=False, help="Force refresh of the config file")
+def init(backup_path: str, force: bool):
     """
     record backup_path in config.ini
     """
     config_file_path = ConfigFileManager().config_file_path
 
-    if config_file_path.is_file():
-        raise Exception("config.ini already exists please delete it first")
+    if config_file_path.is_file() and not force:
+        raise Exception(
+            "config.ini already exists please delete it first or use --force"
+        )
 
     new_config = configparser.ConfigParser()
 

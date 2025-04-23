@@ -42,10 +42,8 @@ class TestPicturePath(unittest.TestCase):
             PicturePath(test_path)
 
         self.assertRaises(MalformedFileNameException, load_picture_path)
-    
+
     def test_picture_path_should_handle_with_timestamp_zero(self):
-        test_path = Path(
-            "tests/files/photos/2024/ANYTHING/0-e7975821ce2e1a55.jpg"
-        )
+        test_path = Path("tests/files/photos/2024/ANYTHING/0-e7975821ce2e1a55.jpg")
 
         PicturePath(test_path)
