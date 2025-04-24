@@ -19,17 +19,21 @@ class AsyncPictureProcessor:
         picture_path_list: List[Path],
         async_recorder: iAsyncRecorder,
         file_history_recorder: iAsyncCrawlHistoryStore,
-        crawler_id: str,
-        crawl_time: datetime,
+        filter_year: int = 0,
     ) -> None:
         self._picture_path_list = picture_path_list
         self._async_recorder = async_recorder
         self._file_history_recorder = file_history_recorder
-        self._crawl_time = crawl_time
-        self._crawler_id = crawler_id
+        self._filter_year = filter_year
 
         self._logger = logging.getLogger("app.crawlasync")
         self._logger.info(f"Received {len(picture_path_list)} unprocessed pictures")
+
+        if self._filter_year != 0:
+            self._logger.warning(
+                f"Filtering pictures from year {self._filter_year} only, all other files will be ignored"
+            )
+
         self._init_progress_bar()
 
     def _init_progress_bar(self) -> None:
@@ -40,12 +44,17 @@ class AsyncPictureProcessor:
         self._progress_counter = self._progress_counter + 1
         self._progress_bar.update(self._progress_counter)
 
-    async def _process(self, path: Path) -> Path:
+    async def _process(self, path: Path, filter_year: int) -> Path:
         try:
             exif_manager = ExifManager(path=path)
 
-            hash = await Hasher(exif_manager.get_image()).hash()
             creation_time = await exif_manager.get_creation_time()
+
+            if filter_year != 0 and creation_time.year != filter_year:
+                self._update_progress_bar()
+                return path
+
+            hash = await Hasher(exif_manager.get_image()).hash()
 
             already_exists = await self._async_recorder.check_picture_exists(hash=hash)
 
@@ -78,28 +87,14 @@ class AsyncPictureProcessor:
         await self._file_history_recorder.add_file(path)
         return path
 
-    def _count_exception(self, result_list: List[Any], exception: Type) -> int:
-        filtered_list = [value for value in result_list if isinstance(value, exception)]
-        return len(filtered_list)
-
     async def process(self) -> None:
         self._progress_bar.start(max_value=len(self._picture_path_list))
 
         result: list[Path] = []
 
         for path in self._picture_path_list:
-            result.append(await self._process(path=path))
+            result.append(await self._process(path=path, filter_year=self._filter_year))
 
         success = [value for value in result if isinstance(value, Path)]
-        exif_exception_count = self._count_exception(result, ExifException)
-        record_exception_count = self._count_exception(result, RecorderException)
-        hashing_exception_count = self._count_exception(result, HasherException)
-
+        
         self._logger.info(f"Added {len(success)} new files successfully")
-        self._logger.info(f"Exif processing failed on {exif_exception_count} files")
-        self._logger.info(f"File recording failed on {record_exception_count} files")
-        self._logger.info(f"Hashing failed on {hashing_exception_count} files")
-
-        total = len(success) + exif_exception_count + record_exception_count
-
-        self._logger.info(f"TOTAL files processed : {total}")

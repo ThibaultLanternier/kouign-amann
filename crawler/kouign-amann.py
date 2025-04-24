@@ -50,10 +50,10 @@ def init(backup_path: str, force: bool):
 
 @cli.command()
 @click.option(
-    "--config-file", default="config.ini", help="Location of the configuration file"
+    "--year", default=0, help="Only process files from this year (0 = all years)"
 )
 @click.argument("target_path", type=click.Path(exists=True))
-def backup(config_file: Dict[str, str], target_path: str):
+def backup(target_path: str, year: int):
     """
     Copy new pictures found in target directory to backup directory
     """
@@ -78,10 +78,9 @@ def backup(config_file: Dict[str, str], target_path: str):
 
     async_processor = AsyncPictureProcessor(
         picture_path_list=path_list,
-        crawler_id="useless_crawler_id",
-        crawl_time=datetime.now(timezone.utc),
         async_recorder=async_file_recorder,
         file_history_recorder=file_history_recorder,
+        filter_year=year,
     )
 
     asyncio.run(async_processor.process())
