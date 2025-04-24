@@ -10,12 +10,8 @@ from app.tools.path_manager import PicturePathManager
 
 class AsyncFileRecorder(iAsyncRecorder):
     _path_manager: PicturePathManager
-
-    def __init__(self, base_file_path: Path):
-        super().__init__()
-        self._base_file_path = base_file_path
-        self._creation_time: Dict[str, datetime] = {}
-
+    
+    def __list_already_existing_files(self) -> list[abstractPicturePath]:
         path_list = [x for x in self._base_file_path.glob("**/*.jpg")]
 
         picture_path_list: list[abstractPicturePath] = []
@@ -27,6 +23,14 @@ class AsyncFileRecorder(iAsyncRecorder):
             except PicturePathException:
                 pass
 
+        return picture_path_list
+
+    def __init__(self, base_file_path: Path):
+        super().__init__()
+        self._base_file_path = base_file_path
+        self._creation_time: Dict[str, datetime] = {}
+
+        picture_path_list = self.__list_already_existing_files()
         self._path_manager = PicturePathManager(picture_path_list, self._base_file_path)
 
     def __get_file_path(self, hash: str, creation_date: datetime):

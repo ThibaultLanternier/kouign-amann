@@ -1,12 +1,9 @@
-from typing import Dict
 import click
 import logging
 import configparser
 import asyncio
 
 from pathlib import Path
-
-from datetime import datetime, timezone
 
 from app.async_processor import AsyncPictureProcessor
 from app.controllers.async_history_store import AsyncCrawlHistoryStore
@@ -52,8 +49,11 @@ def init(backup_path: str, force: bool):
 @click.option(
     "--year", default=0, help="Only process files from this year (0 = all years)"
 )
+@click.option(
+    "--strict", default=False, help="Does not rely on local file store only on perception hash"
+)
 @click.argument("target_path", type=click.Path(exists=True))
-def backup(target_path: str, year: int):
+def backup(target_path: str, year: int, strict: bool):
     """
     Copy new pictures found in target directory to backup directory
     """
@@ -67,10 +67,13 @@ def backup(target_path: str, year: int):
     file_crawler = FileCrawler([target_path])
     file_list = file_crawler.get_file_list()
 
-    new_modified_files = FileCrawler.get_relevant_files(
-        file_list=file_list,
-        crawl_history=file_history_recorder.get_crawl_history(),
-    )
+    if strict: # In strict mode all files reprocessd and checked
+        new_modified_files = file_list
+    else:
+        new_modified_files = FileCrawler.get_relevant_files(
+            file_list=file_list,
+            crawl_history=file_history_recorder.get_crawl_history(),
+        )
 
     path_list = [local_file.path for local_file in new_modified_files]
 
