@@ -27,6 +27,10 @@ class abstractPicturePath(ABC):
         pass
 
     @abstractmethod
+    def get_path(self) -> Path:
+        pass
+
+    @abstractmethod
     def get_hash(self) -> str:
         pass
 
@@ -34,6 +38,20 @@ class abstractPicturePath(ABC):
     def get_year(self) -> int:
         pass
 
+
+def get_existing_picture(path: Path) -> list[abstractPicturePath]:
+    path_list = [x for x in path.glob("**/*.jpg")]
+
+    output: list[abstractPicturePath] = []
+
+    for path in path_list:
+        try:
+            picture_path = PicturePath(path)
+            output.append(picture_path)
+        except PicturePathException:
+            pass
+
+    return output
 
 class PicturePath(abstractPicturePath):
     __day: date
@@ -75,3 +93,6 @@ class PicturePath(abstractPicturePath):
 
     def get_year(self) -> int:
         return self.__year
+
+    def get_path(self) -> Path:
+        return self.__path
