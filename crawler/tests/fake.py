@@ -21,5 +21,8 @@ class FakePicturePath(abstractPicturePath):
     def get_year(self) -> int:
         return self.__day.year
     
+    def get_path(self) -> Path:
+        return self.__folder_path / Path(f"{self.__hash}.jpg")
+    
     def __repr__(self) -> str:
         return self.__hash

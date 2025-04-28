@@ -1,3 +1,4 @@
+from math import pi
 import click
 import logging
 import configparser
@@ -11,6 +12,8 @@ from app.controllers.file import FileCrawler
 from app.tools.logger import init_console
 from app.controllers.async_file_recorder import AsyncFileRecorder
 from app.tools.config_file import ConfigFileManager
+from app.tools.picture_grouper import PictureGrouper, PictureGroup
+from app.tools.path import get_existing_picture
 
 init_console(logging.INFO)
 
@@ -87,6 +90,42 @@ def backup(target_path: str, year: int, strict: bool):
     )
 
     asyncio.run(async_processor.process())
+
+@cli.command()
+@click.option(
+    "--delta", default=1, help="Number of days time difference to group pictures together"
+)
+def group(delta: int):
+    """
+    Group pictures event 
+    """
+    config = configparser.ConfigParser()
+    config.read(ConfigFileManager().config_file_path)
+
+    backup_folder_path = Path(config["backup"]["path"])
+    
+    existing_pictures = get_existing_picture(path=backup_folder_path)
+
+    logger = logging.getLogger("app.group_pictures")
+    
+    logger.info(f"Received {len(existing_pictures)} that need to be grouped")
+
+    group_list = [PictureGroup(x) for x in PictureGrouper(picture_path_list=existing_pictures).group_pictures(max_days=delta)]
+
+    logger.info(f"Found {len(group_list)} groups with a max delta of {delta} day(s)")
+
+    for group in group_list:
+        picture_list_to_move = group.list_pictures_to_move()
+        if len(picture_list_to_move) > 0:
+            logger.info(f"Group {group.get_folder_path()} with {len(picture_list_to_move)} pictures to move")
+            for picture in group.list_pictures_to_move():
+                logger.info(f"Starting moving picture {picture[0].name}")
+                if not picture[1].parent.exists():
+                    picture[1].parent.mkdir(parents=True)
+                    logger.info(f"Created folder {picture[1].parent}")
+                    
+                picture[0].rename(picture[1])
+                logger.info(f"Moved picture {picture[0]} to {picture[1]}")   
 
 
 if __name__ == "__main__":
