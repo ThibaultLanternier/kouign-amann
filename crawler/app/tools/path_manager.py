@@ -2,6 +2,7 @@ from app.tools.path import abstractPicturePath
 from datetime import date
 from pathlib import Path
 
+
 class PicturePathManager:
     _by_day: dict[date, Path]
     _by_hash: dict[str, abstractPicturePath]

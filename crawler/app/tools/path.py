@@ -53,6 +53,7 @@ def get_existing_picture(path: Path) -> list[abstractPicturePath]:
 
     return output
 
+
 class PicturePath(abstractPicturePath):
     __day: date
     __year: int

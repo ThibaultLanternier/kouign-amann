@@ -5,6 +5,7 @@ from pathlib import Path
 from app.tools.path_manager import PicturePathManager
 from tests.fake import FakePicturePath
 
+
 class TestPicturePathManager(unittest.TestCase):
     _path_manager: PicturePathManager
 

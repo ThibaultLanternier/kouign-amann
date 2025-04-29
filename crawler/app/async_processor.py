@@ -1,7 +1,6 @@
 import logging
-from datetime import datetime
 from pathlib import Path
-from typing import Any, List, Type
+from typing import List
 
 from progressbar import ProgressBar
 
@@ -10,7 +9,6 @@ from app.controllers.async_recorder import iAsyncRecorder
 from app.controllers.exif import (ExifException, ExifImageImpossibleToOpen,
                                   ExifManager)
 from app.controllers.hashing import Hasher, HasherException
-from app.controllers.recorder import RecorderException
 
 
 class AsyncPictureProcessor:
@@ -31,7 +29,7 @@ class AsyncPictureProcessor:
 
         if self._filter_year != 0:
             self._logger.warning(
-                f"Filtering pictures from year {self._filter_year} only, all other files will be ignored"
+                f"Pictures from year {self._filter_year} other files will be ignored"
             )
 
         self._init_progress_bar()
@@ -96,5 +94,5 @@ class AsyncPictureProcessor:
             result.append(await self._process(path=path, filter_year=self._filter_year))
 
         success = [value for value in result if isinstance(value, Path)]
-        
+
         self._logger.info(f"Added {len(success)} new files successfully")
