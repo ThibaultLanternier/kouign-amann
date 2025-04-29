@@ -36,6 +36,8 @@ class TestFileService(unittest.TestCase):
         )
 
         self.assertTrue(file_service.backup(picture_path, picture_data))
+        # It should return False if the file already exists
+        self.assertFalse(file_service.backup(picture_path, picture_data))
 
         folder = Path("tests/files/local_recorder/2024/NOT_GROUPED")
         timestamp = int(picture_data.get_creation_date().timestamp())

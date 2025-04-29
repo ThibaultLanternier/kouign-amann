@@ -9,6 +9,7 @@ from app.entities.picture_data import iPictureData
 class iFileService(ABC):
     @abstractmethod
     def backup(self, origin_path: Path, data: iPictureData) -> bool:
+        """Backup to the backup folder returns True if new file is created"""
         pass
 
     @abstractmethod
@@ -41,7 +42,15 @@ class FileService(iFileService):
             f"{int(data.get_creation_date().timestamp())}-{data.get_hash()}.jpg"
         )
 
+    def __file_already_exists(self, file_path: Path) -> bool:
+        return file_path.exists()
+
     def backup(self, origin_path: Path, data: iPictureData) -> bool:
+        new_file_path = self.__get_file_path(data)
+
+        if self.__file_already_exists(new_file_path):
+            return False
+        
         with open(origin_path, "rb") as picture_file:
             new_file_path = self.__get_file_path(data=data)
 
