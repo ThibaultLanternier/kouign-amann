@@ -75,6 +75,7 @@ def backup2(target_path: str, strict: bool):
         strict_mode=strict,
     )
 
+
 @cli.command()
 @click.option(
     "--year", default=0, help="Only process files from this year (0 = all years)"

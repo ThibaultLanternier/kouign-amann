@@ -2,18 +2,20 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from pathlib import Path
 
+
 class iPictureData(ABC):
     @abstractmethod
     def get_path(self) -> Path:
         pass
 
-    @abstractmethod    
+    @abstractmethod
     def get_creation_date(self) -> datetime:
         pass
 
     @abstractmethod
     def get_hash(self) -> str:
         pass
+
 
 class PictureData(iPictureData):
     def __init__(self, path: Path, creation_date: datetime, hash: str) -> None:

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 import logging
+import os
 from pathlib import Path
-from time import sleep
 
 from app.entities.picture_data import iPictureData
 
@@ -19,19 +19,50 @@ class iFileService(ABC):
     def list_pictures(self, root_path: Path) -> list[Path]:
         pass
 
+
 class FileService(iFileService):
     def __init__(self, backup_folder_path: Path) -> None:
         self._backup_folder_path = backup_folder_path
 
         self._logger = logging.getLogger("app.file_service")
-        self._logger.info(f"Init FileService Backup folder path is: {self._backup_folder_path}")
+        self._logger.info(
+            f"Init FileService Backup folder path is: {self._backup_folder_path}"
+        )
+
+    def __get_folder_path(self, data: iPictureData) -> Path:
+        return (
+            self._backup_folder_path
+            / Path(f"{data.get_creation_date().year}")
+            / Path("NOT_GROUPED")
+        )
+
+    def __get_file_path(self, data: iPictureData) -> Path:
+        return self.__get_folder_path(data) / Path(
+            f"{int(data.get_creation_date().timestamp())}-{data.get_hash()}.jpg"
+        )
 
     def backup(self, origin_path: Path, data: iPictureData) -> bool:
-        sleep(0.1)  # Simulate a delay for the backup process
+        with open(origin_path, "rb") as picture_file:
+            new_file_path = self.__get_file_path(data=data)
+
+            os.makedirs(new_file_path.parent, exist_ok=True)
+            with open(new_file_path, "wb+") as new_picture_file:
+                new_picture_file.write(picture_file.read())
+                os.utime(
+                    new_file_path,
+                    (
+                        data.get_creation_date().timestamp(),
+                        data.get_creation_date().timestamp(),
+                    ),
+                )
+
         return True
 
     def move(self, origin_path: Path, target_path: Path) -> bool:
         raise NotImplementedError("Move method is not implemented")
-    
+
     def list_pictures(self, root_path: Path) -> list[Path]:
-        return [x for x in root_path.glob("**/*.jpg")]
+        small_case_jpg = [x for x in root_path.glob("**/*.jpg")]
+        capital_case_jpg = [x for x in root_path.glob("**/*.JPG")]
+
+        return [*small_case_jpg, *capital_case_jpg]
