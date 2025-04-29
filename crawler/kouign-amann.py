@@ -14,6 +14,8 @@ from app.tools.config_file import ConfigFileManager
 from app.tools.picture_grouper import PictureGrouper, PictureGroup
 from app.tools.path import get_existing_picture
 
+from app.use_cases.backup import backup_use_case_factory
+
 init_console(logging.INFO)
 
 logger = logging.getLogger("app.crawl")
@@ -46,6 +48,32 @@ def init(backup_path: str, force: bool):
     with open(config_file_path, "w") as config_file:
         new_config.write(config_file)
 
+
+@cli.command()
+@click.option(
+    "--strict",
+    default=False,
+    help="Does not rely on local file store only on perception hash",
+)
+@click.argument("target_path", type=click.Path(exists=True))
+def backup2(target_path: str, strict: bool):
+    """
+    Copy new pictures found in target directory to backup directory
+    """
+    config = configparser.ConfigParser()
+    config.read(ConfigFileManager().config_file_path)
+
+    backup_folder_path = Path(config["backup"]["path"])
+    target_folder_path = Path(target_path)
+
+    backup_use_case = backup_use_case_factory(backup_folder_path=backup_folder_path)
+
+    file_list = backup_use_case.list_pictures(root_path=target_folder_path)
+
+    backup_use_case.backup(
+        picture_list_to_backup=file_list,
+        strict_mode=strict,
+    )
 
 @cli.command()
 @click.option(
