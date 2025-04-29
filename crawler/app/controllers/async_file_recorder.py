@@ -1,10 +1,12 @@
 from datetime import datetime
 from pathlib import Path
-from typing import Dict
 from app.controllers.async_recorder import iAsyncRecorder
 import os
 
-from app.tools.path import PicturePath, PicturePathException, abstractPicturePath
+from app.tools.path import (
+    PicturePath,
+    get_existing_picture,
+)
 from app.tools.path_manager import PicturePathManager
 
 
@@ -14,27 +16,16 @@ class AsyncFileRecorder(iAsyncRecorder):
     def __init__(self, base_file_path: Path):
         super().__init__()
         self._base_file_path = base_file_path
-        self._creation_time: Dict[str, datetime] = {}
 
-        path_list = [x for x in self._base_file_path.glob("**/*.jpg")]
-
-        picture_path_list: list[abstractPicturePath] = []
-
-        for path in path_list:
-            try:
-                picture_path = PicturePath(path)
-                picture_path_list.append(picture_path)
-            except PicturePathException:
-                pass
-
+        picture_path_list = get_existing_picture(path=self._base_file_path)
         self._path_manager = PicturePathManager(picture_path_list, self._base_file_path)
 
     def __get_file_path(self, hash: str, creation_date: datetime):
         integer_timestamp = int(creation_date.timestamp())
 
-        return self._path_manager.get_folder_path(creation_date.date()) / Path(
-            f"{integer_timestamp}-{hash}.jpg"
-        )
+        return self._path_manager.get_folder_path(
+            picture_day=creation_date.date(), group_event=False
+        ) / Path(f"{integer_timestamp}-{hash}.jpg")
 
     async def record_file(
         self, picture_path: Path, hash: str, creation_time: datetime
