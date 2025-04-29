@@ -25,6 +25,7 @@ class ExifImpossibleToLoadException(ExifException):
 class ExifFailedRecordingHashInExif(ExifException):
     pass
 
+
 class ExifMalformedDateTime(ExifException):
     pass
 
@@ -115,7 +116,7 @@ class ExifManager(AbstractExifManager):
                 0,
                 current_timezone,
             )
-        except:
+        except Exception:
             raise ExifMalformedDateTime()
 
     async def record_hash_in_exif(self, hash: str) -> ImageType:

@@ -47,19 +47,22 @@ class PicturePathManager:
 
         self._regroup_adjacent_days()
 
-    def get_folder_path(self, picture_day: date) -> Path:
-        day_list = sorted(self._by_day.keys())
+    def get_folder_path(self, picture_day: date, group_event: bool = True) -> Path:
+        if group_event:
+            day_list = sorted(self._by_day.keys())
 
-        for day in day_list:
-            time_difference = picture_day - day
-            if abs(time_difference.days) <= 1:
-                return self._by_day[day]
+            for day in day_list:
+                time_difference = picture_day - day
+                if abs(time_difference.days) <= 1:
+                    return self._by_day[day]
 
-        return (
-            self._root_folder
-            / Path(f"{picture_day.year}")
-            / Path(f"{picture_day} <EVENT_DESCRIPTION>")
-        )
+            return (
+                self._root_folder
+                / Path(f"{picture_day.year}")
+                / Path(f"{picture_day} <EVENT_DESCRIPTION>")
+            )
+        else:
+            return self._root_folder / Path(f"{picture_day.year}") / Path("NOT_GROUPED")
 
     def check_hash_exists(self, hash: str) -> bool:
         return hash in self._by_hash

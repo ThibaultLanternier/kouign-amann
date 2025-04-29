@@ -3,9 +3,12 @@ from datetime import datetime
 
 from pathlib import Path
 
+
 class iAsyncRecorder(ABC):
     @abstractmethod
-    async def record_file(self, picture_path: Path, hash: str, creation_time: datetime) -> bool:
+    async def record_file(
+        self, picture_path: Path, hash: str, creation_time: datetime
+    ) -> bool:
         pass
 
     @abstractmethod

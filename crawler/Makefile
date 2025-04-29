@@ -3,7 +3,7 @@ include test.env
 GIT_HASH = $(shell git rev-parse --short HEAD)
 GIT_BRANCH = $(shell git rev-parse --symbolic-full-name --abbrev-ref HEAD)
 
-APP_VERSION=2.2.1
+APP_VERSION=2.3.0
 
 ifeq ($(GIT_BRANCH), develop)
 	SEMVER_APP=$(APP_VERSION)-beta.$(GIT_HASH)
@@ -19,9 +19,6 @@ init:
 	pip install pipenv
 	pipenv install --dev
 	pipenv shell
-
-crawl:
-	REQUESTS_CA_BUNDLE=/home/thibault/Perso/kouign-amann/server/api/CAPrivate.pem python picture-crawler.py crawl
 
 style:
 	black app/ tests/ kouign-amann.py
