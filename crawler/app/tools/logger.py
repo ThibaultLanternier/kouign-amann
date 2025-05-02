@@ -1,7 +1,10 @@
 import logging
+from pathlib import Path
 import sys
 
 from logging import Logger, handlers
+
+from isort import file
 
 LOG_FORMAT = (
     "%(asctime)s - %(threadName)s - %(name)s %(levelname)s - %(message)s"  # noqa: E501
@@ -24,12 +27,11 @@ def init_console(log_level) -> Logger:
     return logger
 
 
-def init_file_log(log_level, log_directory: str):
+def init_file_log(log_level, log_file: str):
     logger = logging.getLogger("app")
 
     standard_formatter = logging.Formatter(LOG_FORMAT)
-
-    file_handler = handlers.RotatingFileHandler(f"{log_directory}kouign-amann.log")
+    file_handler = logging.FileHandler(filename=log_file, mode="a+")
     file_handler.setLevel(log_level)
     file_handler.setFormatter(standard_formatter)
 

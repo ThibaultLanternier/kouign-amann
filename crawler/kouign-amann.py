@@ -1,3 +1,5 @@
+from datetime import date
+from uuid import uuid4
 import click
 import logging
 import configparser
@@ -8,7 +10,7 @@ from pathlib import Path
 from app.async_processor import AsyncPictureProcessor
 from app.controllers.async_history_store import AsyncCrawlHistoryStore
 from app.controllers.file import FileCrawler
-from app.tools.logger import init_console
+from app.tools.logger import init_console, init_file_log
 from app.controllers.async_file_recorder import AsyncFileRecorder
 from app.tools.config_file import ConfigFileManager
 from app.tools.picture_grouper import PictureGrouper, PictureGroup
@@ -19,7 +21,6 @@ from app.use_cases.backup import backup_use_case_factory
 init_console(logging.INFO)
 
 logger = logging.getLogger("app.crawl")
-
 
 @click.group()
 def cli():
@@ -64,6 +65,9 @@ def backup2(target_path: str, strict: bool):
     config.read(ConfigFileManager().config_file_path)
 
     backup_folder_path = Path(config["backup"]["path"])
+
+    init_file_log(logging.DEBUG, log_file=backup_folder_path / Path("logs") / Path(f"backup-{uuid4().hex}.log"))
+
     target_folder_path = Path(target_path)
 
     backup_use_case = backup_use_case_factory(backup_folder_path=backup_folder_path)

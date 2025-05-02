@@ -1,13 +1,12 @@
 from abc import ABC, abstractmethod
-from datetime import datetime
-from math import pi
+import logging
 from pathlib import Path
 from typing import Union
-import uuid
 
 from app.controllers.exif import ExifManager
 from app.entities.picture import Picture, PictureException
 from app.entities.picture_data import PictureData, iPictureData
+from app.repositories.picture_data import iPictureDataRepository
 
 
 class PictureIdComputeException(Exception):
@@ -29,13 +28,15 @@ class iPictureIdService(ABC):
 
 
 class PictureIdService(iPictureIdService):
-    def __init__(self) -> None:
-        pass
+    def __init__(self, picture_data_repo: iPictureDataRepository) -> None:
+        self._picture_data_repo = picture_data_repo
+        self._logger = logging.getLogger("app.picture_id_service")
 
     def get_from_cache(self, picture_path: Path) -> Union[iPictureData | None]:
-        return None
+        return self._picture_data_repo.get(picture_path)
 
     def compute_id(self, picture_path: Path) -> iPictureData:
+        self._logger.debug(f"Computing picture data for {picture_path}")
         try:
             picture = Picture(path=picture_path)
         
@@ -45,7 +46,8 @@ class PictureIdService(iPictureIdService):
                 hash=picture.get_hash(),
             )
         except PictureException as e:
+            self._logger.warning(f"Failed to compute picture data {picture_path}: {e}")
             raise PictureIdComputeException(f"Failed to compute picture {picture_path}: {e}")
 
-    def add_to_cache(self, picture_path: Path, data: iPictureData) -> bool:
-        return True
+    def add_to_cache(self, data: iPictureData) -> bool:
+        return self._picture_data_repo.record(data)

@@ -1,13 +1,13 @@
 import logging
 from progressbar import ProgressBar
-from zipp import Path
-
+from pathlib import Path
 from app.services.file import FileService, iFileService
 from app.services.picture_id import (
     PictureIdComputeException,
     PictureIdService,
     iPictureIdService,
 )
+from app.repositories.picture_data import PictureDataRepository
 
 
 class BackupUseCase:
@@ -39,6 +39,7 @@ class BackupUseCase:
                 picture_data = self._picture_id_service.compute_id(
                     picture_path=picture_path
                 )
+                self._picture_id_service.add_to_cache(data=picture_data)
             except PictureIdComputeException as e:
                 self._logger.warning(
                     f"Failed to compute picture id for {picture_path}: {e}"
@@ -71,8 +72,11 @@ class BackupUseCase:
 
 
 def backup_use_case_factory(backup_folder_path: Path) -> BackupUseCase:
+    picture_data_repo = PictureDataRepository(
+        cache_file_path = Path(f"{backup_folder_path}/cache.jsonl")
+    )
     file_service = FileService(backup_folder_path=backup_folder_path)
-    picture_id_service = PictureIdService()
+    picture_id_service = PictureIdService(picture_data_repo=picture_data_repo)
 
     return BackupUseCase(
         file_service=file_service, picture_id_service=picture_id_service

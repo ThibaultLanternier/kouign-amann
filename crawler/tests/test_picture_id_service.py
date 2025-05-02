@@ -1,13 +1,16 @@
 import unittest
+from unittest.mock import MagicMock
 
 from app.entities.picture_data import iPictureData
-from app.models import picture
+from app.repositories.picture_data import iPictureDataRepository
 from app.services.picture_id import PictureIdService
 
 
 class TestPictureIdService(unittest.TestCase):
     def test_compute_id(self):
-        picture_id_service = PictureIdService()
+        mock_picture_data_repo = MagicMock(name="mock_picture_data_repo", spec=iPictureDataRepository)
+
+        picture_id_service = PictureIdService(picture_data_repo=mock_picture_data_repo)
 
         picture_path = "tests/files/test-canon-eos70D.jpg"
         
