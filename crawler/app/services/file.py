@@ -50,15 +50,13 @@ class FileService(iFileService):
 
         if self.__file_already_exists(new_file_path):
             self._logger.debug(
-                f"File {origin_path} has already been backed up to {new_file_path}, SKIPPING"
+                f"File {origin_path} already backed up to {new_file_path}, SKIPPING"
             )
             return False
-        
+
         with open(origin_path, "rb") as picture_file:
-            #new_file_path = self.__get_file_path(data=data)
-            self._logger.debug(
-                f"Backing up {origin_path} to {new_file_path}"
-            )
+            # new_file_path = self.__get_file_path(data=data)
+            self._logger.debug(f"Backing up {origin_path} to {new_file_path}")
             os.makedirs(new_file_path.parent, exist_ok=True)
             with open(new_file_path, "wb+") as new_picture_file:
                 new_picture_file.write(picture_file.read())

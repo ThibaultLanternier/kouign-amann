@@ -6,31 +6,39 @@ from PIL import Image
 import imagehash
 import piexif
 
+
 class PictureException(Exception):
     pass
+
 
 class ExifImpossibleToLoadException(PictureException):
     pass
 
+
 class ExifImageImpossibleToOpen(PictureException):
     pass
+
 
 class ExifMalformedDateTime(PictureException):
     pass
 
+
 class HasherException(PictureException):
     pass
+
 
 class iPicture(ABC):
     @abstractmethod
     def get_exif_creation_time(self) -> datetime:
         pass
-    
+
     @abstractmethod
     def get_hash(self) -> str:
         pass
 
+
 DEFAULT_DATETIME = datetime(1970, 1, 1, tzinfo=timezone.utc)
+
 
 class Picture(iPicture):
     def __init__(self, path: Path, current_timezone: timezone = timezone.utc) -> None:
@@ -41,7 +49,7 @@ class Picture(iPicture):
             self._image = Image.open(self._path)
         except Exception:
             raise ExifImageImpossibleToOpen(self._path)
-    
+
     def _get_exif_dict(self) -> dict:
         if not hasattr(self, "_exif_dict"):
             try:
@@ -89,7 +97,7 @@ class Picture(iPicture):
             )
         except KeyError:
             return DEFAULT_DATETIME
-    
+
     def get_hash(self) -> str:
         try:
             return str(imagehash.phash(self._image))

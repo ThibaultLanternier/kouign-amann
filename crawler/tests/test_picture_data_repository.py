@@ -1,8 +1,6 @@
-from datetime import date, datetime
-from math import pi
-from pathlib import Path
-import re
 import unittest
+from datetime import datetime
+from pathlib import Path
 from uuid import uuid4
 
 from app.entities.picture_data import PictureData
@@ -17,16 +15,19 @@ class TestPictureDataRepository(unittest.TestCase):
 
         picture_data = PictureData(
             path=Path("tests/files/repository/test.jpg"),
-            creation_date= datetime(2023, 10, 1, 12, 0, 0),
+            creation_date=datetime(2023, 10, 1, 12, 0, 0),
             hash="1234567890abcdef",
         )
 
         self.assertIsNone(repository.get(picture_data.get_path()))
 
-        repository.record(data= picture_data)
+        repository.record(data=picture_data)
 
         self.assertEqual(repository.get(picture_data.get_path()), picture_data)
 
         new_repository = PictureDataRepository(cache_file_path=file_path)
 
-        self.assertEqual(new_repository.get(picture_data.get_path()).get_hash(), picture_data.get_hash())
+        self.assertEqual(
+            new_repository.get(picture_data.get_path()).get_hash(),
+            picture_data.get_hash(),
+        )

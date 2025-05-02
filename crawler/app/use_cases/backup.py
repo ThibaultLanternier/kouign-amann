@@ -73,7 +73,7 @@ class BackupUseCase:
 
 def backup_use_case_factory(backup_folder_path: Path) -> BackupUseCase:
     picture_data_repo = PictureDataRepository(
-        cache_file_path = Path(f"{backup_folder_path}/cache.jsonl")
+        cache_file_path=Path(f"{backup_folder_path}/cache.jsonl")
     )
     file_service = FileService(backup_folder_path=backup_folder_path)
     picture_id_service = PictureIdService(picture_data_repo=picture_data_repo)

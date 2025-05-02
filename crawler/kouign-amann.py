@@ -1,4 +1,3 @@
-from datetime import date
 from uuid import uuid4
 import click
 import logging
@@ -10,7 +9,7 @@ from pathlib import Path
 from app.async_processor import AsyncPictureProcessor
 from app.controllers.async_history_store import AsyncCrawlHistoryStore
 from app.controllers.file import FileCrawler
-from app.tools.logger import init_console, init_file_log
+from app.tools.logger import init_console_log, init_file_log
 from app.controllers.async_file_recorder import AsyncFileRecorder
 from app.tools.config_file import ConfigFileManager
 from app.tools.picture_grouper import PictureGrouper, PictureGroup
@@ -18,9 +17,10 @@ from app.tools.path import get_existing_picture
 
 from app.use_cases.backup import backup_use_case_factory
 
-init_console(logging.INFO)
+init_console_log()
 
 logger = logging.getLogger("app.crawl")
+
 
 @click.group()
 def cli():
@@ -55,18 +55,25 @@ def init(backup_path: str, force: bool):
     "--strict",
     default=False,
     help="Does not rely on local file store only on perception hash",
+    is_flag=True,
 )
+@click.option("--debug", help="Writes debug log to file", is_flag=True)
 @click.argument("target_path", type=click.Path(exists=True))
-def backup2(target_path: str, strict: bool):
+def backup2(target_path: str, strict: bool, debug: str):
     """
     Copy new pictures found in target directory to backup directory
     """
+    print(debug)
+    print(strict)
     config = configparser.ConfigParser()
     config.read(ConfigFileManager().config_file_path)
 
     backup_folder_path = Path(config["backup"]["path"])
 
-    init_file_log(logging.DEBUG, log_file=backup_folder_path / Path("logs") / Path(f"backup-{uuid4().hex}.log"))
+    if debug:
+        log_file = backup_folder_path / Path("logs") / Path(f"backup-{uuid4().hex}.log")
+        logger.info(f"Debug mode enabled, writing log to file {log_file}")
+        init_file_log(log_file=str(log_file))
 
     target_folder_path = Path(target_path)
 
