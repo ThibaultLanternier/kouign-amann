@@ -1,9 +1,7 @@
-
-
-from datetime import datetime
-from math import exp
-from pathlib import Path
 import unittest
+from datetime import datetime
+from pathlib import Path
+
 from app.entities.picture_data import PictureData
 from app.entities.picture_group import PictureGroup
 
@@ -14,15 +12,15 @@ class TestPictureGroup(unittest.TestCase):
         self._picture_group_not_grouped: PictureGroup = PictureGroup(
             [
                 PictureData(
-                    path=Path("root/NOT_GROUPED/hash1.jpg"), 
-                    creation_date=datetime(2023,10,1,15,45,12), 
-                    hash="hash1"
+                    path=Path("root/NOT_GROUPED/hash1.jpg"),
+                    creation_date=datetime(2023, 10, 1, 15, 45, 12),
+                    hash="hash1",
                 ),
                 PictureData(
-                    path=Path("root/NOT_GROUPED/hash2.jpg"), 
-                    creation_date=datetime(2023,10,3), 
-                    hash="hash2"
-                )
+                    path=Path("root/NOT_GROUPED/hash2.jpg"),
+                    creation_date=datetime(2023, 10, 3),
+                    hash="hash2",
+                ),
             ]
         )
 
@@ -64,7 +62,7 @@ class TestPictureGroup(unittest.TestCase):
 
     def test_list_pictures_to_move(self):
         pictures_to_move = self._picture_group_partly_grouped.list_pictures_to_move()
-        
+
         self.assertEqual(
             pictures_to_move,
             [
@@ -75,7 +73,7 @@ class TestPictureGroup(unittest.TestCase):
 
     def test_list_pictures_to_move_new_folder(self):
         pictures_to_move = self._picture_group_not_grouped.list_pictures_to_move()
-        
+
         expected_list = [
             (
                 Path("root/NOT_GROUPED/hash1.jpg"),

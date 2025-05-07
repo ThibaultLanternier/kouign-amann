@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from app.entities.picture_data import iPictureData
 
+
 class iPictureGroup(ABC):
     @abstractmethod
     def get_folder_path(self) -> Path:
@@ -11,8 +12,11 @@ class iPictureGroup(ABC):
     def list_pictures_to_move(self) -> list[tuple[Path, Path]]:
         pass
 
+
 class PictureGroup(iPictureGroup):
-    def _count_pictures_per_folder(self, picture_list: list[iPictureData]) -> dict[Path, int]:
+    def _count_pictures_per_folder(
+        self, picture_list: list[iPictureData]
+    ) -> dict[Path, int]:
         folder_count: dict[Path, int] = {}
 
         for picture in picture_list:
@@ -35,16 +39,18 @@ class PictureGroup(iPictureGroup):
             k
             for (k, v) in sorted(folder_count.items(), key=picture_count, reverse=True)
         ]
-    
+
     def _add_not_grouped_folder(self, folder_list: list[Path]) -> list[Path]:
         if len(folder_list) == 0:
             first_picture: iPictureData = self._picture_list[0]
             root_folder = first_picture.get_path().parent.parent
             folder_list = [
                 root_folder
-                / Path(f"{first_picture.get_creation_date().date()} <EVENT_DESCRIPTION>")
+                / Path(
+                    f"{first_picture.get_creation_date().date()} <EVENT_DESCRIPTION>"
+                )
             ]
-        
+
         return folder_list
 
     def __init__(self, picture_list: list[iPictureData]):
@@ -62,9 +68,12 @@ class PictureGroup(iPictureGroup):
         # If no folders are found, create a new folder based on the first picture's date
         self._folder_list = self._add_not_grouped_folder(self._folder_list)
 
+    def get_picture_list(self) -> list[iPictureData]:
+        return self._picture_list
+
     def get_folder_path(self):
         return self._folder_list[0]
-    
+
     def list_pictures_to_move(self):
         output: list[tuple[Path, Path]] = []
 

@@ -1,3 +1,4 @@
+from abc import ABC
 import logging
 from progressbar import ProgressBar
 from pathlib import Path
@@ -10,14 +11,10 @@ from app.services.picture_id import (
 from app.repositories.picture_data import PictureDataRepository
 
 
-class BackupUseCase:
-    def __init__(
-        self, file_service: iFileService, picture_id_service: iPictureIdService
-    ):
+class baseUseCase(ABC):
+    def __init__(self, file_service: iFileService):
         self._file_service = file_service
-        self._picture_id_service = picture_id_service
-
-        self._logger = logging.getLogger("app.backup_use_case")
+        self._logger = logging.getLogger("app.use_case")
 
     def list_pictures(self, root_path: Path) -> list[Path]:
         self._logger.info(f"Listing pictures in {root_path}")
@@ -25,6 +22,14 @@ class BackupUseCase:
         self._logger.info(f"Found {len(picture_list)} pictures")
 
         return picture_list
+
+
+class BackupUseCase(baseUseCase):
+    def __init__(
+        self, file_service: iFileService, picture_id_service: iPictureIdService
+    ):
+        super().__init__(file_service=file_service)
+        self._picture_id_service = picture_id_service
 
     def _backup_picture(self, picture_path: Path, strict_mode: bool) -> bool:
         picture_data = None
