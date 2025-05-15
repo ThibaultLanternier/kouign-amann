@@ -71,7 +71,10 @@ class FileService(iFileService):
         return True
 
     def move(self, origin_path: Path, target_path: Path) -> bool:
-        raise NotImplementedError("Move method is not implemented")
+        if not target_path.parent.exists():
+            target_path.parent.mkdir(parents=True)
+            
+        origin_path.rename(target_path)
 
     def list_pictures(self, root_path: Path) -> list[Path]:
         small_case_jpg = [x for x in root_path.glob("**/*.jpg")]

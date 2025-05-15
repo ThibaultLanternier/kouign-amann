@@ -16,6 +16,7 @@ from app.tools.picture_grouper import PictureGrouper, PictureGroup
 from app.tools.path import get_existing_picture
 
 from app.use_cases.backup import backup_use_case_factory
+from app.use_cases.group import group_use_case_factory
 
 init_console_log()
 
@@ -61,7 +62,7 @@ def init(backup_path: str, force: bool):
 @click.argument("target_path", type=click.Path(exists=True))
 def backup2(target_path: str, strict: bool, debug: str):
     """
-    Copy new pictures found in target directory to backup directory
+    (NEW) Copy new pictures found in target directory to backup directory
     """
     print(debug)
     print(strict)
@@ -87,6 +88,31 @@ def backup2(target_path: str, strict: bool, debug: str):
     )
 
 
+@cli.command()
+@click.option(
+    "--delta", 
+    help="Time difference between two group of pictures in hours", 
+    default=24
+)
+def group2(delta: int):
+    """
+    (NEW) Group pictures event
+    """
+    config = configparser.ConfigParser()
+    config.read(ConfigFileManager().config_file_path)
+
+    backup_folder_path = Path(config["backup"]["path"])
+
+    group_use_case = group_use_case_factory(
+        backup_folder_path=backup_folder_path,
+        hours_btw_pictures=delta,
+    )
+
+    pictures_list = group_use_case.list_pictures(
+        root_path=backup_folder_path,
+    )
+    group_use_case.group(picture_list=pictures_list)
+    
 @cli.command()
 @click.option(
     "--year", default=0, help="Only process files from this year (0 = all years)"

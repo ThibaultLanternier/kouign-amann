@@ -2,7 +2,10 @@ import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 
+import test
+
 from app.entities.picture import Picture
+from app.entities.picture_data import PictureData
 
 TEST_PICTURE_CAMERA = "tests/files/test-canon-eos70D-exif.jpg"
 TEST_PICTURE_OLD_SCAN_2 = "tests/files/0001.jpg"
@@ -31,3 +34,15 @@ class TestPictureEntity(unittest.TestCase):
         expected_hash = "c643dbe5e4d60f02"
 
         self.assertEqual(expected_hash, picture.get_hash())
+
+    def test_from_standard_path(self):
+        test_path = Path(
+            "tests/files/photos/2024/ANYTHING/1733616335-e7975821ce2e1a55.jpg"
+        )
+        picture_data = PictureData.from_standard_path(test_path)
+
+        self.assertEqual(picture_data.get_creation_date(), datetime(2024, 12, 8, 1, 5, 35))
+        self.assertEqual(
+            picture_data.get_path(), test_path
+        )
+        self.assertEqual(picture_data.get_hash(), "e7975821ce2e1a55")
