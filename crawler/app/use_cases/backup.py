@@ -2,7 +2,7 @@ from abc import ABC
 import logging
 from progressbar import ProgressBar
 from pathlib import Path
-from app.services.file import FileService, iFileService
+from app.services.file import FileService, FileTools, iFileService
 from app.services.picture_id import (
     PictureIdComputeException,
     PictureIdService,
@@ -18,7 +18,7 @@ class baseUseCase(ABC):
 
     def list_pictures(self, root_path: Path) -> list[Path]:
         self._logger.info(f"Listing pictures in {root_path}")
-        picture_list = self._file_service.list_pictures(root_path=root_path)
+        picture_list = FileTools.list_pictures(root_path=root_path)
         self._logger.info(f"Found {len(picture_list)} pictures")
 
         return picture_list

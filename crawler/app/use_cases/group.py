@@ -7,7 +7,7 @@ from app.entities.picture_data import (
     iPictureData,
 )
 from app.repositories.picture_data import PictureDataRepository
-from app.services.file import FileService, iFileService
+from app.services.file import FileService, FileTools, iFileService
 from app.services.picture_id import (
     PictureIdComputeException,
     PictureIdService,
@@ -72,7 +72,7 @@ class GroupUseCase(baseUseCase):
         progress_bar_count = 0
 
         for picture in pictures_to_move:
-            self._file_service.move(origin_path=picture[0], target_path=picture[1])
+            FileTools.move_file(origin_path=picture[0], target_path=picture[1])
             progress_bar_count = progress_bar_count + 1
             progress_bar.update(progress_bar_count)
 
