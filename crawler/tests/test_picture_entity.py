@@ -2,8 +2,6 @@ import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 
-import test
-
 from app.entities.picture import Picture
 from app.entities.picture_data import PictureData
 
@@ -41,8 +39,8 @@ class TestPictureEntity(unittest.TestCase):
         )
         picture_data = PictureData.from_standard_path(test_path)
 
-        self.assertEqual(picture_data.get_creation_date(), datetime(2024, 12, 8, 1, 5, 35))
         self.assertEqual(
-            picture_data.get_path(), test_path
+            picture_data.get_creation_date(), datetime(2024, 12, 8, 1, 5, 35)
         )
+        self.assertEqual(picture_data.get_path(), test_path)
         self.assertEqual(picture_data.get_hash(), "e7975821ce2e1a55")

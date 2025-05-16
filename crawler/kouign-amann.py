@@ -90,9 +90,7 @@ def backup2(target_path: str, strict: bool, debug: str):
 
 @cli.command()
 @click.option(
-    "--delta", 
-    help="Time difference between two group of pictures in hours", 
-    default=24
+    "--delta", help="Time difference between two group of pictures in hours", default=24
 )
 def group2(delta: int):
     """
@@ -112,7 +110,8 @@ def group2(delta: int):
         root_path=backup_folder_path,
     )
     group_use_case.group(picture_list=pictures_list)
-    
+
+
 @cli.command()
 @click.option(
     "--year", default=0, help="Only process files from this year (0 = all years)"
