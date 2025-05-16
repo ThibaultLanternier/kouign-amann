@@ -3,7 +3,27 @@ import logging
 import os
 from pathlib import Path
 
-from app.entities.picture_data import iPictureData
+from app.entities.picture_data import (
+    NotStandardFileNameException,
+    PictureData,
+    iPictureData,
+)
+
+
+class FileTools:
+    @staticmethod
+    def list_pictures(root_path: Path) -> list[Path]:
+        small_case_jpg = [x for x in root_path.glob("**/*.jpg")]
+        capital_case_jpg = [x for x in root_path.glob("**/*.JPG")]
+
+        return [*small_case_jpg, *capital_case_jpg]
+
+    @staticmethod
+    def move_file(origin_path: Path, target_path: Path):
+        if not target_path.parent.exists():
+            target_path.parent.mkdir(parents=True)
+
+        origin_path.rename(target_path)
 
 
 class iFileService(ABC):
@@ -13,21 +33,36 @@ class iFileService(ABC):
         pass
 
     @abstractmethod
-    def move(self, origin_path: Path, target_path: Path) -> bool:
-        pass
-
-    @abstractmethod
-    def list_pictures(self, root_path: Path) -> list[Path]:
+    def hash_exists(self, picture_hash: str) -> bool:
+        """Find file by hash"""
         pass
 
 
 class FileService(iFileService):
+    def _create_hash_set(self, path_list: list[Path]) -> set[str]:
+        output = set()
+
+        for file in path_list:
+            try:
+                picture_data = PictureData.from_standard_path(file)
+                output.add(picture_data.get_hash())
+            except NotStandardFileNameException:
+                self._logger.warning(
+                    f"File {file} is not in the standard format, skipping hash recovery"
+                )
+
+        return output
+
     def __init__(self, backup_folder_path: Path) -> None:
         self._backup_folder_path = backup_folder_path
 
         self._logger = logging.getLogger("app.file_service")
         self._logger.info(
             f"Init FileService Backup folder path is: {self._backup_folder_path}"
+        )
+
+        self._hash_set = self._create_hash_set(
+            FileTools.list_pictures(root_path=self._backup_folder_path)
         )
 
     def __get_folder_path(self, data: iPictureData) -> Path:
@@ -42,20 +77,16 @@ class FileService(iFileService):
             f"{int(data.get_creation_date().timestamp())}-{data.get_hash()}.jpg"
         )
 
-    def __file_already_exists(self, file_path: Path) -> bool:
-        return file_path.exists()
+    def __file_already_exists(self, picture_hash: str) -> bool:
+        return picture_hash in self._hash_set
 
     def backup(self, origin_path: Path, data: iPictureData) -> bool:
-        new_file_path = self.__get_file_path(data)
-
-        if self.__file_already_exists(new_file_path):
-            self._logger.debug(
-                f"File {origin_path} already backed up to {new_file_path}, SKIPPING"
-            )
+        if self.__file_already_exists(data.get_hash()):
+            self._logger.debug(f"File {origin_path} already backed up, SKIPPING")
             return False
 
         with open(origin_path, "rb") as picture_file:
-            # new_file_path = self.__get_file_path(data=data)
+            new_file_path = self.__get_file_path(data=data)
             self._logger.debug(f"Backing up {origin_path} to {new_file_path}")
             os.makedirs(new_file_path.parent, exist_ok=True)
             with open(new_file_path, "wb+") as new_picture_file:
@@ -68,18 +99,8 @@ class FileService(iFileService):
                     ),
                 )
 
+        self._hash_set.add(data.get_hash())
         return True
 
-    def move(self, origin_path: Path, target_path: Path) -> bool:
-        if not target_path.parent.exists():
-            target_path.parent.mkdir(parents=True)
-
-        origin_path.rename(target_path)
-
-        return True
-
-    def list_pictures(self, root_path: Path) -> list[Path]:
-        small_case_jpg = [x for x in root_path.glob("**/*.jpg")]
-        capital_case_jpg = [x for x in root_path.glob("**/*.JPG")]
-
-        return [*small_case_jpg, *capital_case_jpg]
+    def hash_exists(self, picture_hash: str) -> bool:
+        return self.__file_already_exists(picture_hash)
