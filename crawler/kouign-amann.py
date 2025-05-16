@@ -1,3 +1,4 @@
+from uuid import uuid4
 import click
 import logging
 import configparser
@@ -8,13 +9,16 @@ from pathlib import Path
 from app.async_processor import AsyncPictureProcessor
 from app.controllers.async_history_store import AsyncCrawlHistoryStore
 from app.controllers.file import FileCrawler
-from app.tools.logger import init_console
+from app.tools.logger import init_console_log, init_file_log
 from app.controllers.async_file_recorder import AsyncFileRecorder
 from app.tools.config_file import ConfigFileManager
 from app.tools.picture_grouper import PictureGrouper, PictureGroup
 from app.tools.path import get_existing_picture
 
-init_console(logging.INFO)
+from app.use_cases.backup import backup_use_case_factory
+from app.use_cases.group import group_use_case_factory
+
+init_console_log()
 
 logger = logging.getLogger("app.crawl")
 
@@ -45,6 +49,67 @@ def init(backup_path: str, force: bool):
 
     with open(config_file_path, "w") as config_file:
         new_config.write(config_file)
+
+
+@cli.command()
+@click.option(
+    "--strict",
+    default=False,
+    help="Does not rely on local file store only on perception hash",
+    is_flag=True,
+)
+@click.option("--debug", help="Writes debug log to file", is_flag=True)
+@click.argument("target_path", type=click.Path(exists=True))
+def backup2(target_path: str, strict: bool, debug: str):
+    """
+    (NEW) Copy new pictures found in target directory to backup directory
+    """
+    print(debug)
+    print(strict)
+    config = configparser.ConfigParser()
+    config.read(ConfigFileManager().config_file_path)
+
+    backup_folder_path = Path(config["backup"]["path"])
+
+    if debug:
+        log_file = backup_folder_path / Path("logs") / Path(f"backup-{uuid4().hex}.log")
+        logger.info(f"Debug mode enabled, writing log to file {log_file}")
+        init_file_log(log_file=str(log_file))
+
+    target_folder_path = Path(target_path)
+
+    backup_use_case = backup_use_case_factory(backup_folder_path=backup_folder_path)
+
+    file_list = backup_use_case.list_pictures(root_path=target_folder_path)
+
+    backup_use_case.backup(
+        picture_list_to_backup=file_list,
+        strict_mode=strict,
+    )
+
+
+@cli.command()
+@click.option(
+    "--delta", help="Time difference between two group of pictures in hours", default=24
+)
+def group2(delta: int):
+    """
+    (NEW) Group pictures event
+    """
+    config = configparser.ConfigParser()
+    config.read(ConfigFileManager().config_file_path)
+
+    backup_folder_path = Path(config["backup"]["path"])
+
+    group_use_case = group_use_case_factory(
+        backup_folder_path=backup_folder_path,
+        hours_btw_pictures=delta,
+    )
+
+    pictures_list = group_use_case.list_pictures(
+        root_path=backup_folder_path,
+    )
+    group_use_case.group(picture_list=pictures_list)
 
 
 @cli.command()
