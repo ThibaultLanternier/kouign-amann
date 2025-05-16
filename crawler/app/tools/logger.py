@@ -1,4 +1,6 @@
 import logging
+import os
+from pathlib import Path
 import sys
 
 from logging import Logger
@@ -24,11 +26,14 @@ def init_console_log() -> Logger:
     return logger
 
 
-def init_file_log(log_file: str):
+def init_file_log(log_file: Path):
+    if not log_file.parent.is_dir():
+        os.makedirs(log_file.parent, exist_ok=True)
+
     logger = logging.getLogger("app")
 
     standard_formatter = logging.Formatter(LOG_FORMAT)
-    file_handler = logging.FileHandler(filename=log_file, mode="a+")
+    file_handler = logging.FileHandler(filename=str(log_file), mode="a+")
     file_handler.setLevel(logging.DEBUG)
     file_handler.setFormatter(standard_formatter)
 
