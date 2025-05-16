@@ -72,9 +72,11 @@ def backup2(target_path: str, strict: bool, debug: str):
     backup_folder_path = Path(config["backup"]["path"])
 
     if debug:
-        log_file = backup_folder_path / Path("logs") / Path(f"backup-{uuid4().hex}.log")
-        logger.info(f"Debug mode enabled, writing log to file {log_file}")
-        init_file_log(log_file=str(log_file))
+        log_file_path = (
+            backup_folder_path / Path("logs") / Path(f"backup-{uuid4().hex}.log")
+        )
+        logger.info(f"Debug mode enabled, writing log to file {log_file_path}")
+        init_file_log(log_file=log_file_path)
 
     target_folder_path = Path(target_path)
 

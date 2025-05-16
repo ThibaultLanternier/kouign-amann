@@ -40,7 +40,8 @@ class TestPictureEntity(unittest.TestCase):
         picture_data = PictureData.from_standard_path(test_path)
 
         self.assertEqual(
-            picture_data.get_creation_date(), datetime(2024, 12, 8, 1, 5, 35)
+            picture_data.get_creation_date(),
+            datetime(2024, 12, 8, 0, 5, 35, tzinfo=timezone.utc),
         )
         self.assertEqual(picture_data.get_path(), test_path)
         self.assertEqual(picture_data.get_hash(), "e7975821ce2e1a55")
