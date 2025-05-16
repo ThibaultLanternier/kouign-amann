@@ -1,5 +1,4 @@
 from pathlib import Path
-from progressbar import ProgressBar
 
 from app.entities.picture_data import (
     NotStandardFileNameException,
@@ -67,14 +66,10 @@ class GroupUseCase(baseUseCase):
             f"Found {len(pictures_to_move)} pictures that need to be moved"
         )
 
-        progress_bar = ProgressBar()
-        progress_bar.start(max_value=len(pictures_to_move))
-        progress_bar_count = 0
-
         for picture in pictures_to_move:
             FileTools.move_file(origin_path=picture[0], target_path=picture[1])
-            progress_bar_count = progress_bar_count + 1
-            progress_bar.update(progress_bar_count)
+
+        self._logger.info("Grouping completed")
 
 
 def group_use_case_factory(

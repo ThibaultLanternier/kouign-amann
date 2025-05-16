@@ -51,9 +51,7 @@ class BackupUseCase(baseUseCase):
                 )
                 return False
 
-        self._file_service.backup(origin_path=picture_path, data=picture_data)
-
-        return True
+        return self._file_service.backup(origin_path=picture_path, data=picture_data)
 
     def backup(
         self, picture_list_to_backup: list[Path], strict_mode: bool = False
@@ -66,12 +64,20 @@ class BackupUseCase(baseUseCase):
         progress_bar.start(max_value=len(picture_list_to_backup))
         progress_bar_count = 0
 
+        new_picture_count = 0
+
         for picture_path in picture_list_to_backup:
-            self._backup_picture(picture_path=picture_path, strict_mode=strict_mode)
+            if self._backup_picture(picture_path=picture_path, strict_mode=strict_mode):
+                new_picture_count = new_picture_count + 1
+
             progress_bar_count = progress_bar_count + 1
             progress_bar.update(progress_bar_count)
 
         progress_bar.finish()
+
+        self._logger.info(
+            f"Backup completed, {new_picture_count} new pictures backed up"
+        )
 
         return True
 

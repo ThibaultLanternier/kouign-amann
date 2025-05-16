@@ -48,7 +48,7 @@ class FileService(iFileService):
                 output.add(picture_data.get_hash())
             except NotStandardFileNameException:
                 self._logger.warning(
-                    f"File {file} is not in the standard format, skipping has recovery"
+                    f"File {file} is not in the standard format, skipping hash recovery"
                 )
 
         return output
