@@ -106,5 +106,6 @@ def group(delta: int):
     )
     group_use_case.group(picture_list=pictures_list)
 
+
 if __name__ == "__main__":
     cli()
