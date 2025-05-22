@@ -2,18 +2,11 @@ from uuid import uuid4
 import click
 import logging
 import configparser
-import asyncio
 
 from pathlib import Path
 
-from app.async_processor import AsyncPictureProcessor
-from app.controllers.async_history_store import AsyncCrawlHistoryStore
-from app.controllers.file import FileCrawler
 from app.tools.logger import init_console_log, init_file_log
-from app.controllers.async_file_recorder import AsyncFileRecorder
 from app.tools.config_file import ConfigFileManager
-from app.tools.picture_grouper import PictureGrouper, PictureGroup
-from app.tools.path import get_existing_picture
 
 from app.use_cases.backup import backup_use_case_factory
 from app.use_cases.group import group_use_case_factory
