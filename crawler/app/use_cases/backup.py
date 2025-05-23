@@ -55,7 +55,7 @@ class BackupUseCase(baseUseCase):
 
     def backup(
         self, picture_list_to_backup: list[Path], strict_mode: bool = False
-    ) -> bool:
+    ) -> int:
         self._logger.info(f"Starting backup of {len(picture_list_to_backup)} pictures")
         if strict_mode:
             self._logger.info("Strict mode is enabled, all ids will be recomputed")
@@ -79,7 +79,7 @@ class BackupUseCase(baseUseCase):
             f"Backup completed, {new_picture_count} new pictures backed up"
         )
 
-        return True
+        return new_picture_count
 
 
 def backup_use_case_factory(backup_folder_path: Path) -> BackupUseCase:
