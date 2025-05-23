@@ -4,12 +4,13 @@ from pathlib import Path
 import unittest
 from unittest.mock import MagicMock
 
+from click import group
 from reactivex import return_value
 
-from app.services.file import iBackupService, iFileTools
+from app.services.backup import iBackupService, iFileTools
 from app.services.group_creator import iGroupCreatorService
-from app.services.picture_id import iPictureDataCachingService
-from app.use_cases.group import GroupUseCase
+from app.services.picture_data_caching import iPictureDataCachingService
+from app.use_cases.group import GroupUseCase, group_use_case_factory
 from app.entities.picture_data import iPictureData
 from app.entities.picture_group import iPictureGroup
 from app.entities import picture
@@ -33,7 +34,6 @@ class TestGroupUseCase(unittest.TestCase):
         self._mock_file_tools = MagicMock(name="mock_file_tools", spec=iFileTools)
 
         self._group_use_case = GroupUseCase(
-            file_service=self._mock_file_service,
             file_tools=self._mock_file_tools,
             picture_data_factory=self._mock_picture_data_factory,
             group_creator_service=self._mock_group_creator_service,
@@ -96,4 +96,9 @@ class TestGroupUseCase(unittest.TestCase):
         
         self._mock_file_tools.move_file.assert_not_called()
 
+class TestGroupUseCaseFactory(unittest.TestCase):
+    def test_factory_ok(self):
+        instance = group_use_case_factory(hours_btw_pictures=24)
+
+        self.assertIsInstance(instance, GroupUseCase)
 

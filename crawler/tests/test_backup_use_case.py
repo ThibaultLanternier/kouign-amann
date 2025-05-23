@@ -6,17 +6,16 @@ from unittest.mock import MagicMock
 from isort import file
 
 from app.entities.picture_data import iPictureData
-from app.services.file import iBackupService, iFileTools
-from app.services.picture_id import (PictureIdComputeException,
+from app.services.backup import iBackupService, iFileTools
+from app.services.picture_data_caching import (PictureIdComputeException,
                                      iPictureDataCachingService)
-from app.use_cases.backup import BackupUseCase
+from app.use_cases.backup import BackupUseCase, backup_use_case_factory
 from app.entities.picture import HasherException
 from app.factories.picture_data import iPictureDataFactory
 
 PICTURE_PATH = Path("path1")
 PICTURE_DATA = MagicMock(name="fake_picture_data", spec=iPictureData)
 PICTURE_DATA_2 = MagicMock(name="fake_picture_data_2", spec=iPictureData)
-
 
 class TestBackupUseCase(unittest.TestCase):
     def setUp(self):
@@ -33,11 +32,19 @@ class TestBackupUseCase(unittest.TestCase):
         self._mock_file_service.backup.return_value = True
 
         self._backup_use_case = BackupUseCase(
-            file_service=self._mock_file_service,
+            backup_service=self._mock_file_service,
             file_tools=self._mock_file_tools,
-            picture_id_service=self._mock_picture_id_service,
+            picture_data_caching_service=self._mock_picture_id_service,
             picture_data_factory=self._mock_picture_data_factory,
         )
+    
+    def test_list_pictures_ok(self):
+        self._mock_file_tools.list_pictures.return_value = [PICTURE_PATH]
+
+        result = self._backup_use_case.list_pictures(root_path=Path("test"))
+
+        self.assertEqual([PICTURE_PATH], result)
+        self._mock_file_tools.list_pictures.assert_called_once_with(root_path=Path("test"))
 
     def test_backup_strict_mode_OK(self):
         self._mock_picture_id_service.get_from_cache.return_value = PICTURE_DATA_2
@@ -120,3 +127,8 @@ class TestBackupUseCase(unittest.TestCase):
         )
 
         self.assertEqual(0, result)
+
+class TestBackupUseCaseFactory(unittest.TestCase):
+    def test_factory_ok(self):
+        instance = backup_use_case_factory(backup_folder_path=Path("test"))
+        self.assertIsInstance(instance, BackupUseCase)

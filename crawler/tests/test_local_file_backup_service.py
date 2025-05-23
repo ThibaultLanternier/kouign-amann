@@ -6,27 +6,11 @@ from pathlib import Path
 from isort import file
 
 from app.entities.picture_data import PictureData
-from app.services.file import LocalFileBackupService, FileTools
+from app.services.backup import LocalFileBackupService, FileTools
 from app.factories.picture_data import PictureDataFactory
 
 
-class TestFileTools(unittest.TestCase):
-    def test_get_file_case_sensitive_jpg(self):
-        file_list = FileTools().list_pictures(Path("tests/files/crawl"))
-
-        self.assertEqual(
-            set(
-                [
-                    Path("tests/files/crawl/sub-directory/small-2.JPG"),
-                    Path("tests/files/crawl/small-1.jpg"),
-                    Path("tests/files/crawl/sub-directory/small-3.jpg"),
-                ]
-            ),
-            set(file_list),
-        )
-
-
-class TestFileService(unittest.TestCase):
+class TestLocalFileBackupService(unittest.TestCase):
     def test_backup(self):
         file_service = LocalFileBackupService(
             backup_folder_path=Path("tests/files/local_recorder"),

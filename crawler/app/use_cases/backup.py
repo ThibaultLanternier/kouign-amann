@@ -4,8 +4,8 @@ import logging
 from isort import file
 from progressbar import ProgressBar
 from pathlib import Path
-from app.services.file import LocalFileBackupService, FileTools, iBackupService, iFileTools
-from app.services.picture_id import (
+from app.services.backup import LocalFileBackupService, FileTools, iBackupService, iFileTools
+from app.services.picture_data_caching import (
     PictureIdComputeException,
     LocalFilePictureDataCachingService,
     iPictureDataCachingService,
@@ -18,11 +18,11 @@ from app.factories.picture_data import PictureDataFactory, iPictureDataFactory
 class baseUseCase(ABC):
     def __init__(
             self, 
-            file_service: iBackupService,
-            file_tools: iFileTools
+            file_tools: iFileTools,
+            picture_data_factory: iPictureDataFactory
         ):
-        self._file_service = file_service
         self._file_tools = file_tools
+        self._picture_data_factory = picture_data_factory
         self._logger = logging.getLogger("app.use_case")
 
     def list_pictures(self, root_path: Path) -> list[Path]:
@@ -36,21 +36,24 @@ class baseUseCase(ABC):
 class BackupUseCase(baseUseCase):
     def __init__(
         self, 
-        file_service: iBackupService,
+        backup_service: iBackupService,
         file_tools: iFileTools, 
-        picture_id_service: iPictureDataCachingService,
-        picture_data_factory: iPictureDataFactory
+        picture_data_factory: iPictureDataFactory,
+        picture_data_caching_service: iPictureDataCachingService
     ):
-        super().__init__(file_service=file_service, file_tools=file_tools)
+        super().__init__(
+            file_tools=file_tools,
+            picture_data_factory=picture_data_factory
+        )
 
-        self._picture_id_service = picture_id_service
-        self._picture_data_factory = picture_data_factory
+        self._backup_service = backup_service
+        self._picture_data_caching_service = picture_data_caching_service
 
     def _backup_picture(self, picture_path: Path, strict_mode: bool) -> bool:
         picture_data = None
 
         if not strict_mode:
-            picture_data = self._picture_id_service.get_from_cache(
+            picture_data = self._picture_data_caching_service.get_from_cache(
                 picture_path=picture_path
             )
 
@@ -58,14 +61,14 @@ class BackupUseCase(baseUseCase):
             try:
                 self._logger.debug(f"Computing picture data for {picture_path}")
                 picture_data = self._picture_data_factory.compute_data(path=picture_path, current_timezone=timezone.utc)
-                self._picture_id_service.add_to_cache(data=picture_data)
+                self._picture_data_caching_service.add_to_cache(data=picture_data)
             except PictureException as e:
                 self._logger.warning(
                     f"Failed to compute picture id for {picture_path}: {e}"
                 )
                 return False
 
-        return self._file_service.backup(origin_path=picture_path, data=picture_data)
+        return self._backup_service.backup(origin_path=picture_path, data=picture_data)
 
     def backup(
         self, picture_list_to_backup: list[Path], strict_mode: bool = False
@@ -113,8 +116,8 @@ def backup_use_case_factory(backup_folder_path: Path) -> BackupUseCase:
 
 
     return BackupUseCase(
-        file_service=file_service,
+        backup_service=file_service,
         file_tools=file_tools,
         picture_data_factory=picture_data_factory,
-        picture_id_service=picture_id_service
+        picture_data_caching_service=picture_id_service
     )

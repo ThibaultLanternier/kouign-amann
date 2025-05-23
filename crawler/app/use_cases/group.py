@@ -10,8 +10,8 @@ from app.entities.picture_data import (
     iPictureData,
 )
 from app.repositories.picture_data import PictureDataRepository
-from app.services.file import LocalFileBackupService, FileTools, iBackupService, iFileTools
-from app.services.picture_id import (
+from app.services.backup import LocalFileBackupService, FileTools, iBackupService, iFileTools
+from app.services.picture_data_caching import (
     PictureIdComputeException,
     LocalFilePictureDataCachingService,
     iPictureDataCachingService,
@@ -25,14 +25,15 @@ from app.entities.picture import PictureException
 class GroupUseCase(baseUseCase):
     def __init__(
         self,
-        file_service: iBackupService,
         file_tools: iFileTools,
         picture_data_factory: iPictureDataFactory,
         group_creator_service: iGroupCreatorService
     ):
-        super().__init__(file_service=file_service, file_tools=file_tools)
+        super().__init__(
+            file_tools=file_tools,
+            picture_data_factory=picture_data_factory
+        )
 
-        self._picture_data_factory = picture_data_factory
         self._group_creator_service = group_creator_service
 
     def group(self, picture_list: list[Path]):
@@ -82,27 +83,13 @@ class GroupUseCase(baseUseCase):
         self._logger.info("Grouping completed")
 
 
-def group_use_case_factory(
-    backup_folder_path: Path, hours_btw_pictures: int
-) -> GroupUseCase:
-    picture_data_repo = PictureDataRepository(
-        cache_file_path=Path(f"{backup_folder_path}/cache.jsonl")
-    )
-
+def group_use_case_factory(hours_btw_pictures: int) -> GroupUseCase:
     picture_data_factory = PictureDataFactory()
     file_tools = FileTools()
-
-    file_service = LocalFileBackupService(
-        backup_folder_path=backup_folder_path,
-        picture_data_factory=picture_data_factory,
-        file_tools=file_tools
-    )
-
 
     group_creator_service = GroupCreatorService(hours_btw_picture=hours_btw_pictures)
 
     return GroupUseCase(
-        file_service=file_service,
         file_tools=file_tools,
         picture_data_factory=picture_data_factory,
         group_creator_service=group_creator_service,
