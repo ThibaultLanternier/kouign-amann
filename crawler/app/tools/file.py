@@ -13,6 +13,7 @@ class iFileTools(ABC):
         """Move file from origin to target path"""
         pass
 
+
 class FileTools(iFileTools):
     def __init__(self) -> None:
         pass
@@ -28,4 +29,3 @@ class FileTools(iFileTools):
             target_path.parent.mkdir(parents=True)
 
         origin_path.rename(target_path)
-

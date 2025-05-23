@@ -1,5 +1,5 @@
-from pathlib import Path
 import unittest
+from pathlib import Path
 
 from app.tools.file import FileTools
 
@@ -18,4 +18,3 @@ class TestFileTools(unittest.TestCase):
             ),
             set(file_list),
         )
-

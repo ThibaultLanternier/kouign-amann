@@ -1,31 +1,33 @@
-from datetime import timezone
 import unittest
+from datetime import timezone
 from pathlib import Path
 from unittest.mock import MagicMock
 
-from isort import file
-
-from app.entities.picture_data import iPictureData
-from app.services.backup import iBackupService, iFileTools
-from app.services.picture_data_caching import (PictureIdComputeException,
-                                     iPictureDataCachingService)
-from app.use_cases.backup import BackupUseCase, backup_use_case_factory
 from app.entities.picture import HasherException
+from app.entities.picture_data import iPictureData
 from app.factories.picture_data import iPictureDataFactory
+from app.services.backup import iBackupService, iFileTools
+from app.services.picture_data_caching import iPictureDataCachingService
+from app.use_cases.backup import BackupUseCase, backup_use_case_factory
 
 PICTURE_PATH = Path("path1")
 PICTURE_DATA = MagicMock(name="fake_picture_data", spec=iPictureData)
 PICTURE_DATA_2 = MagicMock(name="fake_picture_data_2", spec=iPictureData)
 
+
 class TestBackupUseCase(unittest.TestCase):
     def setUp(self):
         super().setUp()
 
-        self._mock_file_service = MagicMock(name="mock_file_service", spec=iBackupService)
+        self._mock_file_service = MagicMock(
+            name="mock_file_service", spec=iBackupService
+        )
         self._mock_picture_id_service = MagicMock(
             name="mock_picture_id_service", spec=iPictureDataCachingService
         )
-        self._mock_picture_data_factory = MagicMock(name="mock_picture_data_factory", spec=iPictureDataFactory)
+        self._mock_picture_data_factory = MagicMock(
+            name="mock_picture_data_factory", spec=iPictureDataFactory
+        )
 
         self._mock_file_tools = MagicMock(name="mock_file_tools", spec=iFileTools)
 
@@ -37,14 +39,16 @@ class TestBackupUseCase(unittest.TestCase):
             picture_data_caching_service=self._mock_picture_id_service,
             picture_data_factory=self._mock_picture_data_factory,
         )
-    
+
     def test_list_pictures_ok(self):
         self._mock_file_tools.list_pictures.return_value = [PICTURE_PATH]
 
         result = self._backup_use_case.list_pictures(root_path=Path("test"))
 
         self.assertEqual([PICTURE_PATH], result)
-        self._mock_file_tools.list_pictures.assert_called_once_with(root_path=Path("test"))
+        self._mock_file_tools.list_pictures.assert_called_once_with(
+            root_path=Path("test")
+        )
 
     def test_backup_strict_mode_OK(self):
         self._mock_picture_id_service.get_from_cache.return_value = PICTURE_DATA_2
@@ -115,7 +119,9 @@ class TestBackupUseCase(unittest.TestCase):
     def test_backup_not_strict_file_impossible_to_compute_cached_OK(self):
         self._mock_picture_id_service.get_from_cache.return_value = None
 
-        def raise_hasher_exception(path: Path, current_timezone: timezone) -> iPictureData:
+        def raise_hasher_exception(
+            path: Path, current_timezone: timezone
+        ) -> iPictureData:
             raise HasherException("xxxx")
 
         self._mock_picture_data_factory.compute_data.side_effect = (
@@ -127,6 +133,7 @@ class TestBackupUseCase(unittest.TestCase):
         )
 
         self.assertEqual(0, result)
+
 
 class TestBackupUseCaseFactory(unittest.TestCase):
     def test_factory_ok(self):

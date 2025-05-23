@@ -1,24 +1,15 @@
-from calendar import c
 from datetime import timezone
 from pathlib import Path
-import time
 
-from isort import file
-
-from app.entities.picture_data import (
-    PictureData,
-    iPictureData,
-)
-from app.repositories.picture_data import PictureDataRepository
-from app.services.backup import LocalFileBackupService, FileTools, iBackupService, iFileTools
-from app.services.picture_data_caching import (
-    PictureIdComputeException,
-    LocalFilePictureDataCachingService,
-    iPictureDataCachingService,
-)
+from app.entities.picture_data import iPictureData
+from app.tools.file import FileTools, iFileTools
 from app.use_cases.backup import baseUseCase
 from app.services.group_creator import GroupCreatorService, iGroupCreatorService
-from app.factories.picture_data import NotStandardFileNameException, PictureDataFactory, iPictureDataFactory
+from app.factories.picture_data import (
+    NotStandardFileNameException,
+    PictureDataFactory,
+    iPictureDataFactory,
+)
 from app.entities.picture import PictureException
 
 
@@ -27,11 +18,10 @@ class GroupUseCase(baseUseCase):
         self,
         file_tools: iFileTools,
         picture_data_factory: iPictureDataFactory,
-        group_creator_service: iGroupCreatorService
+        group_creator_service: iGroupCreatorService,
     ):
         super().__init__(
-            file_tools=file_tools,
-            picture_data_factory=picture_data_factory
+            file_tools=file_tools, picture_data_factory=picture_data_factory
         )
 
         self._group_creator_service = group_creator_service
@@ -42,8 +32,7 @@ class GroupUseCase(baseUseCase):
         for picture_path in picture_list:
             try:
                 picture_data = self._picture_data_factory.from_standard_path(
-                    path=picture_path,
-                    current_timezone=timezone.utc
+                    path=picture_path, current_timezone=timezone.utc
                 )
                 picture_data_list.append(picture_data)
             except NotStandardFileNameException as e:
@@ -52,8 +41,7 @@ class GroupUseCase(baseUseCase):
                 )
                 try:
                     picture_data = self._picture_data_factory.compute_data(
-                        path=picture_path,
-                        current_timezone=timezone.utc # Note: this needs to be improved
+                        path=picture_path, current_timezone=timezone.utc
                     )
 
                     picture_data_list.append(picture_data)
@@ -63,7 +51,7 @@ class GroupUseCase(baseUseCase):
                     )
 
         self._logger.info(f"Found {len(picture_data_list)} to be analyzed for grouping")
-        
+
         picture_group_list = self._group_creator_service.get_group_list(
             picture_list=picture_data_list
         )

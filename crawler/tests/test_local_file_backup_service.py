@@ -3,11 +3,10 @@ import uuid
 from datetime import datetime
 from pathlib import Path
 
-from isort import file
-
 from app.entities.picture_data import PictureData
-from app.services.backup import LocalFileBackupService, FileTools
 from app.factories.picture_data import PictureDataFactory
+from app.services.backup import LocalFileBackupService
+from app.tools.file import FileTools
 
 
 class TestLocalFileBackupService(unittest.TestCase):

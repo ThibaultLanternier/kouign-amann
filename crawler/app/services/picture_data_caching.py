@@ -3,8 +3,7 @@ import logging
 from pathlib import Path
 from typing import Union
 
-from app.entities.picture import Picture, PictureException
-from app.entities.picture_data import PictureData, iPictureData
+from app.entities.picture_data import iPictureData
 from app.repositories.picture_data import iPictureDataRepository
 
 

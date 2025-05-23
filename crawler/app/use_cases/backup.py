@@ -1,26 +1,23 @@
 from abc import ABC
 from datetime import timezone
 import logging
-from isort import file
 from progressbar import ProgressBar
 from pathlib import Path
-from app.services.backup import LocalFileBackupService, FileTools, iBackupService, iFileTools
+from app.services.backup import LocalFileBackupService, iBackupService
 from app.services.picture_data_caching import (
-    PictureIdComputeException,
     LocalFilePictureDataCachingService,
     iPictureDataCachingService,
 )
 from app.repositories.picture_data import PictureDataRepository
 from app.entities.picture import PictureException
 from app.factories.picture_data import PictureDataFactory, iPictureDataFactory
+from app.tools.file import FileTools, iFileTools
 
 
 class baseUseCase(ABC):
     def __init__(
-            self, 
-            file_tools: iFileTools,
-            picture_data_factory: iPictureDataFactory
-        ):
+        self, file_tools: iFileTools, picture_data_factory: iPictureDataFactory
+    ):
         self._file_tools = file_tools
         self._picture_data_factory = picture_data_factory
         self._logger = logging.getLogger("app.use_case")
@@ -35,15 +32,14 @@ class baseUseCase(ABC):
 
 class BackupUseCase(baseUseCase):
     def __init__(
-        self, 
+        self,
         backup_service: iBackupService,
-        file_tools: iFileTools, 
+        file_tools: iFileTools,
         picture_data_factory: iPictureDataFactory,
-        picture_data_caching_service: iPictureDataCachingService
+        picture_data_caching_service: iPictureDataCachingService,
     ):
         super().__init__(
-            file_tools=file_tools,
-            picture_data_factory=picture_data_factory
+            file_tools=file_tools, picture_data_factory=picture_data_factory
         )
 
         self._backup_service = backup_service
@@ -60,7 +56,9 @@ class BackupUseCase(baseUseCase):
         if picture_data is None:
             try:
                 self._logger.debug(f"Computing picture data for {picture_path}")
-                picture_data = self._picture_data_factory.compute_data(path=picture_path, current_timezone=timezone.utc)
+                picture_data = self._picture_data_factory.compute_data(
+                    path=picture_path, current_timezone=timezone.utc
+                )
                 self._picture_data_caching_service.add_to_cache(data=picture_data)
             except PictureException as e:
                 self._logger.warning(
@@ -103,21 +101,22 @@ def backup_use_case_factory(backup_folder_path: Path) -> BackupUseCase:
     picture_data_repo = PictureDataRepository(
         cache_file_path=Path(f"{backup_folder_path}/cache.jsonl")
     )
-    
+
     picture_data_factory = PictureDataFactory()
     file_tools = FileTools()
 
     file_service = LocalFileBackupService(
-        backup_folder_path=backup_folder_path, 
+        backup_folder_path=backup_folder_path,
         picture_data_factory=picture_data_factory,
         file_tools=file_tools,
     )
-    picture_id_service = LocalFilePictureDataCachingService(picture_data_repo=picture_data_repo)
-
+    picture_id_service = LocalFilePictureDataCachingService(
+        picture_data_repo=picture_data_repo
+    )
 
     return BackupUseCase(
         backup_service=file_service,
         file_tools=file_tools,
         picture_data_factory=picture_data_factory,
-        picture_data_caching_service=picture_id_service
+        picture_data_caching_service=picture_id_service,
     )

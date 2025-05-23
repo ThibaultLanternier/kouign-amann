@@ -6,6 +6,8 @@ from pathlib import Path
 
 from app.entities.picture_data import iPictureData
 from app.factories.picture_data import iPictureDataFactory, NotStandardFileNameException
+from app.tools.file import iFileTools
+
 
 class iBackupService(ABC):
     @abstractmethod
@@ -25,7 +27,9 @@ class LocalFileBackupService(iBackupService):
 
         for file in path_list:
             try:
-                picture_data = self._picture_data_factory.from_standard_path(file, current_timezone=timezone.utc)
+                picture_data = self._picture_data_factory.from_standard_path(
+                    file, current_timezone=timezone.utc
+                )
                 output.add(picture_data.get_hash())
             except NotStandardFileNameException:
                 self._logger.warning(
@@ -35,11 +39,11 @@ class LocalFileBackupService(iBackupService):
         return output
 
     def __init__(
-            self, 
-            backup_folder_path: Path, 
-            picture_data_factory: iPictureDataFactory, 
-            file_tools: iFileTools
-        ) -> None:
+        self,
+        backup_folder_path: Path,
+        picture_data_factory: iPictureDataFactory,
+        file_tools: iFileTools,
+    ) -> None:
         self._backup_folder_path = backup_folder_path
         self._picture_data_factory = picture_data_factory
         self._file_tools = file_tools
