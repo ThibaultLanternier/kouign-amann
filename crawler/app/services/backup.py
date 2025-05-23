@@ -1,32 +1,15 @@
 from abc import ABC, abstractmethod
+from datetime import timezone
 import logging
 import os
 from pathlib import Path
 
-from app.entities.picture_data import (
-    NotStandardFileNameException,
-    PictureData,
-    iPictureData,
-)
+from app.entities.picture_data import iPictureData
+from app.factories.picture_data import iPictureDataFactory, NotStandardFileNameException
+from app.tools.file import iFileTools
 
 
-class FileTools:
-    @staticmethod
-    def list_pictures(root_path: Path) -> list[Path]:
-        small_case_jpg = [x for x in root_path.glob("**/*.jpg")]
-        capital_case_jpg = [x for x in root_path.glob("**/*.JPG")]
-
-        return [*small_case_jpg, *capital_case_jpg]
-
-    @staticmethod
-    def move_file(origin_path: Path, target_path: Path):
-        if not target_path.parent.exists():
-            target_path.parent.mkdir(parents=True)
-
-        origin_path.rename(target_path)
-
-
-class iFileService(ABC):
+class iBackupService(ABC):
     @abstractmethod
     def backup(self, origin_path: Path, data: iPictureData) -> bool:
         """Backup to the backup folder returns True if new file is created"""
@@ -38,13 +21,15 @@ class iFileService(ABC):
         pass
 
 
-class FileService(iFileService):
+class LocalFileBackupService(iBackupService):
     def _create_hash_set(self, path_list: list[Path]) -> set[str]:
         output = set()
 
         for file in path_list:
             try:
-                picture_data = PictureData.from_standard_path(file)
+                picture_data = self._picture_data_factory.from_standard_path(
+                    file, current_timezone=timezone.utc
+                )
                 output.add(picture_data.get_hash())
             except NotStandardFileNameException:
                 self._logger.warning(
@@ -53,8 +38,15 @@ class FileService(iFileService):
 
         return output
 
-    def __init__(self, backup_folder_path: Path) -> None:
+    def __init__(
+        self,
+        backup_folder_path: Path,
+        picture_data_factory: iPictureDataFactory,
+        file_tools: iFileTools,
+    ) -> None:
         self._backup_folder_path = backup_folder_path
+        self._picture_data_factory = picture_data_factory
+        self._file_tools = file_tools
 
         self._logger = logging.getLogger("app.file_service")
         self._logger.info(
@@ -62,7 +54,7 @@ class FileService(iFileService):
         )
 
         self._hash_set = self._create_hash_set(
-            FileTools.list_pictures(root_path=self._backup_folder_path)
+            self._file_tools.list_pictures(root_path=self._backup_folder_path)
         )
 
     def __get_folder_path(self, data: iPictureData) -> Path:

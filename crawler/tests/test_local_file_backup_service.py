@@ -4,29 +4,17 @@ from datetime import datetime
 from pathlib import Path
 
 from app.entities.picture_data import PictureData
-from app.services.file import FileService, FileTools
+from app.factories.picture_data import PictureDataFactory
+from app.services.backup import LocalFileBackupService
+from app.tools.file import FileTools
 
 
-class TestFileTools(unittest.TestCase):
-    def test_get_file_case_sensitive_jpg(self):
-        file_list = FileTools.list_pictures(Path("tests/files/crawl"))
-
-        self.assertEqual(
-            set(
-                [
-                    Path("tests/files/crawl/sub-directory/small-2.JPG"),
-                    Path("tests/files/crawl/small-1.jpg"),
-                    Path("tests/files/crawl/sub-directory/small-3.jpg"),
-                ]
-            ),
-            set(file_list),
-        )
-
-
-class TestFileService(unittest.TestCase):
+class TestLocalFileBackupService(unittest.TestCase):
     def test_backup(self):
-        file_service = FileService(
-            backup_folder_path=Path("tests/files/local_recorder")
+        file_service = LocalFileBackupService(
+            backup_folder_path=Path("tests/files/local_recorder"),
+            picture_data_factory=PictureDataFactory(),
+            file_tools=FileTools(),
         )
 
         picture_path = Path("tests/files/test-canon-eos70D.jpg")
@@ -57,8 +45,10 @@ class TestFileService(unittest.TestCase):
             self.assertEqual(f.read(), picture_path.read_bytes())
 
     def test_hash_exists(self):
-        file_service = FileService(
-            backup_folder_path=Path("tests/files/local_recorder_2")
+        file_service = LocalFileBackupService(
+            backup_folder_path=Path("tests/files/local_recorder_2"),
+            picture_data_factory=PictureDataFactory(),
+            file_tools=FileTools(),
         )
 
         test_hash = "2eacfe02c923466cb98163c0b65c739e"

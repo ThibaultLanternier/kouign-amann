@@ -96,10 +96,7 @@ def group(delta: int):
 
     backup_folder_path = Path(config["backup"]["path"])
 
-    group_use_case = group_use_case_factory(
-        backup_folder_path=backup_folder_path,
-        hours_btw_pictures=delta,
-    )
+    group_use_case = group_use_case_factory(hours_btw_pictures=delta)
 
     pictures_list = group_use_case.list_pictures(
         root_path=backup_folder_path,
