@@ -5,10 +5,6 @@ from pathlib import Path
 import re
 
 
-class NotStandardFileNameException(Exception):
-    pass
-
-
 class iPictureData(ABC):
     @abstractmethod
     def get_path(self) -> Path:
@@ -55,27 +51,4 @@ class PictureData(iPictureData):
                 "creation_date": data.get_creation_date().isoformat(),
                 "hash": data.get_hash(),
             }
-        )
-
-    @staticmethod
-    def from_standard_path(
-        standard_path: Path, current_timezone: timezone = timezone.utc
-    ) -> iPictureData:
-        pattern = re.compile(r"^([0-9]{1,10})-([a-f0-9]+).jpg$")
-        m = re.match(pattern, standard_path.name)
-
-        if m is None:
-            raise NotStandardFileNameException(
-                f"File name {standard_path.name} is malformed"
-            )
-
-        creation_timestamp = int(m.group(1))
-        hash_value = m.group(2)
-
-        return PictureData(
-            path=standard_path,
-            creation_date=datetime.fromtimestamp(
-                creation_timestamp, tz=current_timezone
-            ),
-            hash=hash_value,
         )

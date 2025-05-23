@@ -48,7 +48,7 @@ class Picture(iPicture):
         try:
             self._image = Image.open(self._path)
         except Exception:
-            raise MalformedImageFileException(self._path)
+            raise MalformedImageFileException(str(self._path))
 
     def _get_exif_dict(self) -> dict:
         if not hasattr(self, "_exif_dict"):
@@ -102,4 +102,4 @@ class Picture(iPicture):
         try:
             return str(imagehash.phash(self._image))
         except Exception:
-            raise HasherException(self._path)
+            raise HasherException(str(self._path))

@@ -36,19 +36,6 @@ class TestPictureEntity(unittest.TestCase):
 
         self.assertEqual(expected_hash, picture.get_hash())
 
-    def test_from_standard_path(self):
-        test_path = Path(
-            "tests/files/photos/2024/ANYTHING/1733616335-e7975821ce2e1a55.jpg"
-        )
-        picture_data = PictureData.from_standard_path(test_path)
-
-        self.assertEqual(
-            picture_data.get_creation_date(),
-            datetime(2024, 12, 8, 0, 5, 35, tzinfo=timezone.utc),
-        )
-        self.assertEqual(picture_data.get_path(), test_path)
-        self.assertEqual(picture_data.get_hash(), "e7975821ce2e1a55")
-
     def test_get_exif_malformed_throws_exception(self):
         def create_picture():
             Picture(path=Path("tests/files/not_a_jpeg.jpg"))

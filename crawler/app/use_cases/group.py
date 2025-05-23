@@ -1,39 +1,48 @@
+from calendar import c
+from datetime import timezone
 from pathlib import Path
+import time
+
+from isort import file
 
 from app.entities.picture_data import (
-    NotStandardFileNameException,
     PictureData,
     iPictureData,
 )
 from app.repositories.picture_data import PictureDataRepository
-from app.services.file import FileService, FileTools, iFileService
+from app.services.file import LocalFileBackupService, FileTools, iBackupService, iFileTools
 from app.services.picture_id import (
     PictureIdComputeException,
-    PictureIdService,
-    iPictureIdService,
+    LocalFilePictureDataCachingService,
+    iPictureDataCachingService,
 )
 from app.use_cases.backup import baseUseCase
 from app.services.group_creator import GroupCreatorService, iGroupCreatorService
+from app.factories.picture_data import NotStandardFileNameException, PictureDataFactory, iPictureDataFactory
+from app.entities.picture import PictureException
 
 
 class GroupUseCase(baseUseCase):
     def __init__(
         self,
-        file_service: iFileService,
-        picture_id_service: iPictureIdService,
-        group_creator_service: iGroupCreatorService,
+        file_service: iBackupService,
+        file_tools: iFileTools,
+        picture_data_factory: iPictureDataFactory,
+        group_creator_service: iGroupCreatorService
     ):
-        super().__init__(file_service=file_service)
+        super().__init__(file_service=file_service, file_tools=file_tools)
+
+        self._picture_data_factory = picture_data_factory
         self._group_creator_service = group_creator_service
-        self._picture_id_service = picture_id_service
 
     def group(self, picture_list: list[Path]):
         picture_data_list: list[iPictureData] = []
 
         for picture_path in picture_list:
             try:
-                picture_data = PictureData.from_standard_path(
-                    standard_path=picture_path
+                picture_data = self._picture_data_factory.from_standard_path(
+                    path=picture_path,
+                    current_timezone=timezone.utc
                 )
                 picture_data_list.append(picture_data)
             except NotStandardFileNameException as e:
@@ -41,19 +50,20 @@ class GroupUseCase(baseUseCase):
                     f"Found non standard path for picture {picture_path}: {e}"
                 )
                 try:
-                    picture_data = self._picture_id_service.compute_id(
-                        picture_path=picture_path
+                    picture_data = self._picture_data_factory.compute_data(
+                        path=picture_path,
+                        current_timezone=timezone.utc # Note: this needs to be improved
                     )
 
                     picture_data_list.append(picture_data)
-                except PictureIdComputeException as e:
+                except PictureException as e:
                     self._logger.warning(
                         f"Failed to compute picture id for {picture_path}: {e}"
                     )
 
         self._logger.info(f"Found {len(picture_data_list)} to be analyzed for grouping")
-        picture_group = GroupCreatorService()
-        picture_group_list = picture_group.get_group_list(
+        
+        picture_group_list = self._group_creator_service.get_group_list(
             picture_list=picture_data_list
         )
 
@@ -67,7 +77,7 @@ class GroupUseCase(baseUseCase):
         )
 
         for picture in pictures_to_move:
-            FileTools.move_file(origin_path=picture[0], target_path=picture[1])
+            self._file_tools.move_file(origin_path=picture[0], target_path=picture[1])
 
         self._logger.info("Grouping completed")
 
@@ -79,13 +89,21 @@ def group_use_case_factory(
         cache_file_path=Path(f"{backup_folder_path}/cache.jsonl")
     )
 
-    file_service = FileService(backup_folder_path=backup_folder_path)
-    picture_id_service = PictureIdService(picture_data_repo=picture_data_repo)
+    picture_data_factory = PictureDataFactory()
+    file_tools = FileTools()
+
+    file_service = LocalFileBackupService(
+        backup_folder_path=backup_folder_path,
+        picture_data_factory=picture_data_factory,
+        file_tools=file_tools
+    )
+
 
     group_creator_service = GroupCreatorService(hours_btw_picture=hours_btw_pictures)
 
     return GroupUseCase(
         file_service=file_service,
-        picture_id_service=picture_id_service,
+        file_tools=file_tools,
+        picture_data_factory=picture_data_factory,
         group_creator_service=group_creator_service,
     )

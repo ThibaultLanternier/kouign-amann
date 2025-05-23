@@ -3,13 +3,16 @@ import uuid
 from datetime import datetime
 from pathlib import Path
 
+from isort import file
+
 from app.entities.picture_data import PictureData
-from app.services.file import FileService, FileTools
+from app.services.file import LocalFileBackupService, FileTools
+from app.factories.picture_data import PictureDataFactory
 
 
 class TestFileTools(unittest.TestCase):
     def test_get_file_case_sensitive_jpg(self):
-        file_list = FileTools.list_pictures(Path("tests/files/crawl"))
+        file_list = FileTools().list_pictures(Path("tests/files/crawl"))
 
         self.assertEqual(
             set(
@@ -25,8 +28,10 @@ class TestFileTools(unittest.TestCase):
 
 class TestFileService(unittest.TestCase):
     def test_backup(self):
-        file_service = FileService(
-            backup_folder_path=Path("tests/files/local_recorder")
+        file_service = LocalFileBackupService(
+            backup_folder_path=Path("tests/files/local_recorder"),
+            picture_data_factory=PictureDataFactory(),
+            file_tools=FileTools(),
         )
 
         picture_path = Path("tests/files/test-canon-eos70D.jpg")
@@ -57,8 +62,10 @@ class TestFileService(unittest.TestCase):
             self.assertEqual(f.read(), picture_path.read_bytes())
 
     def test_hash_exists(self):
-        file_service = FileService(
-            backup_folder_path=Path("tests/files/local_recorder_2")
+        file_service = LocalFileBackupService(
+            backup_folder_path=Path("tests/files/local_recorder_2"),
+            picture_data_factory=PictureDataFactory(),
+            file_tools=FileTools(),
         )
 
         test_hash = "2eacfe02c923466cb98163c0b65c739e"
