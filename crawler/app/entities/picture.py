@@ -15,7 +15,7 @@ class ExifImpossibleToLoadException(PictureException):
     pass
 
 
-class ExifImageImpossibleToOpen(PictureException):
+class MalformedImageFileException(PictureException):
     pass
 
 
@@ -48,7 +48,7 @@ class Picture(iPicture):
         try:
             self._image = Image.open(self._path)
         except Exception:
-            raise ExifImageImpossibleToOpen(self._path)
+            raise MalformedImageFileException(self._path)
 
     def _get_exif_dict(self) -> dict:
         if not hasattr(self, "_exif_dict"):
