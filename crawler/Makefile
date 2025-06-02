@@ -3,7 +3,7 @@ include test.env
 GIT_HASH = $(shell git rev-parse --short HEAD)
 GIT_BRANCH = $(shell git rev-parse --symbolic-full-name --abbrev-ref HEAD)
 
-APP_VERSION=2.3.0
+APP_VERSION=3.0.0
 
 ifeq ($(GIT_BRANCH), develop)
 	SEMVER_APP=$(APP_VERSION)-beta.$(GIT_HASH)
@@ -32,9 +32,6 @@ style-check:
 
 test-unit:
 	python -m unittest discover tests -v
-
-test-integration:
-	TEST_AWS_KEY=$(AWS_KEY) TEST_AWS_SECRET=$(AWS_SECRET) python -m unittest discover integration_tests
 
 publish-linux: test-unit style-check
 	pyinstaller --name kouign-amann-linux-$(SEMVER_APP) -F --clean ./kouign-amann.py
