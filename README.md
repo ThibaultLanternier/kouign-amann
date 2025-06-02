@@ -45,11 +45,6 @@ This command will move all pictures present in the `NOT_GROUPED` folder and move
 
 In order to make it easier you can rename each of this folder with a more user-friendly name e.g. `/Photos/2024/2024-12-01 <EVENT_DESCRIPTION>` could be renamed `/Photos/2024/2024-12-01 Family trip to Saint Malo`
 
-Next time you launch `backup` it will only copy photos that have not yet been copied and put them in the relevant event folder.
-
-
-
-
 ## Installation
 
 ### Linux (Debian)
@@ -95,16 +90,3 @@ $ Usage: kouign-amann [OPTIONS] COMMAND [ARGS]...
 ### Windows
 
 > Packaging not done yet : you will need to run it directly with a Python interpreter
-
-## Backup your pictures
-
-### Setup the backup folder
-
-```
-$ kouign-amann init /home/xxx/<NAME_OF_YOUR_FOLDER>
-```
-
-### Backup your pictures
-```
-$ kouign-amann backup /media/SD_CARD/<FOLDER_YOU_WANT_TO_BACKUP>
-```
