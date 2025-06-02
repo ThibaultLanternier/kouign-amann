@@ -15,15 +15,35 @@ Sounds familiar ?
 
 The idea is you define a unique backup folder on your hard drive. Let's call it `/Photos`. Then you launch the `backup` command with the target path you want to backup ex. `/media/my-camera-sd-card/DCIM`. The application will then crawl your sd card to find `.jpeg` files and will give them a unique id and store them in your `/Photos` folder.
 
-To make it easier to manage pictures will be grouped in sub-folders ex. `/Photos/2024/2024-12-01 <EVENT_DESCRIPTION>`.If the program detects a continuous time period where pictures have been taken it will assume its a single event. Let's say you went on 4 days trip during which you took pictures every day they will be grouped in a single folder.
-Once backup has completed you can rename each sub folder to make it easy to find your pictures ex. rename `/Photos/2024/2024-12-01 <EVENT_DESCRIPTION>` to `/Photos/2024/2024-12-01 Family trip to Saint Malo`
-
-Next time you launch `backup` it will only copy photos that have not yet been copied and put them in the relevant event folder.
-
 Unique Ids are generated using a `Perception Hash` meaning that even if a picture has been renamed or resized it will have the same unique Id and therefore will not be duplicated
 
 > Note: if you want more details on perception hashing you can find more details on the [ImageHash library Github](https://github.com/JohannesBuchner/imagehash)
 
+## Backup pictures
+
+```
+$ kouign-amann backup /path/to/camera_sd_card
+```
+
+This command will start copying every "new" pictures it can find in the target directory and copy them to the `Photos/<YEAR>/NOT_GROUPED` folder
+
+## Group them in consistent "event"
+
+To make it easier to manage pictures will be grouped in sub-folders ex. `/Photos/2024/2024-12-01 <EVENT_DESCRIPTION>`
+
+An event is a period of time during which you regularly took pictures : e.g. a trip, a birthday or a party 
+
+By default the system will group together pictures that have less than 24 hours time-difference with the "next" picture
+
+> Note: this parameter can be adjusted using the `--delta` parameter 
+
+```
+$ kouign-amann group
+```
+
+This command will move all pictures present in the `NOT_GROUPED` folder and move them to subfolders named in the following format `/Photos/2024/2024-12-01 <EVENT_DESCRIPTION>` to `/Photos/2024/2024-12-01 Family trip to Saint Malo`
+
+In order to make it easier you can rename each of this folder with a more user-friendly name e.g. `/Photos/2024/2024-12-01 <EVENT_DESCRIPTION>` could be renamed `/Photos/2024/2024-12-01 Family trip to Saint Malo`
 
 ## Installation
 
@@ -70,16 +90,3 @@ $ Usage: kouign-amann [OPTIONS] COMMAND [ARGS]...
 ### Windows
 
 > Packaging not done yet : you will need to run it directly with a Python interpreter
-
-## Backup your pictures
-
-### Setup the backup folder
-
-```
-$ kouign-amann init /home/xxx/<NAME_OF_YOUR_FOLDER>
-```
-
-### Backup your pictures
-```
-$ kouign-amann backup /media/SD_CARD/<FOLDER_YOU_WANT_TO_BACKUP>
-```
