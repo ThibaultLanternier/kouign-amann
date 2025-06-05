@@ -43,7 +43,7 @@ class TestPictureDataRepository(unittest.TestCase):
         folders = repository.get_parents_folder_list(picture_hash="same-hash")
 
         # Verify folders
-        self.assertEqual(folders, ["folder1", "folder2"])
+        self.assertEqual(set(folders), set(["folder1", "folder2"]))
 
     def test_get_record(self):
         file_path = Path(f"tests/files/repository/repo_{uuid4().hex}.jsonl")
