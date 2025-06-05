@@ -52,7 +52,7 @@ class GroupUseCase(baseUseCase):
 
         self._logger.info(f"Found {len(picture_data_list)} to be analyzed for grouping")
 
-        picture_group_list = self._group_creator_service.get_group_list(
+        picture_group_list = self._group_creator_service.get_group_list_from_time(
             picture_list=picture_data_list
         )
 
