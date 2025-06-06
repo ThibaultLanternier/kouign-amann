@@ -10,6 +10,7 @@ from app.tools.config_file import ConfigFileManager
 
 from app.use_cases.backup import backup_use_case_factory
 from app.use_cases.group import group_use_case_factory
+from app.use_cases.rename import rename_use_case_factory
 
 init_console_log()
 
@@ -102,6 +103,25 @@ def group(delta: int):
         root_path=backup_folder_path,
     )
     group_use_case.group(picture_list=pictures_list)
+
+
+@cli.command()
+def rename():
+    """
+    Try to rename event folders based on historical pictures folders
+    """
+    config = configparser.ConfigParser()
+    config.read(ConfigFileManager().config_file_path)
+
+    backup_folder_path = Path(config["backup"]["path"])
+
+    rename_use_case = rename_use_case_factory(backup_folder_path=backup_folder_path)
+
+    picture_path_list = rename_use_case.list_pictures(
+        root_path=backup_folder_path,
+    )
+
+    rename_use_case.rename_folders(picture_path_list=picture_path_list)
 
 
 if __name__ == "__main__":
