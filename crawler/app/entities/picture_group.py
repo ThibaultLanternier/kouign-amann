@@ -35,6 +35,7 @@ class iPictureGroup(ABC):
         pass
 
 
+
 class PictureGroup(iPictureGroup):
     def _count_pictures_per_folder(
         self, picture_list: list[iPictureData]
@@ -122,7 +123,16 @@ class PictureGroup(iPictureGroup):
 
         return f"{min_date.date()} {folder_name}".strip()
 
-    def get_new_folder_name(self, picture_repository: iPictureDataRepository) -> Path:
+    def _is_raw_camera_folder(self, folder_name: str) -> bool:
+        strings_to_exclude = ['CANON', 'FUJI', 'APPLE']
+
+        for string in strings_to_exclude:   
+            if string in folder_name:
+                return True
+        
+        return False
+
+    def get_new_folder_name(self, picture_repository: iPictureDataRepository, ) -> Path:
         if not self.is_editable():
             raise NotEditableGroupException("This group is not editable")
 
@@ -133,9 +143,11 @@ class PictureGroup(iPictureGroup):
                 picture.get_hash()
             )
 
+            folder_name_whitout_camera_folder = [folder for folder in folder_name_list if not self._is_raw_camera_folder(folder)]
+
             clean_folder_name_list = [
                 self._remove_date_from_name(folder_name)
-                for folder_name in folder_name_list
+                for folder_name in folder_name_whitout_camera_folder
             ]
 
             for folder_name in clean_folder_name_list:

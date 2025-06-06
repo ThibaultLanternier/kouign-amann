@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+import os
 from pathlib import Path
 
 
@@ -29,3 +30,7 @@ class FileTools(iFileTools):
             target_path.parent.mkdir(parents=True)
 
         origin_path.rename(target_path)
+
+    def rename_file(self, origin_folder_path: Path, new_folder_path: Path) -> None:
+        """Rename a file to a new name in the same directory."""
+        os.rename(origin_folder_path, new_folder_path)

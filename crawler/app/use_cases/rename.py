@@ -22,7 +22,7 @@ class RenameUseCase(baseUseCase):
         self._picture_data_repository = picture_repository
         self._group_creator_service = group_creator_service
 
-    def rename_folders(self, picture_path_list: list[Path]) -> None:
+    def rename_folders(self, picture_path_list: list[Path], dry_run = False) -> None:
         self._logger.info(
             f"Extracting picture data from {len(picture_path_list)} pictures"
         )
@@ -56,11 +56,19 @@ class RenameUseCase(baseUseCase):
                     self._logger.info(
                         f"Folder {folder_path} could be renamed {new_folder_name}"
                     )
+                    if not dry_run:
+                        self._file_tools.rename_file(
+                            origin_folder_path=folder_path,
+                            new_folder_path=new_folder_name,
+                        )
+                        self._logger.info(
+                            f"Renamed {folder_path} to {new_folder_name}"
+                        )
                 self._logger.warning(
                     f"No data found in history to rename {folder_path}, skipping"
                 )
             else:
-                self._logger.warning(
+                self._logger.debug(
                     f"Group {group.get_folder_path()} is not editable, skipping rename"
                 )
 

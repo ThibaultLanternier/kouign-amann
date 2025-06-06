@@ -137,6 +137,26 @@ class TestPictureGroup(unittest.TestCase):
             picture_group.get_new_folder_name(self._mock_picture_data_repository),
             expected_folder_name,
         )
+    
+    def test_get_new_folder_name_should_return_same_name_if_only_camera_folder(self):
+        picture_group = PictureGroup(
+            [
+                self._picture_group_list_2[1],
+                self._picture_group_list_2[3],
+            ]
+        )
+
+        self._mock_picture_data_repository.get_parents_folder_list.return_value = [
+            'mon truc avec CANON',
+            'FUJI RAW',
+            'XXX APPLE RAW',
+        ]
+
+        expected_folder_name = Path("root/2013-02-03 <EVENT_DESCRIPTION>")
+        self.assertEqual(
+            picture_group.get_new_folder_name(self._mock_picture_data_repository),
+            expected_folder_name,
+        )
 
     def test_get_new_folder_name_not_editable_should_raise(self):
         picture_group = PictureGroup([self._picture_group_list_2[2]])

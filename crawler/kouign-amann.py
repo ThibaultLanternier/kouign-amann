@@ -106,9 +106,12 @@ def group(delta: int):
 
 
 @cli.command()
-def rename():
+@click.option(
+    "--dry_run", help="Does not actually rename the folders", default=False, is_flag=True
+)
+def rename(dry_run: bool):
     """
-    Try to rename event folders based on historical pictures folders
+    WARNING : !! EXPERIMENTAL FEATURE !! Try to rename new event folders based on original pictures folders
     """
     config = configparser.ConfigParser()
     config.read(ConfigFileManager().config_file_path)
@@ -121,7 +124,7 @@ def rename():
         root_path=backup_folder_path,
     )
 
-    rename_use_case.rename_folders(picture_path_list=picture_path_list)
+    rename_use_case.rename_folders(picture_path_list=picture_path_list, dry_run=dry_run)
 
 
 if __name__ == "__main__":
