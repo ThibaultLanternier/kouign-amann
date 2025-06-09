@@ -1,3 +1,4 @@
+from typing import Union
 from uuid import uuid4
 import click
 import logging
@@ -10,6 +11,7 @@ from app.tools.config_file import ConfigFileManager
 
 from app.use_cases.backup import backup_use_case_factory
 from app.use_cases.group import group_use_case_factory
+from app.use_cases.rename import rename_use_case_factory
 
 init_console_log()
 
@@ -102,6 +104,47 @@ def group(delta: int):
         root_path=backup_folder_path,
     )
     group_use_case.group(picture_list=pictures_list)
+
+
+@cli.command()
+@click.option(
+    "--dry_run",
+    help="Does not actually rename the folders",
+    default=False,
+    is_flag=True,
+)
+@click.option(
+    "--sub_folder",
+    default=None,
+    help="Specific sub folder to rename DEBUG ONLY",
+    type=click.Path(exists=True),
+)
+def rename(dry_run: bool, sub_folder: Union[str, None] = None):
+    """
+    !! EXPERIMENTAL FEATURE !! Try to rename new event folders based on historical path
+    """
+    config = configparser.ConfigParser()
+    config.read(ConfigFileManager().config_file_path)
+
+    backup_folder_path = Path(config["backup"]["path"])
+
+    rename_use_case = rename_use_case_factory(backup_folder_path=backup_folder_path)
+
+    verbose_mode = sub_folder is not None
+
+    if sub_folder is not None:
+        picture_path_list = rename_use_case.list_pictures(
+            root_path=Path(sub_folder),  # type: ignore
+        )
+        logger.warning(f"Try to rename only sub folder {sub_folder}")
+    else:
+        picture_path_list = rename_use_case.list_pictures(
+            root_path=backup_folder_path,
+        )
+
+    rename_use_case.rename_folders(
+        picture_path_list=picture_path_list, dry_run=dry_run, verbose=verbose_mode
+    )
 
 
 if __name__ == "__main__":

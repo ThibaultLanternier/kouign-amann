@@ -26,7 +26,7 @@ class TestGroupUseCase(unittest.TestCase):
         self._mock_file_service = MagicMock(
             name="mock_file_service", spec=iBackupService
         )
-        self._mock_group_creator_service = MagicMock(
+        self._mock_group_creator_svc = MagicMock(
             name="mock_group_creator_service", spec=iGroupCreatorService
         )
         self._mock_picture_data_factory = MagicMock(
@@ -37,7 +37,7 @@ class TestGroupUseCase(unittest.TestCase):
         self._group_use_case = GroupUseCase(
             file_tools=self._mock_file_tools,
             picture_data_factory=self._mock_picture_data_factory,
-            group_creator_service=self._mock_group_creator_service,
+            group_creator_service=self._mock_group_creator_svc,
         )
 
     def test_group_get_data_from_path_ok(self):
@@ -46,7 +46,9 @@ class TestGroupUseCase(unittest.TestCase):
         PICTURE_GROUP.list_pictures_to_move.return_value = [
             (PICTURE_PATH, PICTURE_PATH_2)
         ]
-        self._mock_group_creator_service.get_group_list.return_value = [PICTURE_GROUP]
+        self._mock_group_creator_svc.get_group_list_from_time.return_value = [
+            PICTURE_GROUP
+        ]
 
         self._group_use_case.group(picture_list=[PICTURE_PATH])
 
@@ -54,7 +56,7 @@ class TestGroupUseCase(unittest.TestCase):
             path=PICTURE_PATH, current_timezone=timezone.utc
         )
 
-        self._mock_group_creator_service.get_group_list.assert_called_once_with(
+        self._mock_group_creator_svc.get_group_list_from_time.assert_called_once_with(
             picture_list=[PICTURE_DATA]
         )
 
@@ -74,11 +76,13 @@ class TestGroupUseCase(unittest.TestCase):
         PICTURE_GROUP.list_pictures_to_move.return_value = [
             (PICTURE_PATH, PICTURE_PATH_2)
         ]
-        self._mock_group_creator_service.get_group_list.return_value = [PICTURE_GROUP]
+        self._mock_group_creator_svc.get_group_list_from_time.return_value = [
+            PICTURE_GROUP
+        ]
 
         self._group_use_case.group(picture_list=[PICTURE_PATH])
 
-        self._mock_group_creator_service.get_group_list.assert_called_once_with(
+        self._mock_group_creator_svc.get_group_list_from_time.assert_called_once_with(
             picture_list=[PICTURE_DATA]
         )
 
@@ -105,11 +109,11 @@ class TestGroupUseCase(unittest.TestCase):
             (PICTURE_PATH, PICTURE_PATH_2)
         ]
 
-        self._mock_group_creator_service.get_group_list.return_value = []
+        self._mock_group_creator_svc.get_group_list_from_time.return_value = []
 
         self._group_use_case.group(picture_list=[PICTURE_PATH])
 
-        self._mock_group_creator_service.get_group_list.assert_called_once_with(
+        self._mock_group_creator_svc.get_group_list_from_time.assert_called_once_with(
             picture_list=[]
         )
 

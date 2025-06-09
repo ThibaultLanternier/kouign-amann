@@ -57,9 +57,24 @@ class TestGroupCreatorService(unittest.TestCase):
 
         return super().setUp()
 
+    def test_group_creator_service_from_folders_ok(self):
+        grouper = GroupCreatorService()
+        grouped_pictures = grouper.get_group_list_from_folders(self._picture_list)
+
+        self.assertEqual(
+            [x.get_picture_list() for x in grouped_pictures],
+            [
+                [self._picture_list[0], self._picture_list[2]],
+                [self._picture_list[1]],
+                [self._picture_list[3]],
+            ],
+        )
+
     def test_group_creator_service_1_value(self):
         grouper = GroupCreatorService(hours_btw_picture=1)
-        grouped_pictures = grouper.get_group_list([self._picture_list_hours[0]])
+        grouped_pictures = grouper.get_group_list_from_time(
+            [self._picture_list_hours[0]]
+        )
 
         self.assertEqual(
             [x.get_picture_list() for x in grouped_pictures],
@@ -70,7 +85,7 @@ class TestGroupCreatorService(unittest.TestCase):
 
     def test_group_creator_service_1hour_time_difference(self):
         grouper = GroupCreatorService(hours_btw_picture=1)
-        grouped_pictures = grouper.get_group_list(self._picture_list_hours)
+        grouped_pictures = grouper.get_group_list_from_time(self._picture_list_hours)
 
         self.assertEqual(
             [x.get_picture_list() for x in grouped_pictures],
@@ -89,7 +104,7 @@ class TestGroupCreatorService(unittest.TestCase):
 
     def test_group_creator_service_2hours_time_difference(self):
         grouper = GroupCreatorService(hours_btw_picture=2)
-        grouped_pictures = grouper.get_group_list(self._picture_list_hours)
+        grouped_pictures = grouper.get_group_list_from_time(self._picture_list_hours)
 
         self.assertEqual(
             [x.get_picture_list() for x in grouped_pictures],
@@ -107,7 +122,7 @@ class TestGroupCreatorService(unittest.TestCase):
 
     def test_group_creator_service_default_days_2_paths(self):
         grouper = GroupCreatorService()
-        grouped_pictures = grouper.get_group_list(
+        grouped_pictures = grouper.get_group_list_from_time(
             [self._picture_list[0], self._picture_list[3]]
         )
 
@@ -121,7 +136,7 @@ class TestGroupCreatorService(unittest.TestCase):
 
     def test_group_creator_service_default_days(self):
         grouper = GroupCreatorService()
-        grouped_pictures = grouper.get_group_list(self._picture_list)
+        grouped_pictures = grouper.get_group_list_from_time(self._picture_list)
 
         self.assertEqual(
             [x.get_picture_list() for x in grouped_pictures],
@@ -137,7 +152,7 @@ class TestGroupCreatorService(unittest.TestCase):
 
     def test_group_creator_service_2_days(self):
         grouper = GroupCreatorService(hours_btw_picture=48)
-        grouped_pictures = grouper.get_group_list(self._picture_list)
+        grouped_pictures = grouper.get_group_list_from_time(self._picture_list)
 
         self.assertEqual(
             [x.get_picture_list() for x in grouped_pictures],
