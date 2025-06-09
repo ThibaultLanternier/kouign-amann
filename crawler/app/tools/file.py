@@ -14,6 +14,11 @@ class iFileTools(ABC):
         """Move file from origin to target path"""
         pass
 
+    @abstractmethod
+    def rename_file(self, origin_folder_path: Path, new_folder_path: Path) -> None:
+        """Rename a file to a new name in the same directory."""
+        pass
+
 
 class FileTools(iFileTools):
     def __init__(self) -> None:

@@ -22,10 +22,16 @@ class RenameUseCase(baseUseCase):
         self._picture_data_repository = picture_repository
         self._group_creator_service = group_creator_service
 
-    def rename_folders(self, picture_path_list: list[Path], dry_run = False) -> None:
+    def rename_folders(
+        self, picture_path_list: list[Path], dry_run=False, verbose=False
+    ) -> None:
         self._logger.info(
             f"Extracting picture data from {len(picture_path_list)} pictures"
         )
+
+        if verbose:
+            self._logger.info("VERBOSE MODE ENABLED, showing details of each rename")
+
         picture_data_list: list[iPictureData] = [
             self._picture_data_factory.from_standard_path(
                 picture_path, current_timezone=timezone.utc
@@ -45,10 +51,13 @@ class RenameUseCase(baseUseCase):
             picture_data_list
         )
 
+        self._logger.info(f"Found {len(group_list)} directory to rename")
+
         for group in group_list:
             if group.is_editable():
                 new_folder_name = group.get_new_folder_name(
-                    picture_repository=self._picture_data_repository
+                    picture_repository=self._picture_data_repository,
+                    verbose=verbose,
                 )
                 folder_path = group.get_folder_path()
 
@@ -61,9 +70,7 @@ class RenameUseCase(baseUseCase):
                             origin_folder_path=folder_path,
                             new_folder_path=new_folder_name,
                         )
-                        self._logger.info(
-                            f"Renamed {folder_path} to {new_folder_name}"
-                        )
+                        self._logger.info(f"Renamed {folder_path} to {new_folder_name}")
                 self._logger.warning(
                     f"No data found in history to rename {folder_path}, skipping"
                 )
