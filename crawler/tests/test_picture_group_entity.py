@@ -113,10 +113,12 @@ class TestPictureGroup(unittest.TestCase):
         self._mock_picture_data_repository.get_parents_folder_list.return_value = [
             "2024-03 Vacances Ski les Arcs",
             "2024-03 Vacances Ski les Arcs",
-            " Vacances Ski les Arcs" "Saint Malo Weekend",
+            "Saint Malo Weekend",
         ]
 
-        expected_folder_name = Path("root/2023-10-03 Vacances Ski les Arcs")
+        expected_folder_name = Path(
+            "root/2023-10-03 Saint Malo Weekend<OR>Vacances Ski les Arcs"
+        )
         self.assertEqual(
             picture_group.get_new_folder_name(self._mock_picture_data_repository),
             expected_folder_name,

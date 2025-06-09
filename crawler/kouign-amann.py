@@ -1,3 +1,4 @@
+from typing import Union
 from uuid import uuid4
 import click
 import logging
@@ -118,7 +119,7 @@ def group(delta: int):
     help="Specific sub folder to rename DEBUG ONLY",
     type=click.Path(exists=True),
 )
-def rename(dry_run: bool, sub_folder: str = ""):
+def rename(dry_run: bool, sub_folder: Union[str, None] = None):
     """
     !! EXPERIMENTAL FEATURE !! Try to rename new event folders based on historical path
     """
@@ -129,9 +130,9 @@ def rename(dry_run: bool, sub_folder: str = ""):
 
     rename_use_case = rename_use_case_factory(backup_folder_path=backup_folder_path)
 
-    verbose_mode = sub_folder != ""
+    verbose_mode = sub_folder is not None
 
-    if sub_folder != "":
+    if sub_folder is not None:
         picture_path_list = rename_use_case.list_pictures(
             root_path=Path(sub_folder),  # type: ignore
         )
