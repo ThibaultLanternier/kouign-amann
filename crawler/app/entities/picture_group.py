@@ -37,6 +37,7 @@ class iPictureGroup(ABC):
     def is_editable(self) -> bool:
         pass
 
+MIN_GROUP_SIZE = 10
 
 class PictureGroup(iPictureGroup):
     def _count_pictures_per_folder(
@@ -78,30 +79,51 @@ class PictureGroup(iPictureGroup):
 
         return folder_list
 
-    def __init__(self, picture_list: list[iPictureData]):
+    def _get_too_small_group_folder_name(self) -> list[Path]:
+        first_picture: iPictureData = self._picture_list[0]
+        root_folder = first_picture.get_path().parent.parent
+        return [
+            root_folder / Path(f"{first_picture.get_creation_date().date().year} OTHER")
+        ]
+
+    def __init__(
+        self, picture_list: list[iPictureData], min_group_size: int = MIN_GROUP_SIZE
+    ) -> None:
         self._picture_list = picture_list
+
+        self._min_group_size = min_group_size
 
         if len(self._picture_list) == 0:
             raise Exception("A group must contain at least one picture path")
 
-        # Count the number of pictures in each folder (excluding "NOT_GROUPED")
-        self._picture_path_count = self._count_pictures_per_folder(self._picture_list)
+        if len(self._picture_list) >= self._min_group_size:
+            # The group is large enough, so we can proceed with the grouping
 
-        # Sort the folders by the number of pictures in descending order
-        self._folder_list = self._get_ordered_folder_list(self._picture_path_count)
+            # Count the number of pictures in each folder (excluding "NOT_GROUPED")
+            self._picture_path_count = self._count_pictures_per_folder(
+                self._picture_list
+            )
 
-        # If no folders are found, create a new folder based on the first picture's date
-        self._folder_list = self._add_not_grouped_folder(self._folder_list)
+            # Sort the folders by the number of pictures in descending order
+            self._folder_list = self._get_ordered_folder_list(self._picture_path_count)
+
+            # If no folders are found, create a folder based on the first picture's date
+            self._folder_list = self._add_not_grouped_folder(self._folder_list)
+        else:
+            # The group is too small all pictures shall go to <YEAR> OTHER folder
+            self._folder_list = self._get_too_small_group_folder_name()
 
         self._logger = logging.getLogger("app.picture_group_entity")
 
     def get_picture_list(self) -> list[iPictureData]:
         return self._picture_list
 
-    def get_folder_path(self):
+    def get_folder_path(self) -> Path:
         return self._folder_list[0]
 
-    def list_pictures_to_move(self):
+    def list_pictures_to_move(
+        self, min_group_size: int = 20
+    ) -> list[tuple[Path, Path]]:
         output: list[tuple[Path, Path]] = []
 
         for picture in self._picture_list:

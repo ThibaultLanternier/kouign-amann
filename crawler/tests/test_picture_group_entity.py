@@ -24,6 +24,22 @@ class TestPictureGroup(unittest.TestCase):
                     creation_date=datetime(2023, 10, 3),
                     hash="hash2",
                 ),
+            ],
+            min_group_size=2,
+        )
+
+        self._picture_group_not_grouped_default_min_size: PictureGroup = PictureGroup(
+            [
+                PictureData(
+                    path=Path("root/NOT_GROUPED/hash1.jpg"),
+                    creation_date=datetime(2023, 10, 1, 15, 45, 12),
+                    hash="hash1",
+                ),
+                PictureData(
+                    path=Path("root/NOT_GROUPED/hash2.jpg"),
+                    creation_date=datetime(2023, 10, 3),
+                    hash="hash2",
+                ),
             ]
         )
 
@@ -73,22 +89,24 @@ class TestPictureGroup(unittest.TestCase):
             ),
         ]
 
-        self._picture_group_partly_grouped = PictureGroup(self._picture_group_list)
+        self._picture_group_partly_grouped = PictureGroup(
+            self._picture_group_list, min_group_size=4
+        )
 
         self._mock_picture_data_repository = MagicMock(spec=iPictureDataRepository)
 
     def test_is_editable_not_grouped_should_return_false(self):
-        picture_group = PictureGroup([self._picture_group_list_2[0]])
+        picture_group = PictureGroup([self._picture_group_list_2[0]], min_group_size=1)
 
         self.assertFalse(picture_group.is_editable())
 
     def test_is_editable_already_renamed_should_return_false(self):
-        picture_group = PictureGroup([self._picture_group_list_2[2]])
+        picture_group = PictureGroup([self._picture_group_list_2[2]], min_group_size=1)
 
         self.assertFalse(picture_group.is_editable())
 
     def test_is_editable_generic_name_should_return_true(self):
-        picture_group = PictureGroup([self._picture_group_list_2[1]])
+        picture_group = PictureGroup([self._picture_group_list_2[1]], min_group_size=1)
 
         self.assertTrue(picture_group.is_editable())
 
@@ -97,7 +115,8 @@ class TestPictureGroup(unittest.TestCase):
             [
                 self._picture_group_list_2[1],
                 self._picture_group_list_2[2],
-            ]
+            ],
+            min_group_size=1,
         )
 
         self.assertRaises(NotUniqueFolderException, picture_group.is_editable)
@@ -107,7 +126,8 @@ class TestPictureGroup(unittest.TestCase):
             [
                 self._picture_group_list_2[1],
                 self._picture_group_list_2[3],
-            ]
+            ],
+            min_group_size=1,
         )
 
         self._mock_picture_data_repository.get_parents_folder_list.return_value = [
@@ -129,7 +149,8 @@ class TestPictureGroup(unittest.TestCase):
             [
                 self._picture_group_list_2[1],
                 self._picture_group_list_2[3],
-            ]
+            ],
+            min_group_size=1,
         )
 
         self._mock_picture_data_repository.get_parents_folder_list.return_value = []
@@ -145,7 +166,8 @@ class TestPictureGroup(unittest.TestCase):
             [
                 self._picture_group_list_2[1],
                 self._picture_group_list_2[3],
-            ]
+            ],
+            min_group_size=1,
         )
 
         self._mock_picture_data_repository.get_parents_folder_list.return_value = [
@@ -161,7 +183,7 @@ class TestPictureGroup(unittest.TestCase):
         )
 
     def test_get_new_folder_name_not_editable_should_raise(self):
-        picture_group = PictureGroup([self._picture_group_list_2[2]])
+        picture_group = PictureGroup([self._picture_group_list_2[2]], min_group_size=1)
 
         def get_new_folder_name():
             picture_group.get_new_folder_name(self._mock_picture_data_repository)
@@ -201,6 +223,27 @@ class TestPictureGroup(unittest.TestCase):
             (
                 Path("root/NOT_GROUPED/hash2.jpg"),
                 Path("root/2023-10-01 <EVENT_DESCRIPTION>/hash2.jpg"),
+            ),
+        ]
+
+        self.assertEqual(
+            pictures_to_move,
+            expected_list,
+        )
+
+    def test_list_pictures_to_move_new_folder_group_too_small(self):
+        pictures_to_move = (
+            self._picture_group_not_grouped_default_min_size.list_pictures_to_move()
+        )
+
+        expected_list = [
+            (
+                Path("root/NOT_GROUPED/hash1.jpg"),
+                Path("root/2023 OTHER/hash1.jpg"),
+            ),
+            (
+                Path("root/NOT_GROUPED/hash2.jpg"),
+                Path("root/2023 OTHER/hash2.jpg"),
             ),
         ]
 
