@@ -150,11 +150,7 @@ def rename(dry_run: bool, sub_folder: Union[str, None] = None):
 
 
 @cli.command()
-@click.option(
-    "--check_path",
-    type=click.Path(exists=True),
-    help="Path to folder that needs to be checked",
-)
+@click.argument("check_path", type=click.Path(exists=True))
 def check(check_path: str):
     """
     Check all pictures in check_path have already been backed up.
