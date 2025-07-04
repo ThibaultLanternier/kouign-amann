@@ -21,7 +21,9 @@ class iGroupCreatorService(ABC):
 
 
 class GroupCreatorService(iGroupCreatorService):
-    def __init__(self, hours_btw_picture: int = 24) -> None:
+    def __init__(
+        self, hours_btw_picture: int = 24, minimum_group_size: int = 10
+    ) -> None:
         self._hours_btw_picture = timedelta(days=0, hours=hours_btw_picture)
 
     def _convert_to_group(
