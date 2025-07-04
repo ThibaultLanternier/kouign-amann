@@ -1,3 +1,4 @@
+from datetime import timezone
 from typing import Union
 from uuid import uuid4
 import click
@@ -12,6 +13,7 @@ from app.tools.config_file import ConfigFileManager
 from app.use_cases.backup import backup_use_case_factory
 from app.use_cases.group import group_use_case_factory
 from app.use_cases.rename import rename_use_case_factory
+from app.use_cases.check import check_use_case_factory
 
 init_console_log()
 
@@ -144,6 +146,34 @@ def rename(dry_run: bool, sub_folder: Union[str, None] = None):
 
     rename_use_case.rename_folders(
         picture_path_list=picture_path_list, dry_run=dry_run, verbose=verbose_mode
+    )
+
+
+@cli.command()
+@click.option(
+    "--check_path",
+    type=click.Path(exists=True),
+    help="Path to folder that needs to be checked",
+)
+def check(check_path: str):
+    """
+    Check all pictures in check_path have already been backed up.
+    """
+    config = configparser.ConfigParser()
+    config.read(ConfigFileManager().config_file_path)
+
+    backup_folder_path = Path(config["backup"]["path"])
+
+    check_use_case = check_use_case_factory()
+
+    backup_list = check_use_case.list_pictures(root_path=backup_folder_path)
+
+    picture_list = check_use_case.list_pictures(root_path=Path(check_path))
+
+    check_use_case.check_pictures(
+        backup_list=backup_list,
+        picture_list=picture_list,
+        current_timezone=timezone.utc,
     )
 
 
