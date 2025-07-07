@@ -37,7 +37,9 @@ class iPictureGroup(ABC):
     def is_editable(self) -> bool:
         pass
 
+
 MIN_GROUP_SIZE = 10
+
 
 class PictureGroup(iPictureGroup):
     def _count_pictures_per_folder(
