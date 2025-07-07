@@ -89,7 +89,7 @@ def backup(target_path: str, strict: bool, debug: str):
 
 @cli.command()
 @click.option(
-    "--delta", help="Time difference between two group of pictures in hours", default=24
+    "--delta", help="Time difference between two group of pictures in hours", default=36
 )
 def group(delta: int):
     """
