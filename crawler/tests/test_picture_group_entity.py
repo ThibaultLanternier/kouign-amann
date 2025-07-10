@@ -28,6 +28,22 @@ class TestPictureGroup(unittest.TestCase):
             min_group_size=2,
         )
 
+        self._picture_group_in_other_folder: PictureGroup = PictureGroup(
+            [
+                PictureData(
+                    path=Path("root/2023 OTHER/hash1.jpg"),
+                    creation_date=datetime(2023, 10, 1, 15, 45, 12),
+                    hash="hash1",
+                ),
+                PictureData(
+                    path=Path("root/2023 OTHER/hash2.jpg"),
+                    creation_date=datetime(2023, 10, 3),
+                    hash="hash2",
+                ),
+            ],
+            min_group_size=2,
+        )
+
         self._picture_group_not_grouped_default_min_size: PictureGroup = PictureGroup(
             [
                 PictureData(
@@ -223,6 +239,25 @@ class TestPictureGroup(unittest.TestCase):
             ),
             (
                 Path("root/NOT_GROUPED/hash2.jpg"),
+                Path("root/2023-10-01 <EVENT_DESCRIPTION>/hash2.jpg"),
+            ),
+        ]
+
+        self.assertEqual(
+            pictures_to_move,
+            expected_list,
+        )
+
+    def test_list_pictures_to_move_other_folder(self):
+        pictures_to_move = self._picture_group_in_other_folder.list_pictures_to_move()
+
+        expected_list = [
+            (
+                Path("root/2023 OTHER/hash1.jpg"),
+                Path("root/2023-10-01 <EVENT_DESCRIPTION>/hash1.jpg"),
+            ),
+            (
+                Path("root/2023 OTHER/hash2.jpg"),
                 Path("root/2023-10-01 <EVENT_DESCRIPTION>/hash2.jpg"),
             ),
         ]

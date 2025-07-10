@@ -122,6 +122,6 @@ class TestGroupUseCase(unittest.TestCase):
 
 class TestGroupUseCaseFactory(unittest.TestCase):
     def test_factory_ok(self):
-        instance = group_use_case_factory(hours_btw_pictures=24)
+        instance = group_use_case_factory(hours_btw_pictures=24, minimun_group_size=10)
 
         self.assertIsInstance(instance, GroupUseCase)
