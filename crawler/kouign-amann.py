@@ -91,7 +91,13 @@ def backup(target_path: str, strict: bool, debug: str):
 @click.option(
     "--delta", help="Time difference between two group of pictures in hours", default=36
 )
-def group(delta: int):
+@click.option(
+    "--path",
+    help="Group only a specific path",
+    default=None,
+    type=click.Path(exists=True),
+)
+def group(delta: int, path: Union[str, None]):
     """
     (NEW) Group pictures event
     """
@@ -100,10 +106,16 @@ def group(delta: int):
 
     backup_folder_path = Path(config["backup"]["path"])
 
+    if path is None:
+        folder_path_to_group = backup_folder_path
+    else:
+        logger.warning(f"Grouping only pictures in {path}")
+        folder_path_to_group = Path(path)
+
     group_use_case = group_use_case_factory(hours_btw_pictures=delta)
 
     pictures_list = group_use_case.list_pictures(
-        root_path=backup_folder_path,
+        root_path=folder_path_to_group,
     )
     group_use_case.group(picture_list=pictures_list)
 
