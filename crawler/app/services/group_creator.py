@@ -25,11 +25,15 @@ class GroupCreatorService(iGroupCreatorService):
         self, hours_btw_picture: int = 24, minimum_group_size: int = 10
     ) -> None:
         self._hours_btw_picture = timedelta(days=0, hours=hours_btw_picture)
+        self._minimum_group_size = minimum_group_size
 
     def _convert_to_group(
         self, group_list: list[list[iPictureData]]
     ) -> list[iPictureGroup]:
-        return [PictureGroup(group) for group in group_list]
+        return [
+            PictureGroup(picture_list=group, min_group_size=self._minimum_group_size)
+            for group in group_list
+        ]
 
     def get_group_list_from_time(
         self, picture_list: list[iPictureData]
