@@ -21,7 +21,7 @@ class CheckUseCase(baseUseCase):
         backup_list: list[Path],
         picture_list: list[Path],
         current_timezone=timezone.utc,
-    ) -> None:
+    ) -> int:
         hash_set = set()
 
         self._logger.info(f"Indexing {len(backup_list)} already backuped up pictures")
@@ -58,6 +58,7 @@ class CheckUseCase(baseUseCase):
             progress_bar_count = progress_bar_count + 1
             progress_bar.update(progress_bar_count)
 
+        return not_in_backup_count
         if not_in_backup_count > 0:
             self._logger.error(
                 f"{not_in_backup_count} pictures have not been backed up"

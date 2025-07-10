@@ -166,11 +166,16 @@ def check(check_path: str):
 
     picture_list = check_use_case.list_pictures(root_path=Path(check_path))
 
-    check_use_case.check_pictures(
+    not_in_backup_count = check_use_case.check_pictures(
         backup_list=backup_list,
         picture_list=picture_list,
         current_timezone=timezone.utc,
     )
+
+    if not_in_backup_count > 0:
+        logger.error(f"{not_in_backup_count} pictures have not been backed up")
+    else:
+        logger.info("All pictures have been backed up")
 
 
 if __name__ == "__main__":
