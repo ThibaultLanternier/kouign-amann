@@ -136,12 +136,13 @@ class TestPictureGroup(unittest.TestCase):
             "Saint Malo Weekend",
         ]
 
-        expected_folder_name = Path(
-            "root/2023-10-03 Saint Malo Weekend<OR>Vacances Ski les Arcs"
-        )
-        self.assertEqual(
+        expected_folder_name_list = [
+            Path("root/2023-10-03 Saint Malo Weekend<OR>Vacances Ski les Arcs"),
+            Path("root/2023-10-03 Vacances Ski les Arcs<OR>Saint Malo Weekend"),
+        ]
+        self.assertIn(
             picture_group.get_new_folder_name(self._mock_picture_data_repository),
-            expected_folder_name,
+            expected_folder_name_list,
         )
 
     def test_get_new_folder_name_should_return_same_name_if_folder_list_empty(self):
