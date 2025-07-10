@@ -1,9 +1,12 @@
 import unittest
 from datetime import datetime
 from pathlib import Path
+from unittest.mock import MagicMock
 
-from app.entities.picture_data import PictureData
-from app.entities.picture_group import PictureGroup
+from app.entities.picture_data import PictureData, iPictureData
+from app.entities.picture_group import (NotUniqueFolderException, PictureGroup,
+                                        PictureGroupException)
+from app.repositories.picture_data import iPictureDataRepository
 
 
 class TestPictureGroup(unittest.TestCase):
@@ -21,33 +24,188 @@ class TestPictureGroup(unittest.TestCase):
                     creation_date=datetime(2023, 10, 3),
                     hash="hash2",
                 ),
-            ]
+            ],
+            min_group_size=2,
         )
 
-        self._picture_group_partly_grouped = PictureGroup(
+        self._picture_group_in_other_folder: PictureGroup = PictureGroup(
             [
                 PictureData(
-                    path=Path("root/NOT_GROUPED/hash1.jpg"),
-                    creation_date=datetime(2023, 10, 1),
+                    path=Path("root/2023 OTHER/hash1.jpg"),
+                    creation_date=datetime(2023, 10, 1, 15, 45, 12),
                     hash="hash1",
                 ),
                 PictureData(
-                    path=Path("root/EVENT-XXX/hash2.jpg"),
+                    path=Path("root/2023 OTHER/hash2.jpg"),
                     creation_date=datetime(2023, 10, 3),
                     hash="hash2",
                 ),
+            ],
+            min_group_size=2,
+        )
+
+        self._picture_group_not_grouped_default_min_size: PictureGroup = PictureGroup(
+            [
                 PictureData(
-                    path=Path("root/EVENT-YYY/hash3.jpg"),
-                    creation_date=datetime(2023, 10, 5),
-                    hash="hash3",
+                    path=Path("root/NOT_GROUPED/hash1.jpg"),
+                    creation_date=datetime(2023, 10, 1, 15, 45, 12),
+                    hash="hash1",
                 ),
                 PictureData(
-                    path=Path("root/EVENT-YYY/hash4.jpg"),
-                    creation_date=datetime(2023, 10, 7),
-                    hash="hash4",
+                    path=Path("root/NOT_GROUPED/hash2.jpg"),
+                    creation_date=datetime(2023, 10, 3),
+                    hash="hash2",
                 ),
             ]
         )
+
+        self._picture_group_list: list[iPictureData] = [
+            PictureData(
+                path=Path("root/NOT_GROUPED/hash1.jpg"),
+                creation_date=datetime(2023, 10, 1),
+                hash="hash1",
+            ),
+            PictureData(
+                path=Path("root/EVENT-XXX/hash2.jpg"),
+                creation_date=datetime(2023, 10, 3),
+                hash="hash2",
+            ),
+            PictureData(
+                path=Path("root/EVENT-YYY/hash3.jpg"),
+                creation_date=datetime(2023, 10, 5),
+                hash="hash3",
+            ),
+            PictureData(
+                path=Path("root/EVENT-YYY/hash4.jpg"),
+                creation_date=datetime(2023, 10, 7),
+                hash="hash4",
+            ),
+        ]
+
+        self._picture_group_list_2: list[iPictureData] = [
+            PictureData(
+                path=Path("root/NOT_GROUPED/hash1.jpg"),
+                creation_date=datetime(2023, 10, 1),
+                hash="hash1",
+            ),
+            PictureData(
+                path=Path("root/2013-02-03 <EVENT_DESCRIPTION>/hash2.jpg"),
+                creation_date=datetime(2023, 10, 3),
+                hash="hash2",
+            ),
+            PictureData(
+                path=Path("root/EVENT-YYY/hash3.jpg"),
+                creation_date=datetime(2023, 10, 5),
+                hash="hash3",
+            ),
+            PictureData(
+                path=Path("root/2013-02-03 <EVENT_DESCRIPTION>/hash4.jpg"),
+                creation_date=datetime(2023, 10, 7),
+                hash="hash4",
+            ),
+        ]
+
+        self._picture_group_partly_grouped = PictureGroup(
+            self._picture_group_list, min_group_size=4
+        )
+
+        self._mock_picture_data_repository = MagicMock(spec=iPictureDataRepository)
+
+    def test_is_editable_not_grouped_should_return_false(self):
+        picture_group = PictureGroup([self._picture_group_list_2[0]], min_group_size=1)
+
+        self.assertFalse(picture_group.is_editable())
+
+    def test_is_editable_already_renamed_should_return_false(self):
+        picture_group = PictureGroup([self._picture_group_list_2[2]], min_group_size=1)
+
+        self.assertFalse(picture_group.is_editable())
+
+    def test_is_editable_generic_name_should_return_true(self):
+        picture_group = PictureGroup([self._picture_group_list_2[1]], min_group_size=1)
+
+        self.assertTrue(picture_group.is_editable())
+
+    def test_is_editable_not_single_folder_should_raise(self):
+        picture_group = PictureGroup(
+            [
+                self._picture_group_list_2[1],
+                self._picture_group_list_2[2],
+            ],
+            min_group_size=1,
+        )
+
+        self.assertRaises(NotUniqueFolderException, picture_group.is_editable)
+
+    def test_get_new_folder_name_should_return_most_repeated_name(self):
+        picture_group = PictureGroup(
+            [
+                self._picture_group_list_2[1],
+                self._picture_group_list_2[3],
+            ],
+            min_group_size=1,
+        )
+
+        self._mock_picture_data_repository.get_parents_folder_list.return_value = [
+            "2024-03 Vacances Ski les Arcs",
+            "2024-03 Vacances Ski les Arcs",
+            "Saint Malo Weekend",
+        ]
+
+        expected_folder_name_list = [
+            Path("root/2023-10-03 Saint Malo Weekend<OR>Vacances Ski les Arcs"),
+            Path("root/2023-10-03 Vacances Ski les Arcs<OR>Saint Malo Weekend"),
+        ]
+        self.assertIn(
+            picture_group.get_new_folder_name(self._mock_picture_data_repository),
+            expected_folder_name_list,
+        )
+
+    def test_get_new_folder_name_should_return_same_name_if_folder_list_empty(self):
+        picture_group = PictureGroup(
+            [
+                self._picture_group_list_2[1],
+                self._picture_group_list_2[3],
+            ],
+            min_group_size=1,
+        )
+
+        self._mock_picture_data_repository.get_parents_folder_list.return_value = []
+
+        expected_folder_name = Path("root/2013-02-03 <EVENT_DESCRIPTION>")
+        self.assertEqual(
+            picture_group.get_new_folder_name(self._mock_picture_data_repository),
+            expected_folder_name,
+        )
+
+    def test_get_new_folder_name_should_return_same_name_if_only_camera_folder(self):
+        picture_group = PictureGroup(
+            [
+                self._picture_group_list_2[1],
+                self._picture_group_list_2[3],
+            ],
+            min_group_size=1,
+        )
+
+        self._mock_picture_data_repository.get_parents_folder_list.return_value = [
+            "mon truc avec CANON",
+            "FUJI RAW",
+            "XXX APPLE RAW",
+        ]
+
+        expected_folder_name = Path("root/2013-02-03 <EVENT_DESCRIPTION>")
+        self.assertEqual(
+            picture_group.get_new_folder_name(self._mock_picture_data_repository),
+            expected_folder_name,
+        )
+
+    def test_get_new_folder_name_not_editable_should_raise(self):
+        picture_group = PictureGroup([self._picture_group_list_2[2]], min_group_size=1)
+
+        def get_new_folder_name():
+            picture_group.get_new_folder_name(self._mock_picture_data_repository)
+
+        self.assertRaises(PictureGroupException, get_new_folder_name)
 
     def test_get_folder_path_no_picture_already_grouped(self):
         self.assertEqual(
@@ -82,6 +240,46 @@ class TestPictureGroup(unittest.TestCase):
             (
                 Path("root/NOT_GROUPED/hash2.jpg"),
                 Path("root/2023-10-01 <EVENT_DESCRIPTION>/hash2.jpg"),
+            ),
+        ]
+
+        self.assertEqual(
+            pictures_to_move,
+            expected_list,
+        )
+
+    def test_list_pictures_to_move_other_folder(self):
+        pictures_to_move = self._picture_group_in_other_folder.list_pictures_to_move()
+
+        expected_list = [
+            (
+                Path("root/2023 OTHER/hash1.jpg"),
+                Path("root/2023-10-01 <EVENT_DESCRIPTION>/hash1.jpg"),
+            ),
+            (
+                Path("root/2023 OTHER/hash2.jpg"),
+                Path("root/2023-10-01 <EVENT_DESCRIPTION>/hash2.jpg"),
+            ),
+        ]
+
+        self.assertEqual(
+            pictures_to_move,
+            expected_list,
+        )
+
+    def test_list_pictures_to_move_new_folder_group_too_small(self):
+        pictures_to_move = (
+            self._picture_group_not_grouped_default_min_size.list_pictures_to_move()
+        )
+
+        expected_list = [
+            (
+                Path("root/NOT_GROUPED/hash1.jpg"),
+                Path("root/2023 OTHER/hash1.jpg"),
+            ),
+            (
+                Path("root/NOT_GROUPED/hash2.jpg"),
+                Path("root/2023 OTHER/hash2.jpg"),
             ),
         ]
 

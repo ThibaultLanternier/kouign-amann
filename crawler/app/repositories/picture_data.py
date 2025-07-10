@@ -15,6 +15,10 @@ class iPictureDataRepository(ABC):
     def record(self, data: iPictureData) -> bool:
         pass
 
+    @abstractmethod
+    def get_parents_folder_list(self, picture_hash: str) -> list[str]:
+        pass
+
 
 class PictureDataRepository(iPictureDataRepository):
     def _get_data_from_file(self) -> list[iPictureData]:
@@ -36,6 +40,13 @@ class PictureDataRepository(iPictureDataRepository):
     def _index_data(self, data: iPictureData) -> None:
         self._data[data.get_path()] = data
 
+        picture_hash = data.get_hash()
+
+        if picture_hash not in self._folder_data:
+            self._folder_data[picture_hash] = []
+
+        self._folder_data[picture_hash].append(data.get_path())
+
     def _write_data_to_file(self, data: iPictureData) -> None:
         with open(self._cache_file_path, "a+") as file:
             file.write(PictureData.to_json(data) + "\n")
@@ -43,6 +54,7 @@ class PictureDataRepository(iPictureDataRepository):
     def __init__(self, cache_file_path: Path) -> None:
         self._cache_file_path = cache_file_path
         self._data: dict[Path, iPictureData] = {}
+        self._folder_data: dict[str, list[Path]] = {}
 
         self._logger = logging.getLogger("app.picture_data_repository")
         self._logger.info(
@@ -67,3 +79,14 @@ class PictureDataRepository(iPictureDataRepository):
         self._write_data_to_file(data=data)
 
         return True
+
+    def get_parents_folder_list(self, picture_hash: str) -> list[str]:
+        if picture_hash in self._folder_data:
+            folders = [
+                str(path.parent.name) for path in self._folder_data[picture_hash]
+            ]
+            unique_folders = list(set(folders))
+
+            return unique_folders
+        else:
+            return []

@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from datetime import timedelta
+from pathlib import Path
 
 from app.entities.picture_data import iPictureData
 from app.entities.picture_group import PictureGroup, iPictureGroup
@@ -7,22 +8,36 @@ from app.entities.picture_group import PictureGroup, iPictureGroup
 
 class iGroupCreatorService(ABC):
     @abstractmethod
-    def get_group_list(self, picture_list: list[iPictureData]) -> list[iPictureGroup]:
-        raise NotImplementedError(
-            "iGroupCreatorService.get_group_list() is not implemented"
-        )
+    def get_group_list_from_time(
+        self, picture_list: list[iPictureData]
+    ) -> list[iPictureGroup]:
+        pass
+
+    @abstractmethod
+    def get_group_list_from_folders(
+        self, picture_list: list[iPictureData]
+    ) -> list[iPictureGroup]:
+        pass
 
 
 class GroupCreatorService(iGroupCreatorService):
-    def __init__(self, hours_btw_picture: int = 24) -> None:
+    def __init__(
+        self, hours_btw_picture: int = 24, minimum_group_size: int = 10
+    ) -> None:
         self._hours_btw_picture = timedelta(days=0, hours=hours_btw_picture)
+        self._minimum_group_size = minimum_group_size
 
     def _convert_to_group(
         self, group_list: list[list[iPictureData]]
     ) -> list[iPictureGroup]:
-        return [PictureGroup(group) for group in group_list]
+        return [
+            PictureGroup(picture_list=group, min_group_size=self._minimum_group_size)
+            for group in group_list
+        ]
 
-    def get_group_list(self, picture_list: list[iPictureData]) -> list[iPictureGroup]:
+    def get_group_list_from_time(
+        self, picture_list: list[iPictureData]
+    ) -> list[iPictureGroup]:
         sorted_picture_list = sorted(picture_list, key=lambda x: x.get_creation_date())
         grouped_picture_path = []
         current_group = []
@@ -48,3 +63,21 @@ class GroupCreatorService(iGroupCreatorService):
         grouped_picture_path.append(current_group)
 
         return self._convert_to_group(grouped_picture_path)
+
+    def get_group_list_from_folders(
+        self, picture_list: list[iPictureData]
+    ) -> list[iPictureGroup]:
+        folder_dict: dict[Path, list[iPictureData]] = {}
+
+        for picture in picture_list:
+            folder_path = picture.get_path().parent
+            if folder_path not in folder_dict:
+                folder_dict[folder_path] = []
+            folder_dict[folder_path].append(picture)
+
+        group_list: list[iPictureGroup] = []
+
+        for pictures in folder_dict.values():
+            group_list.append(PictureGroup(pictures))
+
+        return group_list

@@ -52,7 +52,7 @@ class GroupUseCase(baseUseCase):
 
         self._logger.info(f"Found {len(picture_data_list)} to be analyzed for grouping")
 
-        picture_group_list = self._group_creator_service.get_group_list(
+        picture_group_list = self._group_creator_service.get_group_list_from_time(
             picture_list=picture_data_list
         )
 
@@ -71,11 +71,15 @@ class GroupUseCase(baseUseCase):
         self._logger.info("Grouping completed")
 
 
-def group_use_case_factory(hours_btw_pictures: int) -> GroupUseCase:
+def group_use_case_factory(
+    hours_btw_pictures: int, minimun_group_size: int
+) -> GroupUseCase:
     picture_data_factory = PictureDataFactory()
     file_tools = FileTools()
 
-    group_creator_service = GroupCreatorService(hours_btw_picture=hours_btw_pictures)
+    group_creator_service = GroupCreatorService(
+        hours_btw_picture=hours_btw_pictures, minimum_group_size=minimun_group_size
+    )
 
     return GroupUseCase(
         file_tools=file_tools,
