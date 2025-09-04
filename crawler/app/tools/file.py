@@ -28,7 +28,12 @@ class FileTools(iFileTools):
         small_case_jpg = [x for x in root_path.glob("**/*.jpg")]
         capital_case_jpg = [x for x in root_path.glob("**/*.JPG")]
 
-        return [*small_case_jpg, *capital_case_jpg]
+        output = [*small_case_jpg, *capital_case_jpg]
+
+        return self.exclude_apple_double_folders(output)
+    
+    def exclude_apple_double_folders(self, paths: list[Path]) -> list[Path]:
+        return [p for p in paths if not any(part == '.AppleDouble' for part in p.parts)]
 
     def move_file(self, origin_path: Path, target_path: Path):
         if not target_path.parent.exists():
