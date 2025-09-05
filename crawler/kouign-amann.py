@@ -73,6 +73,11 @@ def backup(target_path: str, strict: bool, debug: str, exclude_folder: list[str]
 
     backup_folder_path = Path(config["backup"]["path"])
 
+    sharded_folder_path = {}
+
+    for key in config["sharding"]:
+        sharded_folder_path[int(key)] = Path(config["sharding"][key])
+
     if len(exclude_folder) > 0:
         for folder in exclude_folder:
             logger.info(f"Excluding pictures contained in folder {folder} from backup")
@@ -86,7 +91,10 @@ def backup(target_path: str, strict: bool, debug: str, exclude_folder: list[str]
 
     target_folder_path = Path(target_path)
 
-    backup_use_case = backup_use_case_factory(backup_folder_path=backup_folder_path)
+    backup_use_case = backup_use_case_factory(
+        backup_folder_path=backup_folder_path,
+        sharded_folder_path=sharded_folder_path,
+    )
 
     file_list = backup_use_case.list_pictures(
         root_path=target_folder_path, folder_name_to_exclude=exclude_folder

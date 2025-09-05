@@ -47,7 +47,7 @@ class TestBackupUseCase(unittest.TestCase):
 
         self.assertEqual([PICTURE_PATH], result)
         self._mock_file_tools.list_pictures.assert_called_once_with(
-            root_path=Path("test"), folder_name_to_exclude=[]
+            root_path_list=[Path("test")], folder_name_to_exclude=[]
         )
 
     def test_backup_strict_mode_OK(self):
@@ -137,5 +137,7 @@ class TestBackupUseCase(unittest.TestCase):
 
 class TestBackupUseCaseFactory(unittest.TestCase):
     def test_factory_ok(self):
-        instance = backup_use_case_factory(backup_folder_path=Path("test"))
+        instance = backup_use_case_factory(
+            backup_folder_path=Path("test"), sharded_folder_path={}
+        )
         self.assertIsInstance(instance, BackupUseCase)

@@ -41,10 +41,12 @@ class LocalFileBackupService(iBackupService):
     def __init__(
         self,
         backup_folder_path: Path,
+        sharded_folder_path: dict[int, Path],
         picture_data_factory: iPictureDataFactory,
         file_tools: iFileTools,
     ) -> None:
         self._backup_folder_path = backup_folder_path
+        self._sharded_folder_path = sharded_folder_path
         self._picture_data_factory = picture_data_factory
         self._file_tools = file_tools
 
@@ -53,17 +55,26 @@ class LocalFileBackupService(iBackupService):
             f"Init FileService Backup folder path is: {self._backup_folder_path}"
         )
 
+        for year, path in sharded_folder_path.items():
+            self._logger.info(f"Pictures for year {year} will be recorde in {path}")
+
+        sharded_path_list = list(sharded_folder_path.values())
+
         self._hash_set = self._create_hash_set(
             self._file_tools.list_pictures(
-                root_path=self._backup_folder_path, folder_name_to_exclude=[]
+                root_path_list=[self._backup_folder_path, *sharded_path_list],
+                folder_name_to_exclude=[],
             )
         )
 
     def __get_folder_path(self, data: iPictureData) -> Path:
+        if data.get_creation_date().year in self._sharded_folder_path:
+            root_folder = self._sharded_folder_path[data.get_creation_date().year]
+        else:
+            root_folder = self._backup_folder_path
+
         return (
-            self._backup_folder_path
-            / Path(f"{data.get_creation_date().year}")
-            / Path("NOT_GROUPED")
+            root_folder / Path(f"{data.get_creation_date().year}") / Path("NOT_GROUPED")
         )
 
     def __get_file_path(self, data: iPictureData) -> Path:

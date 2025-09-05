@@ -27,7 +27,7 @@ class baseUseCase(ABC):
     ) -> list[Path]:
         self._logger.info(f"Listing pictures in {root_path}")
         picture_list = self._file_tools.list_pictures(
-            root_path=root_path, folder_name_to_exclude=folder_name_to_exclude
+            root_path_list=[root_path], folder_name_to_exclude=folder_name_to_exclude
         )
         self._logger.info(f"Found {len(picture_list)} pictures")
 
@@ -101,7 +101,9 @@ class BackupUseCase(baseUseCase):
         return new_picture_count
 
 
-def backup_use_case_factory(backup_folder_path: Path) -> BackupUseCase:
+def backup_use_case_factory(
+    backup_folder_path: Path, sharded_folder_path: dict[int, Path]
+) -> BackupUseCase:
     picture_data_repo = PictureDataRepository(
         cache_file_path=Path(f"{backup_folder_path}/cache.jsonl")
     )
@@ -111,6 +113,7 @@ def backup_use_case_factory(backup_folder_path: Path) -> BackupUseCase:
 
     file_service = LocalFileBackupService(
         backup_folder_path=backup_folder_path,
+        sharded_folder_path=sharded_folder_path,
         picture_data_factory=picture_data_factory,
         file_tools=file_tools,
     )
