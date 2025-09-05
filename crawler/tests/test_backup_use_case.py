@@ -47,7 +47,7 @@ class TestBackupUseCase(unittest.TestCase):
 
         self.assertEqual([PICTURE_PATH], result)
         self._mock_file_tools.list_pictures.assert_called_once_with(
-            root_path=Path("test")
+            root_path=Path("test"), folder_name_to_exclude=[]
         )
 
     def test_backup_strict_mode_OK(self):

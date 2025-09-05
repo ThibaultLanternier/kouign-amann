@@ -54,7 +54,9 @@ class LocalFileBackupService(iBackupService):
         )
 
         self._hash_set = self._create_hash_set(
-            self._file_tools.list_pictures(root_path=self._backup_folder_path)
+            self._file_tools.list_pictures(
+                root_path=self._backup_folder_path, folder_name_to_exclude=[]
+            )
         )
 
     def __get_folder_path(self, data: iPictureData) -> Path:

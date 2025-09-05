@@ -56,8 +56,13 @@ def init(backup_path: str, force: bool):
     is_flag=True,
 )
 @click.option("--debug", help="Writes debug log to file", is_flag=True)
+@click.option(
+    "--exclude_folder",
+    help="name of subfolder(s) that need to be excluded from backup",
+    multiple=True,
+)
 @click.argument("target_path", type=click.Path(exists=True))
-def backup(target_path: str, strict: bool, debug: str):
+def backup(target_path: str, strict: bool, debug: str, exclude_folder: list[str]):
     """
     (NEW) Copy new pictures found in target directory to backup directory
     """
@@ -67,6 +72,10 @@ def backup(target_path: str, strict: bool, debug: str):
     config.read(ConfigFileManager().config_file_path)
 
     backup_folder_path = Path(config["backup"]["path"])
+
+    if len(exclude_folder) > 0:
+        for folder in exclude_folder:
+            logger.info(f"Excluding pictures contained in folder {folder} from backup")
 
     if debug:
         log_file_path = (
@@ -79,7 +88,9 @@ def backup(target_path: str, strict: bool, debug: str):
 
     backup_use_case = backup_use_case_factory(backup_folder_path=backup_folder_path)
 
-    file_list = backup_use_case.list_pictures(root_path=target_folder_path)
+    file_list = backup_use_case.list_pictures(
+        root_path=target_folder_path, folder_name_to_exclude=exclude_folder
+    )
 
     backup_use_case.backup(
         picture_list_to_backup=file_list,

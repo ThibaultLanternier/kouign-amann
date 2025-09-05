@@ -5,7 +5,9 @@ from pathlib import Path
 
 class iFileTools(ABC):
     @abstractmethod
-    def list_pictures(self, root_path: Path) -> list[Path]:
+    def list_pictures(
+        self, root_path: Path, folder_name_to_exclude: list[str]
+    ) -> list[Path]:
         """List all pictures in the given path"""
         pass
 
@@ -24,16 +26,25 @@ class FileTools(iFileTools):
     def __init__(self) -> None:
         pass
 
-    def list_pictures(self, root_path: Path) -> list[Path]:
+    def list_pictures(
+        self, root_path: Path, folder_name_to_exclude: list[str]
+    ) -> list[Path]:
         small_case_jpg = [x for x in root_path.glob("**/*.jpg")]
         capital_case_jpg = [x for x in root_path.glob("**/*.JPG")]
 
         output = [*small_case_jpg, *capital_case_jpg]
 
-        return self.exclude_apple_double_folders(output)
-    
-    def exclude_apple_double_folders(self, paths: list[Path]) -> list[Path]:
-        return [p for p in paths if not any(part == '.AppleDouble' for part in p.parts)]
+        for folder_name in folder_name_to_exclude:
+            output = self.exclude_file_from_folder(
+                paths=output, folder_name=folder_name
+            )
+
+        return output
+
+    def exclude_file_from_folder(
+        self, paths: list[Path], folder_name: str
+    ) -> list[Path]:
+        return [p for p in paths if not any(part == folder_name for part in p.parts)]
 
     def move_file(self, origin_path: Path, target_path: Path):
         if not target_path.parent.exists():

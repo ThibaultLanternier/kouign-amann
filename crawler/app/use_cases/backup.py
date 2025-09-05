@@ -22,9 +22,13 @@ class baseUseCase(ABC):
         self._picture_data_factory = picture_data_factory
         self._logger = logging.getLogger("app.use_case")
 
-    def list_pictures(self, root_path: Path) -> list[Path]:
+    def list_pictures(
+        self, root_path: Path, folder_name_to_exclude: list[str] = []
+    ) -> list[Path]:
         self._logger.info(f"Listing pictures in {root_path}")
-        picture_list = self._file_tools.list_pictures(root_path=root_path)
+        picture_list = self._file_tools.list_pictures(
+            root_path=root_path, folder_name_to_exclude=folder_name_to_exclude
+        )
         self._logger.info(f"Found {len(picture_list)} pictures")
 
         return picture_list
