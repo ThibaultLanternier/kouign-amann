@@ -6,7 +6,7 @@ from pathlib import Path
 class iFileTools(ABC):
     @abstractmethod
     def list_pictures(
-        self, root_path: Path, folder_name_to_exclude: list[str]
+        self, root_path_list: list[Path], folder_name_to_exclude: list[str]
     ) -> list[Path]:
         """List all pictures in the given path"""
         pass
@@ -26,7 +26,7 @@ class FileTools(iFileTools):
     def __init__(self) -> None:
         pass
 
-    def list_pictures(
+    def _list_pictures_in_path(
         self, root_path: Path, folder_name_to_exclude: list[str]
     ) -> list[Path]:
         small_case_jpg = [x for x in root_path.glob("**/*.jpg")]
@@ -37,6 +37,21 @@ class FileTools(iFileTools):
         for folder_name in folder_name_to_exclude:
             output = self.exclude_file_from_folder(
                 paths=output, folder_name=folder_name
+            )
+
+        return output
+
+    def list_pictures(
+        self, root_path_list: list[Path], folder_name_to_exclude: list[str]
+    ) -> list[Path]:
+
+        output = []
+
+        for root_path in root_path_list:
+            output.extend(
+                self._list_pictures_in_path(
+                    root_path=root_path, folder_name_to_exclude=folder_name_to_exclude
+                )
             )
 
         return output

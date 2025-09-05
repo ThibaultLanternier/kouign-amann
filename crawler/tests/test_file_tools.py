@@ -7,7 +7,7 @@ from app.tools.file import FileTools
 class TestFileTools(unittest.TestCase):
     def test_get_file_case_sensitive_jpg(self):
         file_list = FileTools().list_pictures(
-            Path("tests/files/crawl"),
+            root_path_list=[Path("tests/files/crawl")],
             folder_name_to_exclude=[],
         )
 
@@ -28,7 +28,7 @@ class TestFileTools(unittest.TestCase):
 
     def test_get_file_case_sensitive_jpg_exclude_folder(self):
         file_list = FileTools().list_pictures(
-            Path("tests/files/crawl"),
+            root_path_list=[Path("tests/files/crawl")],
             folder_name_to_exclude=[".AppleDouble", "OtherStrangeFolder"],
         )
 
