@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from json import JSONDecodeError
 import logging
 from pathlib import Path
 from typing import Union
@@ -28,12 +29,19 @@ class PictureDataRepository(iPictureDataRepository):
             with open(self._cache_file_path, "r") as file:
                 lines = file.readlines()
                 for line in lines:
-                    output.append(PictureData.from_json(line.strip()))
+                    try:
+                        output.append(PictureData.from_json(line.strip()))
+                    except JSONDecodeError as e:
+                        self._logger.error(
+                            f"Error decoding line in cache file: {line.strip()} - {e}"
+                        )
         except FileNotFoundError:
             self._logger.warning(
                 f"Cache file {self._cache_file_path} not found. Creating a new one."
             )
             pass
+
+        self._logger.info(f"Loaded {len(output)} PictureData from cache file")
 
         return output
 
