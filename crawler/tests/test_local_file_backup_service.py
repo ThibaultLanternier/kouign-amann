@@ -13,6 +13,7 @@ class TestLocalFileBackupService(unittest.TestCase):
     def test_backup(self):
         file_service = LocalFileBackupService(
             backup_folder_path=Path("tests/files/local_recorder"),
+            sharded_folder_path={},
             picture_data_factory=PictureDataFactory(),
             file_tools=FileTools(),
         )
@@ -44,9 +45,40 @@ class TestLocalFileBackupService(unittest.TestCase):
         with open(expected_backup_path, "rb") as f:
             self.assertEqual(f.read(), picture_path.read_bytes())
 
+    def test_backup_with_year_sharding(self):
+        file_service = LocalFileBackupService(
+            backup_folder_path=Path("tests/files/local_recorder"),
+            sharded_folder_path={2024: Path("tests/files/local_recorder_sharded")},
+            picture_data_factory=PictureDataFactory(),
+            file_tools=FileTools(),
+        )
+
+        picture_path = Path("tests/files/test-canon-eos70D.jpg")
+
+        picture_data = PictureData(
+            hash=uuid.uuid4().hex,
+            path=picture_path,
+            creation_date=datetime(2024, 11, 30, 11, 45),
+        )
+
+        self.assertTrue(
+            file_service.backup(picture_path, picture_data),
+            "First recording should work",
+        )
+
+        sharded_folder = Path("tests/files/local_recorder_sharded/2024/NOT_GROUPED")
+        timestamp = int(picture_data.get_creation_date().timestamp())
+
+        file_name = Path(f"{timestamp}-{picture_data.get_hash()}.jpg")
+        expected_backup_path = sharded_folder / file_name
+
+        with open(expected_backup_path, "rb") as f:
+            self.assertEqual(f.read(), picture_path.read_bytes())
+
     def test_hash_exists(self):
         file_service = LocalFileBackupService(
             backup_folder_path=Path("tests/files/local_recorder_2"),
+            sharded_folder_path={},
             picture_data_factory=PictureDataFactory(),
             file_tools=FileTools(),
         )

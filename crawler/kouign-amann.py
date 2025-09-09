@@ -56,8 +56,13 @@ def init(backup_path: str, force: bool):
     is_flag=True,
 )
 @click.option("--debug", help="Writes debug log to file", is_flag=True)
+@click.option(
+    "--exclude_folder",
+    help="name of subfolder(s) that need to be excluded from backup",
+    multiple=True,
+)
 @click.argument("target_path", type=click.Path(exists=True))
-def backup(target_path: str, strict: bool, debug: str):
+def backup(target_path: str, strict: bool, debug: str, exclude_folder: list[str]):
     """
     (NEW) Copy new pictures found in target directory to backup directory
     """
@@ -68,6 +73,16 @@ def backup(target_path: str, strict: bool, debug: str):
 
     backup_folder_path = Path(config["backup"]["path"])
 
+    sharded_folder_path = {}
+
+    if "sharding" in config:
+        for key in config["sharding"]:
+            sharded_folder_path[int(key)] = Path(config["sharding"][key])
+
+    if len(exclude_folder) > 0:
+        for folder in exclude_folder:
+            logger.info(f"Excluding pictures contained in folder {folder} from backup")
+
     if debug:
         log_file_path = (
             backup_folder_path / Path("logs") / Path(f"backup-{uuid4().hex}.log")
@@ -77,9 +92,14 @@ def backup(target_path: str, strict: bool, debug: str):
 
     target_folder_path = Path(target_path)
 
-    backup_use_case = backup_use_case_factory(backup_folder_path=backup_folder_path)
+    backup_use_case = backup_use_case_factory(
+        backup_folder_path=backup_folder_path,
+        sharded_folder_path=sharded_folder_path,
+    )
 
-    file_list = backup_use_case.list_pictures(root_path=target_folder_path)
+    file_list = backup_use_case.list_pictures(
+        root_path=target_folder_path, folder_name_to_exclude=exclude_folder
+    )
 
     backup_use_case.backup(
         picture_list_to_backup=file_list,
@@ -91,19 +111,19 @@ def backup(target_path: str, strict: bool, debug: str):
 @click.option(
     "--delta", help="Time difference between two group of pictures in hours", default=36
 )
-@click.option(
-    "--path",
-    help="Group only a specific path",
-    default=None,
-    type=click.Path(exists=True),
-)
 @click.option("--debug", help="Writes debug log to file", is_flag=True, default=False)
 @click.option(
     "--group_size", help="Minimum number of pictures for a group", default=10, type=int
 )
-def group(delta: int, path: Union[str, None], debug: bool, group_size: int):
+@click.argument(
+    "path",
+    default=None,
+    required=False,
+    type=click.Path(exists=True),
+)
+def group(delta: int, debug: bool, group_size: int, path: Union[str, None]):
     """
-    (NEW) Group pictures event
+    (NEW) Group all pictures located in path by event
     """
     config = configparser.ConfigParser()
     config.read(ConfigFileManager().config_file_path)
@@ -119,9 +139,10 @@ def group(delta: int, path: Union[str, None], debug: bool, group_size: int):
 
     if path is None:
         folder_path_to_group = backup_folder_path
+        logger.warning(f"Grouping the whole backup folder {folder_path_to_group}")
     else:
-        logger.warning(f"Grouping only pictures in {path}")
         folder_path_to_group = Path(path)
+        logger.warning(f"Grouping only pictures in {folder_path_to_group}")
 
     group_use_case = group_use_case_factory(
         hours_btw_pictures=delta, minimun_group_size=group_size
@@ -140,15 +161,15 @@ def group(delta: int, path: Union[str, None], debug: bool, group_size: int):
     default=False,
     is_flag=True,
 )
-@click.option(
-    "--sub_folder",
+@click.option("--verbose", help="Verbose mode", is_flag=True, default=False)
+@click.argument(
+    "path",
     default=None,
-    help="Specific sub folder to rename DEBUG ONLY",
     type=click.Path(exists=True),
 )
-def rename(dry_run: bool, sub_folder: Union[str, None] = None):
+def rename(dry_run: bool, verbose: bool, path: Union[str, None] = None):
     """
-    !! EXPERIMENTAL FEATURE !! Try to rename new event folders based on historical path
+    !! EXPERIMENTAL !! Try to rename new event folders in path based on historical path
     """
     config = configparser.ConfigParser()
     config.read(ConfigFileManager().config_file_path)
@@ -157,26 +178,25 @@ def rename(dry_run: bool, sub_folder: Union[str, None] = None):
 
     rename_use_case = rename_use_case_factory(backup_folder_path=backup_folder_path)
 
-    verbose_mode = sub_folder is not None
-
-    if sub_folder is not None:
-        picture_path_list = rename_use_case.list_pictures(
-            root_path=Path(sub_folder),  # type: ignore
-        )
-        logger.warning(f"Try to rename only sub folder {sub_folder}")
+    if path is None:
+        folder_path_to_rename = backup_folder_path
+        logger.warning(f"Renaming the complete backup folder{folder_path_to_rename}")
     else:
-        picture_path_list = rename_use_case.list_pictures(
-            root_path=backup_folder_path,
-        )
+        folder_path_to_rename = Path(path)
+        logger.warning(f"Renaming folders only in {folder_path_to_rename}")
+
+    picture_path_list = rename_use_case.list_pictures(
+        root_path=folder_path_to_rename,
+    )
 
     rename_use_case.rename_folders(
-        picture_path_list=picture_path_list, dry_run=dry_run, verbose=verbose_mode
+        picture_path_list=picture_path_list, dry_run=dry_run, verbose=verbose
     )
 
 
 @cli.command()
-@click.argument("check_path", type=click.Path(exists=True))
-def check(check_path: str):
+@click.argument("path", type=click.Path(exists=True))
+def check(path: str):
     """
     Check all pictures in check_path have already been backed up.
     """
@@ -189,7 +209,7 @@ def check(check_path: str):
 
     backup_list = check_use_case.list_pictures(root_path=backup_folder_path)
 
-    picture_list = check_use_case.list_pictures(root_path=Path(check_path))
+    picture_list = check_use_case.list_pictures(root_path=Path(path))
 
     not_in_backup_count = check_use_case.check_pictures(
         backup_list=backup_list,
