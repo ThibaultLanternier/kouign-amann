@@ -27,7 +27,7 @@ class PictureDataFactory(iPictureDataFactory):
     def from_standard_path(
         self, path: Path, current_timezone: timezone
     ) -> iPictureData:
-        pattern = re.compile(r"^([0-9]{1,10})-([a-f0-9]+).jpg$")
+        pattern = re.compile(r"^([0-9]{1,10})-([a-f0-9]+)(-x)?\.jpg$")
         m = re.match(pattern, path.name)
 
         if m is None:
@@ -35,6 +35,7 @@ class PictureDataFactory(iPictureDataFactory):
 
         creation_timestamp = int(m.group(1))
         hash_value = m.group(2)
+        group_break = m.group(3) == "-x"
 
         return PictureData(
             path=path,
@@ -42,6 +43,7 @@ class PictureDataFactory(iPictureDataFactory):
                 creation_timestamp, tz=current_timezone
             ),
             hash=hash_value,
+            group_break=group_break,
         )
 
     def compute_data(self, path: Path, current_timezone: timezone) -> iPictureData:
