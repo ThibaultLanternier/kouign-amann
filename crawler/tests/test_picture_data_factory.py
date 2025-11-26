@@ -1,6 +1,6 @@
+import unittest
 from datetime import datetime, timezone
 from pathlib import Path
-import unittest
 
 from app.factories.picture_data import (NotStandardFileNameException,
                                         PictureDataFactory)
@@ -11,7 +11,9 @@ class TestPictureDataFactory(unittest.TestCase):
         test_path = Path(
             "tests/files/photos/2024/ANYTHING/1733616335-e7975821ce2e1a55.jpg"
         )
-        picture_data = PictureDataFactory().from_standard_path(path=test_path, current_timezone=timezone.utc)
+        picture_data = PictureDataFactory().from_standard_path(
+            path=test_path, current_timezone=timezone.utc
+        )
 
         self.assertEqual(
             picture_data.get_creation_date(),
@@ -25,7 +27,9 @@ class TestPictureDataFactory(unittest.TestCase):
         test_path_with_group_break = Path(
             "tests/files/photos/2024/ANYTHING/1609459200-abcdef1234567890-x.jpg"
         )
-        picture_data = PictureDataFactory().from_standard_path(path=test_path_with_group_break, current_timezone=timezone.utc)
+        picture_data = PictureDataFactory().from_standard_path(
+            path=test_path_with_group_break, current_timezone=timezone.utc
+        )
 
         self.assertEqual(
             picture_data.get_creation_date(),
@@ -39,6 +43,8 @@ class TestPictureDataFactory(unittest.TestCase):
         test_path = Path("tests/files/photos/2024/ANYTHING/testXXX.jpg")
 
         def create_from_standard_path():
-            PictureDataFactory().from_standard_path(path=test_path, current_timezone=timezone.utc)
+            PictureDataFactory().from_standard_path(
+                path=test_path, current_timezone=timezone.utc
+            )
 
         self.assertRaises(NotStandardFileNameException, create_from_standard_path)

@@ -21,8 +21,11 @@ class iPictureData(ABC):
     def is_group_break(self) -> bool:
         pass
 
+
 class PictureData(iPictureData):
-    def __init__(self, path: Path, creation_date: datetime, hash: str, group_break: bool = False) -> None:
+    def __init__(
+        self, path: Path, creation_date: datetime, hash: str, group_break: bool = False
+    ) -> None:
         self._path = path
         self._creation_date = creation_date
         self._hash = hash
@@ -36,7 +39,7 @@ class PictureData(iPictureData):
 
     def get_hash(self) -> str:
         return self._hash
-    
+
     def is_group_break(self) -> bool:
         return self._group_break
 
