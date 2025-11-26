@@ -1,4 +1,3 @@
-from ast import Set
 from datetime import timezone
 from pathlib import Path
 
@@ -68,9 +67,9 @@ class GroupUseCase(baseUseCase):
             if group_path in group_folder_path and not group.is_too_small():
                 group.increment_counter()
                 self._logger.warning(
-                    f"Duplicate folder {group_path} incrementing path to {group.get_folder_path()}"
+                    f"Duplicate folder {group_path} new path {group.get_folder_path()}"
                 )
-            
+
             group_folder_path.add(group_path)
 
             pictures_to_move.extend(group.list_pictures_to_move())

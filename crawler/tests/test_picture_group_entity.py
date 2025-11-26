@@ -212,7 +212,7 @@ class TestPictureGroup(unittest.TestCase):
             self._picture_group_not_grouped.get_folder_path(),
             Path("root/2023-10-01 <EVENT_DESCRIPTION>"),
         )
-    
+
     def test_get_folder_path_no_picture_already_grouped_with_increment(self):
         self._picture_group_not_grouped.increment_counter()
         self.assertEqual(
@@ -274,9 +274,7 @@ class TestPictureGroup(unittest.TestCase):
             expected_list,
         )
 
-        self.assertFalse(
-            self._picture_group_in_other_folder.is_too_small()
-        )
+        self.assertFalse(self._picture_group_in_other_folder.is_too_small())
 
     def test_list_pictures_to_move_new_folder_group_too_small(self):
         pictures_to_move = (
