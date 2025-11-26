@@ -1,3 +1,4 @@
+from ast import Set
 from datetime import timezone
 from pathlib import Path
 
@@ -58,7 +59,20 @@ class GroupUseCase(baseUseCase):
 
         pictures_to_move: list[tuple[Path, Path]] = []
 
+        group_folder_path: set[Path] = set()
+
         for group in picture_group_list:
+            group_path = group.get_folder_path()
+            self._logger.debug(f"Found a group with path: {group_path}")
+
+            if group_path in group_folder_path and not group.is_too_small():
+                group.increment_counter()
+                self._logger.warning(
+                    f"Duplicate folder {group_path} incrementing path to {group.get_folder_path()}"
+                )
+            
+            group_folder_path.add(group_path)
+
             pictures_to_move.extend(group.list_pictures_to_move())
 
         self._logger.info(

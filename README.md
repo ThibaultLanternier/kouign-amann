@@ -45,9 +45,7 @@ This command will move all pictures present in the `NOT_GROUPED` folder and move
 
 In order to make it easier you can rename each of this folder with a more user-friendly name e.g. `/Photos/2024/2024-12-01 <EVENT_DESCRIPTION>` could be renamed `/Photos/2024/2024-12-01 Family trip to Saint Malo`
 
-You can force split a group if you want in order to do that rename the picture that will start the splitted group with `-x`at the end e.g. `1365710422-b5a4a5696a29669e.jpg` -> `1365710422-b5a4a5696a29669e-x.jpg`
-
-In order to split an existing directory in sub-directories you need to add the `-x` on one picture + move all pictures to `NOT_GROUPED` directory then re-launch the `group` command
+You can force split a group if you want in order to do that rename the picture that will start the splitted group with `-x`at the end e.g. `1365710422-b5a4a5696a29669e.jpg` -> `1365710422-b5a4a5696a29669e-x.jpg` then re-launch the `group` command
 
 ## Installation
 
@@ -58,7 +56,7 @@ First download `kouign-amann.deb` from the latest release
 and install it
 
 ```
-$ dkpg -i kouign-amann.deb
+$ sudo dkpg -i kouign-amann.deb
 ```
 
 then check it works
