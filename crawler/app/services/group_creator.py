@@ -52,7 +52,7 @@ class GroupCreatorService(iGroupCreatorService):
                     picture.get_creation_date() - previous_picture.get_creation_date()
                 )
 
-                if time_difference <= self._hours_btw_picture:
+                if time_difference <= self._hours_btw_picture and not picture.is_group_break():
                     current_group.append(picture)
                 else:
                     grouped_picture_path.append(current_group)

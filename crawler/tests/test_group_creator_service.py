@@ -77,9 +77,9 @@ class TestGroupCreatorService(unittest.TestCase):
         )
 
         self.assertEqual(
-            [x.get_picture_list() for x in grouped_pictures],
+            [[picture.get_hash() for picture in x.get_picture_list()] for x in grouped_pictures],
             [
-                PictureGroup([self._picture_list_hours[0]]).get_picture_list(),
+                ["hash1"],
             ],
         )
 
@@ -88,18 +88,11 @@ class TestGroupCreatorService(unittest.TestCase):
         grouped_pictures = grouper.get_group_list_from_time(self._picture_list_hours)
 
         self.assertEqual(
-            [x.get_picture_list() for x in grouped_pictures],
+            [[picture.get_hash() for picture in x.get_picture_list()] for x in grouped_pictures],
             [
-                PictureGroup(
-                    [self._picture_list_hours[0], self._picture_list_hours[1]]
-                ).get_picture_list(),
-                PictureGroup(
-                    [
-                        self._picture_list_hours[2],
-                        self._picture_list_hours[3],
-                    ]
-                ).get_picture_list(),
-            ],
+                ["hash1", "hash2"],
+                ["hash3", "hash4"],
+            ]
         )
 
     def test_group_creator_service_2hours_time_difference(self):
@@ -107,16 +100,9 @@ class TestGroupCreatorService(unittest.TestCase):
         grouped_pictures = grouper.get_group_list_from_time(self._picture_list_hours)
 
         self.assertEqual(
-            [x.get_picture_list() for x in grouped_pictures],
+            [[picture.get_hash() for picture in x.get_picture_list()] for x in grouped_pictures],
             [
-                PictureGroup(
-                    [
-                        self._picture_list_hours[0],
-                        self._picture_list_hours[1],
-                        self._picture_list_hours[2],
-                        self._picture_list_hours[3],
-                    ]
-                ).get_picture_list()
+                ["hash1", "hash2", "hash3", "hash4"]
             ],
         )
 
@@ -127,10 +113,10 @@ class TestGroupCreatorService(unittest.TestCase):
         )
 
         self.assertEqual(
-            [x.get_picture_list() for x in grouped_pictures],
+            [[picture.get_hash() for picture in x.get_picture_list()] for x in grouped_pictures],
             [
-                PictureGroup([self._picture_list[0]]).get_picture_list(),
-                PictureGroup([self._picture_list[3]]).get_picture_list(),
+                ["hash1"],
+                ["hash4"],
             ],
         )
 
@@ -139,14 +125,10 @@ class TestGroupCreatorService(unittest.TestCase):
         grouped_pictures = grouper.get_group_list_from_time(self._picture_list)
 
         self.assertEqual(
-            [x.get_picture_list() for x in grouped_pictures],
+            [[picture.get_hash() for picture in x.get_picture_list()] for x in grouped_pictures],
             [
-                PictureGroup(
-                    [self._picture_list[0], self._picture_list[1]]
-                ).get_picture_list(),
-                PictureGroup(
-                    [self._picture_list[2], self._picture_list[3]]
-                ).get_picture_list(),
+                ["hash1", "hash2"],
+                ["hash3", "hash4"]
             ],
         )
 
@@ -155,15 +137,31 @@ class TestGroupCreatorService(unittest.TestCase):
         grouped_pictures = grouper.get_group_list_from_time(self._picture_list)
 
         self.assertEqual(
-            [x.get_picture_list() for x in grouped_pictures],
+            [[picture.get_hash() for picture in x.get_picture_list()] for x in grouped_pictures],
             [
-                PictureGroup(
-                    [
-                        self._picture_list[0],
-                        self._picture_list[1],
-                        self._picture_list[2],
-                        self._picture_list[3],
-                    ]
-                ).get_picture_list()
+                ["hash1", "hash2", "hash3", "hash4"],
             ],
         )
+    
+    def test_group_creator_service_2_days_with_group_break(self):
+        grouper = GroupCreatorService(hours_btw_picture=48)
+        
+        # Adding a group break to the third picture
+        self._picture_list[2] = PictureData(
+            path=self._picture_list[2].get_path(),
+            creation_date=self._picture_list[2].get_creation_date(),
+            hash=self._picture_list[2].get_hash(),
+            group_break=True,
+        )
+        
+        grouped_pictures = grouper.get_group_list_from_time(self._picture_list)
+
+        self.assertEqual(
+            [[picture.get_hash() for picture in x.get_picture_list()] for x in grouped_pictures],
+            [
+                ["hash1", "hash2"],
+                ["hash3","hash4"],
+            ],
+        )
+    
+
