@@ -213,6 +213,13 @@ class TestPictureGroup(unittest.TestCase):
             Path("root/2023-10-01 <EVENT_DESCRIPTION>"),
         )
 
+    def test_get_folder_path_no_picture_already_grouped_with_increment(self):
+        self._picture_group_not_grouped.increment_counter()
+        self.assertEqual(
+            self._picture_group_not_grouped.get_folder_path(),
+            Path("root/2023-10-01 <EVENT_DESCRIPTION>_1"),
+        )
+
     def test_get_folder_path_picture_already_grouped_in_multiple_folder(self):
         self.assertEqual(
             self._picture_group_partly_grouped.get_folder_path(), Path("root/EVENT-YYY")
@@ -267,6 +274,8 @@ class TestPictureGroup(unittest.TestCase):
             expected_list,
         )
 
+        self.assertFalse(self._picture_group_in_other_folder.is_too_small())
+
     def test_list_pictures_to_move_new_folder_group_too_small(self):
         pictures_to_move = (
             self._picture_group_not_grouped_default_min_size.list_pictures_to_move()
@@ -287,3 +296,5 @@ class TestPictureGroup(unittest.TestCase):
             pictures_to_move,
             expected_list,
         )
+
+        self.assertTrue(self._picture_group_not_grouped_default_min_size.is_too_small())
