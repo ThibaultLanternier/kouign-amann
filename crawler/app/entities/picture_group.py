@@ -37,6 +37,14 @@ class iPictureGroup(ABC):
     def is_editable(self) -> bool:
         pass
 
+    @abstractmethod
+    def increment_counter(self) -> None:
+        pass
+
+    @abstractmethod
+    def is_too_small(self) -> bool:
+        pass
+
 
 MIN_GROUP_SIZE = 10
 
@@ -102,12 +110,14 @@ class PictureGroup(iPictureGroup):
 
         self._logger = logging.getLogger("app.picture_group_entity")
 
+        self._incremental_counter = 0
+
         self._logger.debug(f"Minimum group size {self._min_group_size}")
 
         if len(self._picture_list) == 0:
             raise Exception("A group must contain at least one picture path")
 
-        if len(self._picture_list) >= self._min_group_size:
+        if not self.is_too_small():
             # The group is large enough, so we can proceed with the grouping
             self._logger.debug(f"Size is OK {len(self._picture_list)} pictures")
 
@@ -142,7 +152,12 @@ class PictureGroup(iPictureGroup):
         return self._picture_list
 
     def get_folder_path(self) -> Path:
-        return self._folder_list[0]
+        if self._incremental_counter == 0:
+            return self._folder_list[0]
+        else:
+            return Path(
+                str(self._folder_list[0]) + "_" + str(self._incremental_counter)
+            )
 
     def list_pictures_to_move(self) -> list[tuple[Path, Path]]:
         output: list[tuple[Path, Path]] = []
@@ -249,3 +264,9 @@ class PictureGroup(iPictureGroup):
         pattern = re.compile(r"^\d{4}-\d{2}-\d{2} <EVENT_DESCRIPTION>$")
 
         return re.match(pattern, list(folder_name_set)[0]) is not None
+
+    def increment_counter(self) -> None:
+        self._incremental_counter = self._incremental_counter + 1
+
+    def is_too_small(self) -> bool:
+        return len(self._picture_list) < self._min_group_size
