@@ -1,3 +1,4 @@
+import configparser
 from datetime import timezone
 from pathlib import Path
 from app.use_cases.backup import baseUseCase
@@ -6,6 +7,7 @@ from app.services.group_creator import GroupCreatorService, iGroupCreatorService
 from app.entities.picture_data import iPictureData
 from app.factories.picture_data import PictureDataFactory, iPictureDataFactory
 from app.tools.file import FileTools, iFileTools
+from app.tools.config_file import ConfigFileManager
 
 
 class RenameUseCase(baseUseCase):
@@ -78,7 +80,6 @@ class RenameUseCase(baseUseCase):
                 self._logger.debug(
                     f"Group {group.get_folder_path()} is not editable, skipping rename"
                 )
-
 
 def rename_use_case_factory(backup_folder_path: Path) -> RenameUseCase:
     picture_data_repo = PictureDataRepository(
