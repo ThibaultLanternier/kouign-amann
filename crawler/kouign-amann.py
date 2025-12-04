@@ -3,7 +3,6 @@ from typing import Union
 from uuid import uuid4
 import click
 import logging
-import configparser
 
 from pathlib import Path
 
@@ -19,6 +18,19 @@ init_console_log()
 
 logger = logging.getLogger("app.crawl")
 
+config_manager = ConfigFileManager()
+
+
+def enable_debug_log(action_name: str) -> None:
+    backup_folder_path = config_manager.get_backup_folder_path()
+
+    log_file_path = (
+        backup_folder_path / Path("logs") / Path(f"{action_name}-{uuid4().hex}.log")
+    )
+    logger.info(f"Debug mode enabled, writing log to file {log_file_path}")
+
+    init_file_log(log_file=log_file_path)
+
 
 @click.group()
 def cli():
@@ -27,25 +39,14 @@ def cli():
 
 @cli.command()
 @click.argument("backup_path", type=click.Path(exists=True))
-@click.option("--force", default=False, help="Force refresh of the config file")
+@click.option(
+    "--force", is_flag=True, default=False, help="Force refresh of the config file"
+)
 def init(backup_path: str, force: bool):
     """
     record backup_path in config.ini
     """
-    config_file_path = ConfigFileManager().config_file_path
-
-    if config_file_path.is_file() and not force:
-        raise Exception(
-            "config.ini already exists please delete it first or use --force"
-        )
-
-    new_config = configparser.ConfigParser()
-
-    new_config["backup"] = {}
-    new_config["backup"]["path"] = backup_path
-
-    with open(config_file_path, "w") as config_file:
-        new_config.write(config_file)
+    config_manager.set_backup_folder_path(Path(backup_path), force=force)
 
 
 @cli.command()
@@ -66,36 +67,19 @@ def backup(target_path: str, strict: bool, debug: str, exclude_folder: list[str]
     """
     (NEW) Copy new pictures found in target directory to backup directory
     """
-    print(debug)
-    print(strict)
-    config = configparser.ConfigParser()
-    config.read(ConfigFileManager().config_file_path)
-
-    backup_folder_path = Path(config["backup"]["path"])
-
-    sharded_folder_path = {}
-
-    if "sharding" in config:
-        for key in config["sharding"]:
-            sharded_folder_path[int(key)] = Path(config["sharding"][key])
+    backup_use_case = backup_use_case_factory(
+        backup_folder_path=config_manager.get_backup_folder_path(),
+        sharded_folder_path=config_manager.get_sharded_backup_folder_path(),
+    )
 
     if len(exclude_folder) > 0:
         for folder in exclude_folder:
             logger.info(f"Excluding pictures contained in folder {folder} from backup")
 
     if debug:
-        log_file_path = (
-            backup_folder_path / Path("logs") / Path(f"backup-{uuid4().hex}.log")
-        )
-        logger.info(f"Debug mode enabled, writing log to file {log_file_path}")
-        init_file_log(log_file=log_file_path)
+        enable_debug_log(action_name="backup")
 
     target_folder_path = Path(target_path)
-
-    backup_use_case = backup_use_case_factory(
-        backup_folder_path=backup_folder_path,
-        sharded_folder_path=sharded_folder_path,
-    )
 
     file_list = backup_use_case.list_pictures(
         root_path=target_folder_path, folder_name_to_exclude=exclude_folder
@@ -125,20 +109,11 @@ def group(delta: int, debug: bool, group_size: int, path: Union[str, None]):
     """
     (NEW) Group all pictures located in path by event
     """
-    config = configparser.ConfigParser()
-    config.read(ConfigFileManager().config_file_path)
-
-    backup_folder_path = Path(config["backup"]["path"])
-
     if debug:
-        log_file_path = (
-            backup_folder_path / Path("logs") / Path(f"group-{uuid4().hex}.log")
-        )
-        logger.info(f"Debug mode enabled, writing log to file {log_file_path}")
-        init_file_log(log_file=log_file_path)
+        enable_debug_log(action_name="group")
 
     if path is None:
-        folder_path_to_group = backup_folder_path
+        folder_path_to_group = config_manager.get_backup_folder_path()
         logger.warning(f"Grouping the whole backup folder {folder_path_to_group}")
     else:
         folder_path_to_group = Path(path)
@@ -171,19 +146,16 @@ def rename(dry_run: bool, verbose: bool, path: Union[str, None] = None):
     """
     !! EXPERIMENTAL !! Try to rename new event folders in path based on historical path
     """
-    config = configparser.ConfigParser()
-    config.read(ConfigFileManager().config_file_path)
-
-    backup_folder_path = Path(config["backup"]["path"])
-
-    rename_use_case = rename_use_case_factory(backup_folder_path=backup_folder_path)
-
     if path is None:
-        folder_path_to_rename = backup_folder_path
+        folder_path_to_rename = config_manager.get_backup_folder_path()
         logger.warning(f"Renaming the complete backup folder{folder_path_to_rename}")
     else:
         folder_path_to_rename = Path(path)
         logger.warning(f"Renaming folders only in {folder_path_to_rename}")
+
+    rename_use_case = rename_use_case_factory(
+        backup_folder_path=config_manager.get_backup_folder_path()
+    )
 
     picture_path_list = rename_use_case.list_pictures(
         root_path=folder_path_to_rename,
@@ -200,10 +172,7 @@ def check(path: str):
     """
     Check all pictures in check_path have already been backed up.
     """
-    config = configparser.ConfigParser()
-    config.read(ConfigFileManager().config_file_path)
-
-    backup_folder_path = Path(config["backup"]["path"])
+    backup_folder_path = config_manager.get_backup_folder_path()
 
     check_use_case = check_use_case_factory()
 
