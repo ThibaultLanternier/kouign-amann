@@ -1,5 +1,4 @@
 from abc import ABC
-import configparser
 from datetime import timezone
 import logging
 from progressbar import ProgressBar
@@ -13,7 +12,6 @@ from app.repositories.picture_data import PictureDataRepository
 from app.entities.picture import PictureException
 from app.factories.picture_data import PictureDataFactory, iPictureDataFactory
 from app.tools.file import FileTools, iFileTools
-from app.tools.config_file import ConfigFileManager
 
 
 class baseUseCase(ABC):
@@ -101,7 +99,8 @@ class BackupUseCase(baseUseCase):
         )
 
         return new_picture_count
-    
+
+
 def backup_use_case_factory(
     backup_folder_path: Path, sharded_folder_path: dict[int, Path]
 ) -> BackupUseCase:

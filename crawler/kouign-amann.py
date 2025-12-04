@@ -20,6 +20,7 @@ logger = logging.getLogger("app.crawl")
 
 config_manager = ConfigFileManager()
 
+
 def enable_debug_log(action_name: str) -> None:
     backup_folder_path = config_manager.get_backup_folder_path()
 
@@ -27,8 +28,9 @@ def enable_debug_log(action_name: str) -> None:
         backup_folder_path / Path("logs") / Path(f"{action_name}-{uuid4().hex}.log")
     )
     logger.info(f"Debug mode enabled, writing log to file {log_file_path}")
-    
+
     init_file_log(log_file=log_file_path)
+
 
 @click.group()
 def cli():
@@ -37,7 +39,9 @@ def cli():
 
 @cli.command()
 @click.argument("backup_path", type=click.Path(exists=True))
-@click.option("--force", is_flag=True,default=False, help="Force refresh of the config file")
+@click.option(
+    "--force", is_flag=True, default=False, help="Force refresh of the config file"
+)
 def init(backup_path: str, force: bool):
     """
     record backup_path in config.ini
@@ -65,7 +69,7 @@ def backup(target_path: str, strict: bool, debug: str, exclude_folder: list[str]
     """
     backup_use_case = backup_use_case_factory(
         backup_folder_path=config_manager.get_backup_folder_path(),
-        sharded_folder_path=config_manager.get_sharded_backup_folder_path()
+        sharded_folder_path=config_manager.get_sharded_backup_folder_path(),
     )
 
     if len(exclude_folder) > 0:
@@ -149,8 +153,10 @@ def rename(dry_run: bool, verbose: bool, path: Union[str, None] = None):
         folder_path_to_rename = Path(path)
         logger.warning(f"Renaming folders only in {folder_path_to_rename}")
 
-    rename_use_case = rename_use_case_factory(backup_folder_path=config_manager.get_backup_folder_path())
-    
+    rename_use_case = rename_use_case_factory(
+        backup_folder_path=config_manager.get_backup_folder_path()
+    )
+
     picture_path_list = rename_use_case.list_pictures(
         root_path=folder_path_to_rename,
     )
