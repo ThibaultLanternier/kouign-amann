@@ -18,6 +18,8 @@ marshmallow = "*"
 aiohttp = "*"
 aiofiles = "*"
 platformdirs = "*"
+fastapi = "*"
+uvicorn = "*"
 
 [dev-packages]
 pdbpp = "*"
