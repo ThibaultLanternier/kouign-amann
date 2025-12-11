@@ -12,6 +12,7 @@ from app.repositories.picture_data import PictureDataRepository
 from app.entities.picture import PictureException
 from app.factories.picture_data import PictureDataFactory, iPictureDataFactory
 from app.tools.file import FileTools, iFileTools
+from app.entities.picture_data import iPictureData
 
 
 class baseUseCase(ABC):
@@ -49,7 +50,9 @@ class BackupUseCase(baseUseCase):
         self._backup_service = backup_service
         self._picture_data_caching_service = picture_data_caching_service
 
-    def _backup_picture(self, picture_path: Path, strict_mode: bool) -> bool:
+    def backup_single_picture(
+        self, picture_path: Path, strict_mode: bool
+    ) -> tuple[bool, iPictureData | None]:
         picture_data = None
 
         if not strict_mode:
@@ -68,9 +71,12 @@ class BackupUseCase(baseUseCase):
                 self._logger.warning(
                     f"Failed to compute picture id for {picture_path}: {e}"
                 )
-                return False
+                return False, None
 
-        return self._backup_service.backup(origin_path=picture_path, data=picture_data)
+        return (
+            self._backup_service.backup(origin_path=picture_path, data=picture_data),
+            picture_data,
+        )
 
     def backup(
         self, picture_list_to_backup: list[Path], strict_mode: bool = False
@@ -86,7 +92,12 @@ class BackupUseCase(baseUseCase):
         new_picture_count = 0
 
         for picture_path in picture_list_to_backup:
-            if self._backup_picture(picture_path=picture_path, strict_mode=strict_mode):
+            result, data = self.backup_single_picture(
+                picture_path=picture_path, strict_mode=strict_mode
+            )
+
+            if result and data is not None:
+                self._logger.debug(f"Picture {data.get_hash()} backed up successfully")
                 new_picture_count = new_picture_count + 1
 
             progress_bar_count = progress_bar_count + 1
@@ -99,6 +110,10 @@ class BackupUseCase(baseUseCase):
         )
 
         return new_picture_count
+
+    def locate_picture_by_hash(self, picture_hash: str) -> Path | None:
+        self._logger.info(f"Locating picture with hash {picture_hash}")
+        return self._backup_service.find_by_hash(picture_hash=picture_hash)
 
 
 def backup_use_case_factory(

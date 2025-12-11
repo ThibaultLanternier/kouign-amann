@@ -1,9 +1,12 @@
+from email.policy import strict
 import logging
 from contextlib import asynccontextmanager
+from math import pi
+from os import path
 from pathlib import Path
 from uuid import uuid4
 
-from fastapi import BackgroundTasks, FastAPI, HTTPException, Request
+from fastapi import BackgroundTasks, FastAPI, HTTPException, Request, Response
 from pydantic import BaseModel
 
 from app.tools.config_file import ConfigFileManager
@@ -65,6 +68,19 @@ class ListPicturesRequest(BaseModel):
 class ListPictureAsyncResponse(BaseModel):
     """Response model for async backup folder endpoint"""
     picture_list_id: str
+
+class PictureBackupRequest(BaseModel):
+    """Request model for picture backup endpoint"""
+    path: str
+    strict_mode: bool = False
+
+class PictureBackupResponse(BaseModel):
+    """Response model for picture backup endpoint"""
+    hash: str
+
+class PicturePathResponse(BaseModel):
+    """Response model for picture path lookup endpoint"""
+    path: str
 
 @app.post("/picture-list", response_model=ListPictureAsyncResponse)
 async def create_list_pictures(
@@ -146,7 +162,54 @@ async def create_list_pictures(picture_list_id: str, request: Request) -> ListPi
             detail=f"Internal server error: {str(e)}"
         )
 
+@app.post("/picture")
+async def backup_picture(request_body: PictureBackupRequest, request: Request, response: Response) -> PictureBackupResponse:
+    try:
+        target_picture_path = Path(request_body.path)
+        strict_mode = request_body.strict_mode
+        logger.info(f"Received request to backup picture {target_picture_path} with strict_mode={strict_mode}")
+        backup_use_case: BackupUseCase = request.app.state.backup_use_case
+        success, picture_data = backup_use_case.backup_single_picture(picture_path=target_picture_path, strict_mode=strict_mode)
 
+        if picture_data is None:
+            raise HTTPException(
+                status_code=422,
+                detail=f"Failed to backup picture {target_picture_path}"
+            )
+
+        if success:
+            response.status_code = 201
+        else:
+            response.status_code = 200
+        
+        return PictureBackupResponse(hash=picture_data.get_hash())
+        
+    except Exception as e:
+        logger.exception(f"Error retrieving backup result: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Internal server error: {str(e)}"
+        )
+
+@app.get("/picture/{picture_hash}")
+async def get_picture(picture_hash: str, request: Request) -> PicturePathResponse:
+    try:
+        backup_use_case: BackupUseCase = request.app.state.backup_use_case
+        picture_path = backup_use_case.locate_picture_by_hash(picture_hash=picture_hash)
+
+        if picture_path is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Picture with hash {picture_hash} not found"
+            )
+
+        return PicturePathResponse(path=str(picture_path))
+    except Exception as e:
+        logger.exception(f"Error retrieving picture by hash: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Internal server error: {str(e)}"
+        )
 @app.get("/health")
 async def health_check() -> dict:
     """Health check endpoint"""
