@@ -38,6 +38,7 @@ class TestPictureDataFactory(unittest.TestCase):
         self.assertEqual(picture_data.get_path(), test_path_with_group_break)
         self.assertEqual(picture_data.get_hash(), "abcdef1234567890")
         self.assertTrue(picture_data.is_group_break())
+        self.assertFalse(picture_data.is_selected())
 
     def test_from_standard_path_incorrect_path_throws(self):
         test_path = Path("tests/files/photos/2024/ANYTHING/testXXX.jpg")
@@ -48,3 +49,14 @@ class TestPictureDataFactory(unittest.TestCase):
             )
 
         self.assertRaises(NotStandardFileNameException, create_from_standard_path)
+
+    def test_from_standard_path_selected_picture(self):
+        test_path = Path(
+            "tests/files/photos/2024/ANYTHING/0-1733616335-a95cd229cd12b74d.jpg"
+        )
+
+        picture_data = PictureDataFactory().from_standard_path(
+            path=test_path, current_timezone=timezone.utc
+        )
+
+        self.assertTrue(picture_data.is_selected())
