@@ -20,17 +20,22 @@ class iBackupService(ABC):
         """Find file by hash"""
         pass
 
+    @abstractmethod
+    def find_by_hash(self, picture_hash: str) -> Path | None:
+        """Locate picture by its hash value"""
+        pass
+
 
 class LocalFileBackupService(iBackupService):
-    def _create_hash_set(self, path_list: list[Path]) -> set[str]:
-        output = set()
+    def _create_hash_set(self, path_list: list[Path]) -> dict[str, Path]:
+        output = {}
 
         for file in path_list:
             try:
                 picture_data = self._picture_data_factory.from_standard_path(
                     file, current_timezone=timezone.utc
                 )
-                output.add(picture_data.get_hash())
+                output[picture_data.get_hash()] = file
             except NotStandardFileNameException:
                 self._logger.warning(
                     f"File {file} is not in the standard format, skipping hash recovery"
@@ -83,7 +88,7 @@ class LocalFileBackupService(iBackupService):
         )
 
     def __file_already_exists(self, picture_hash: str) -> bool:
-        return picture_hash in self._hash_set
+        return picture_hash in self._hash_set.keys()
 
     def backup(self, origin_path: Path, data: iPictureData) -> bool:
         if self.__file_already_exists(data.get_hash()):
@@ -103,9 +108,15 @@ class LocalFileBackupService(iBackupService):
                         data.get_creation_date().timestamp(),
                     ),
                 )
+            self._hash_set[data.get_hash()] = new_file_path
 
-        self._hash_set.add(data.get_hash())
         return True
 
     def hash_exists(self, picture_hash: str) -> bool:
         return self.__file_already_exists(picture_hash)
+
+    def find_by_hash(self, picture_hash: str) -> Path | None:
+        if picture_hash in self._hash_set:
+            return self._hash_set[picture_hash]
+        else:
+            return None
