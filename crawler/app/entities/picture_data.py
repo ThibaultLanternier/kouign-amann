@@ -21,15 +21,25 @@ class iPictureData(ABC):
     def is_group_break(self) -> bool:
         pass
 
+    @abstractmethod
+    def is_selected(self) -> bool:
+        pass
+
 
 class PictureData(iPictureData):
     def __init__(
-        self, path: Path, creation_date: datetime, hash: str, group_break: bool = False
+        self,
+        path: Path,
+        creation_date: datetime,
+        hash: str,
+        group_break: bool = False,
+        is_selected: bool = False,
     ) -> None:
         self._path = path
         self._creation_date = creation_date
         self._hash = hash
         self._group_break = group_break
+        self._is_selected = is_selected
 
     def get_path(self) -> Path:
         return self._path
@@ -42,6 +52,9 @@ class PictureData(iPictureData):
 
     def is_group_break(self) -> bool:
         return self._group_break
+
+    def is_selected(self) -> bool:
+        return self._is_selected
 
     @staticmethod
     def from_json(json_data: str) -> iPictureData:

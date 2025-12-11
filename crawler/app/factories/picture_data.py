@@ -27,15 +27,16 @@ class PictureDataFactory(iPictureDataFactory):
     def from_standard_path(
         self, path: Path, current_timezone: timezone
     ) -> iPictureData:
-        pattern = re.compile(r"^([0-9]{1,10})-([a-f0-9]+)(-x)?\.jpg$")
+        pattern = re.compile(r"^(0-)?([0-9]{1,10})-([a-f0-9]+)(-x)?\.jpg$")
         m = re.match(pattern, path.name)
 
         if m is None:
             raise NotStandardFileNameException(f"File name {path.name} is malformed")
 
-        creation_timestamp = int(m.group(1))
-        hash_value = m.group(2)
-        group_break = m.group(3) == "-x"
+        is_selected = m.group(1) == "0-"
+        creation_timestamp = int(m.group(2))
+        hash_value = m.group(3)
+        group_break = m.group(4) == "-x"
 
         return PictureData(
             path=path,
@@ -44,6 +45,7 @@ class PictureDataFactory(iPictureDataFactory):
             ),
             hash=hash_value,
             group_break=group_break,
+            is_selected=is_selected,
         )
 
     def compute_data(self, path: Path, current_timezone: timezone) -> iPictureData:
