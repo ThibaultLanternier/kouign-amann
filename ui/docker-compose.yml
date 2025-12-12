@@ -1,0 +1,11 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./kouign-amann-ui:/home/node/src
+    command: bash
+    tty: true
+    ports:
+      - "3000:3000"

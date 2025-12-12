@@ -21,6 +21,11 @@ class iFileTools(ABC):
         """Rename a file to a new name in the same directory."""
         pass
 
+    @abstractmethod
+    def list_directories(self, root_path: Path) -> list[Path]:
+        """List all directories in the given root path"""
+        pass
+
 
 class FileTools(iFileTools):
     def __init__(self) -> None:
@@ -70,3 +75,13 @@ class FileTools(iFileTools):
     def rename_file(self, origin_folder_path: Path, new_folder_path: Path) -> None:
         """Rename a file to a new name in the same directory."""
         os.rename(origin_folder_path, new_folder_path)
+
+    def list_directories(self, root_path: Path) -> list[Path]:
+        """List all directories recursively in the given root path"""
+        if not root_path.exists():
+            raise ValueError(f"Path does not exist: {root_path}")
+
+        if not root_path.is_dir():
+            raise ValueError(f"Path is not a directory: {root_path}")
+
+        return [p for p in root_path.iterdir() if p.is_dir() and p != root_path]
