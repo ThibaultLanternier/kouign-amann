@@ -15,6 +15,7 @@ from app.tools.logger import init_console_log
 from app.use_cases.backup import BackupUseCase, backup_use_case_factory
 from app.workers.list_pictures_worker import ListPicturesJob, ListPictureJobResult
 from app.workers.data_store import DataStore
+from app.tools.file import FileTools
 
 # Initialize logging
 init_console_log()
@@ -91,6 +92,14 @@ class PictureBackupResponse(BaseModel):
 class PicturePathResponse(BaseModel):
     """Response model for picture path lookup endpoint"""
     path: str
+
+class DirectoryListRequest(BaseModel):
+    """Request model for directory listing endpoint"""
+    path: str
+
+class DirectoryListResponse(BaseModel):
+    """Response model for directory listing endpoint"""
+    directories: list[str]
 
 @app.post("/picture-list", response_model=ListPictureAsyncResponse)
 async def create_list_pictures(
@@ -216,6 +225,34 @@ async def get_picture(picture_hash: str, request: Request) -> PicturePathRespons
         return PicturePathResponse(path=str(picture_path))
     except Exception as e:
         logger.exception(f"Error retrieving picture by hash: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Internal server error: {str(e)}"
+        )
+    
+@app.post("/directories")
+async def list_directories(request: DirectoryListRequest) -> DirectoryListResponse:
+    """List all directories in the given path"""
+    try:
+        file_tools = FileTools()
+        directory_list = file_tools.list_directories(root_path=Path(request.path))
+
+        return DirectoryListResponse(directories=[str(dir_path) for dir_path in directory_list])
+
+    except ValueError as ve:
+        raise HTTPException(
+            status_code=404,
+            detail=str(ve)
+        )
+    
+    except PermissionError as pe:
+        raise HTTPException(
+            status_code=403,
+            detail=str(pe)
+        )   
+    
+    except Exception as e:
+        logger.exception(f"Error listing directories: {e}")
         raise HTTPException(
             status_code=500,
             detail=f"Internal server error: {str(e)}"

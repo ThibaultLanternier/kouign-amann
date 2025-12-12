@@ -42,3 +42,17 @@ class TestFileTools(unittest.TestCase):
             ),
             set(file_list),
         )
+
+    def test_list_directories(self):
+        dir_list = FileTools().list_directories(root_path=Path("tests/files/crawl"))
+
+        self.assertEqual(
+            set(
+                [
+                    Path("tests/files/crawl/sub-directory"),
+                    Path("tests/files/crawl/sub-directory/OtherStrangeFolder"),
+                    Path("tests/files/crawl/sub-directory/.AppleDouble"),
+                ]
+            ),
+            set(dir_list),
+        )
