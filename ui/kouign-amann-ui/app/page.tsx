@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 const API_BASE_URL = 'http://localhost:8000';
 
@@ -12,13 +12,18 @@ interface ListPictureJobResult {
 }
 
 export default function Home() {
-  const [folderPath, setFolderPath] = useState('');
+  const [folderPath, setFolderPath] = useState('/');
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [totalImages, setTotalImages] = useState(0);
   const [currentImage, setCurrentImage] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [completedHashes, setCompletedHashes] = useState<string[]>([]);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
 
   const pollPictureList = async (pictureListId: string): Promise<string[]> => {
     const maxAttempts = 60;
@@ -62,6 +67,99 @@ export default function Home() {
 
     const data = await response.json();
     return data.hash;
+  };
+
+  const fetchDirectories = async (path: string): Promise<string[]> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/directories`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ path }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return data.directories || [];
+      }else{
+        return [];
+      }
+    } catch (err) {
+      console.error('Error fetching directories:', err);
+      return [];
+    }
+  };
+
+  useEffect(() => {
+    const loadSuggestions = async () => {
+      if (!folderPath) {
+        setSuggestions([]);
+        return;
+      }
+
+      const directories = await fetchDirectories(folderPath);
+      if(directories.length !== 0) {
+        setSuggestions(directories);
+      }else{
+        const currentSuggestions = suggestions;
+
+        const filteredSuggestions = currentSuggestions.filter(dir =>
+          dir.toLowerCase().startsWith(folderPath.toLowerCase())
+        );
+        setSuggestions(filteredSuggestions);
+      }
+    };
+
+    loadSuggestions();
+  }, [folderPath]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        inputRef.current &&
+        !inputRef.current.contains(event.target as Node) &&
+        suggestionsRef.current &&
+        !suggestionsRef.current.contains(event.target as Node)
+      ) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleInputChange = (value: string) => {
+    setFolderPath(value);
+    setShowSuggestions(true);
+    setSelectedSuggestionIndex(-1);
+  };
+
+  const handleSuggestionClick = (directory: string) => {
+    setFolderPath(directory);
+    setShowSuggestions(false);
+    setSelectedSuggestionIndex(-1);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!showSuggestions || suggestions.length === 0) return;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSelectedSuggestionIndex(prev =>
+        prev < suggestions.length - 1 ? prev + 1 : prev
+      );
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSelectedSuggestionIndex(prev => prev > 0 ? prev - 1 : -1);
+    } else if (e.key === 'Enter' && selectedSuggestionIndex >= 0) {
+      e.preventDefault();
+      handleSuggestionClick(suggestions[selectedSuggestionIndex]);
+    } else if (e.key === 'Escape') {
+      setShowSuggestions(false);
+      setSelectedSuggestionIndex(-1);
+    }
   };
 
   const handleProcessFolder = async () => {
@@ -137,21 +235,46 @@ export default function Home() {
           </h1>
 
           <div className="space-y-4">
-            <div>
+            <div className="relative">
               <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
                 Chemin du dossier
               </label>
               <input
+                ref={inputRef}
                 id="folder-path"
                 type="text"
                 value={folderPath}
-                onChange={(e) => setFolderPath(e.target.value)}
+                onChange={(e) => handleInputChange(e.target.value)}
+                onKeyDown={handleKeyDown}
+                onFocus={() => setShowSuggestions(true)}
                 disabled={isProcessing}
-                placeholder="/chemin/vers/vos/images"
+                placeholder="/root"
                 className="w-full px-4 py-2 border border-zinc-300 dark:border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-900 dark:text-zinc-100"
               />
+              {showSuggestions && suggestions.length > 0 && (
+                <div
+                  ref={suggestionsRef}
+                  className="absolute z-10 w-full mt-1 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                >
+                  {suggestions.map((directory, index) => (
+                    <button
+                      key={directory}
+                      onClick={() => handleSuggestionClick(directory)}
+                      className={`w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors ${
+                        index === selectedSuggestionIndex
+                          ? 'bg-blue-50 dark:bg-blue-900/20'
+                          : ''
+                      }`}
+                    >
+                      <span className="text-sm text-zinc-700 dark:text-zinc-300">
+                        {directory}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
               <p className="text-xs text-zinc-500 dark:text-zinc-500 mt-1">
-                Entrez le chemin absolu du dossier contenant vos images
+                Sélectionnez un dossier dans la liste ou tapez le chemin absolu
               </p>
             </div>
 
