@@ -77,7 +77,7 @@ class FileTools(iFileTools):
         os.rename(origin_folder_path, new_folder_path)
 
     def list_directories(self, root_path: Path) -> list[Path]:
-        """List all directories recursively in the given root path"""
+        """List all directories in the given root_path"""
         if not root_path.exists():
             raise ValueError(f"Path does not exist: {root_path}")
 

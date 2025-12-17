@@ -10,7 +10,7 @@ from app.tools.logger import init_console_log, init_file_log
 from app.tools.config_file import ConfigFileManager
 
 from app.use_cases.backup import backup_use_case_factory
-from app.use_cases.group import group_use_case_factory
+from app.use_cases.heap import heap_use_case_factory
 from app.use_cases.rename import rename_use_case_factory
 from app.use_cases.check import check_use_case_factory
 
@@ -99,34 +99,21 @@ def backup(target_path: str, strict: bool, debug: str, exclude_folder: list[str]
 @click.option(
     "--group_size", help="Minimum number of pictures for a group", default=10, type=int
 )
-@click.argument(
-    "path",
-    default=None,
-    required=False,
-    type=click.Path(exists=True),
-)
-def group(delta: int, debug: bool, group_size: int, path: Union[str, None]):
+def group(delta: int, debug: bool, group_size: int):
     """
     (NEW) Group all pictures located in path by event
     """
     if debug:
         enable_debug_log(action_name="group")
 
-    if path is None:
-        folder_path_to_group = config_manager.get_backup_folder_path()
-        logger.warning(f"Grouping the whole backup folder {folder_path_to_group}")
-    else:
-        folder_path_to_group = Path(path)
-        logger.warning(f"Grouping only pictures in {folder_path_to_group}")
-
-    group_use_case = group_use_case_factory(
-        hours_btw_pictures=delta, minimun_group_size=group_size
+    heap_use_case = heap_use_case_factory(
+        backup_folder_path=config_manager.get_backup_folder_path(),
+        sharded_folder_path=config_manager.get_sharded_backup_folder_path(),
+        hours_btw_pictures=delta,
+        minimun_group_size=group_size,
     )
 
-    pictures_list = group_use_case.list_pictures(
-        root_path=folder_path_to_group,
-    )
-    group_use_case.group(picture_list=pictures_list)
+    heap_use_case.reorganize_heaps()
 
 
 @cli.command()
