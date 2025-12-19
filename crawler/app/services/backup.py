@@ -5,8 +5,12 @@ import os
 from pathlib import Path
 
 from app.entities.picture_data import iPictureData
-from app.factories.picture_data import iPictureDataFactory, NotStandardFileNameException
-from app.tools.file import iFileTools
+from app.factories.picture_data import (
+    PictureDataFactory,
+    iPictureDataFactory,
+    NotStandardFileNameException,
+)
+from app.tools.file import FileTools, iFileTools
 from app.entities.picture_heap import iPictureHeap
 from app.services.path_builder import LocalFilePathBuilderService
 from app.factories.picture_heap import PictureHeapFactory
@@ -36,6 +40,11 @@ class iBackupService(ABC):
     @abstractmethod
     def find_by_hash(self, picture_hash: str) -> Path | None:
         """Locate picture by its hash value"""
+        pass
+
+    @abstractmethod
+    def get_picture_data_factory(self) -> iPictureDataFactory:
+        """Get the picture data factory used by the service"""
         pass
 
 
@@ -174,3 +183,23 @@ class LocalFileBackupService(iBackupService):
             output.append(picture_heap)
 
         return output
+
+    def get_picture_data_factory(self) -> iPictureDataFactory:
+        return self._picture_data_factory
+
+
+def local_file_backup_service_factory(
+    backup_folder_path: Path,
+    sharded_folder_path: dict[int, Path],
+) -> iBackupService:
+    picture_data_factory = PictureDataFactory()
+    file_tools = FileTools()
+
+    backup_service = LocalFileBackupService(
+        backup_folder_path=backup_folder_path,
+        sharded_folder_path=sharded_folder_path,
+        picture_data_factory=picture_data_factory,
+        file_tools=file_tools,
+    )
+
+    return backup_service

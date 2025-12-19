@@ -57,6 +57,3 @@ class LocalFilePathBuilderService:
         file_name = self._get_file_name(data)
 
         return folder_path / file_name
-
-    def get_heap_list(self, picture_path_list: list[Path]) -> list[iPictureHeap]:
-        raise NotImplementedError("Not implemented yet")

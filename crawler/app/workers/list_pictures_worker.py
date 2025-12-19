@@ -5,7 +5,7 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from app.use_cases.backup import BackupUseCase
+from app.use_cases.list_pictures import ListPicturesUseCase
 from app.workers.data_store import DataStore
 
 logger = logging.getLogger("app.backup_worker")
@@ -31,11 +31,11 @@ class ListPicturesJob(AsyncJob):
     def __init__(
         self,
         job_id: UUID,
-        backup_use_case: BackupUseCase,
+        list_pictures_use_case: ListPicturesUseCase,
         data_store: DataStore[ListPictureJobResult],
     ):
         self.job_id = job_id
-        self._backup_use_case = backup_use_case
+        self._list_pictures_use_case = list_pictures_use_case
 
         self._data_store = data_store
 
@@ -56,7 +56,7 @@ class ListPicturesJob(AsyncJob):
         self._data_store.save_data(self._result, str(self.job_id))
 
         try:
-            picture_list = self._backup_use_case.list_pictures(
+            picture_list = self._list_pictures_use_case.list_pictures(
                 root_path=self.folder_path
             )
             logger.info(f"Done found {len(picture_list)} pictures")
