@@ -1,6 +1,5 @@
 import unittest
 from datetime import datetime, timedelta
-from pathlib import Path
 
 from app.entities.picture_data import PictureData
 from app.entities.picture_heap import HeapType, PictureHeap, iPictureHeap
@@ -16,24 +15,20 @@ class TestTimeDifferenceHeapOrganizer(unittest.TestCase):
 
         # First Heap
         self._picture_1 = PictureData(
-            path=Path("root/USELESS"),
             creation_date=datetime(2023, 10, 1, 10),
             hash="hash1",
         )
         self._picture_1_1 = PictureData(
-            path=Path("root/USELESS"),
             creation_date=datetime(2023, 10, 1, 10, 10),
             hash="hash1_1",
         )
         self._picture_2 = PictureData(
-            path=Path("root/USELESS"),
             creation_date=datetime(2023, 10, 1, 12, 10),
             hash="hash2",
         )
 
         # Second Heap Too small (less than 2) should go in OTHER
         self._picture_3 = PictureData(
-            path=Path("root/USELESS"),
             creation_date=datetime(2023, 10, 1, 15),
             hash="hash3",
         )
@@ -125,7 +120,6 @@ class TestTimeDifferenceHeapOrganizer(unittest.TestCase):
 
     def test_time_difference_heap_organizer_with_group_break(self):
         picture_1_2_break = PictureData(
-            path=Path("root/USELESS"),
             creation_date=datetime(2023, 10, 1, 11, 10),
             hash="hash1_2_break",
             group_break=True,

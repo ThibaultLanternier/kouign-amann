@@ -39,7 +39,6 @@ class PictureDataFactory(iPictureDataFactory):
         group_break = m.group(4) == "-x"
 
         return PictureData(
-            path=path,
             creation_date=datetime.fromtimestamp(
                 creation_timestamp, tz=current_timezone
             ),
@@ -52,7 +51,6 @@ class PictureDataFactory(iPictureDataFactory):
         picture = Picture(path=path, current_timezone=current_timezone)
 
         return PictureData(
-            path=path,
             creation_date=picture.get_exif_creation_time(),
             hash=picture.get_hash(),
         )

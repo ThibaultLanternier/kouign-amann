@@ -67,7 +67,9 @@ class BackupUseCase:
                 picture_data = self._picture_data_factory.compute_data(
                     path=picture_path, current_timezone=timezone.utc
                 )
-                self._picture_data_caching_service.add_to_cache(data=picture_data)
+                self._picture_data_caching_service.add_to_cache(
+                    data=picture_data, picture_path=picture_path
+                )
             except PictureException as e:
                 self._logger.warning(
                     f"Failed to compute picture id for {picture_path}: {e}"

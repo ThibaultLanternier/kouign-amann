@@ -24,7 +24,6 @@ class TestLocalFileBackupService(unittest.TestCase):
 
         picture_data = PictureData(
             hash=uuid.uuid4().hex,
-            path=picture_path,
             creation_date=datetime(2024, 11, 30, 11, 45),
         )
 
@@ -59,7 +58,6 @@ class TestLocalFileBackupService(unittest.TestCase):
 
         picture_data = PictureData(
             hash=uuid.uuid4().hex,
-            path=picture_path,
             creation_date=datetime(2024, 11, 30, 11, 45),
         )
 
@@ -140,7 +138,6 @@ class TestLocalFileBackupService(unittest.TestCase):
         )
 
         picture_data = PictureData(
-            path=Path("USELESSS"),
             creation_date=datetime(1980, 11, 30, 12),
             hash="5eacfe02",
             group_break=True,

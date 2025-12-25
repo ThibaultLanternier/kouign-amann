@@ -19,7 +19,6 @@ class TestLocalFileBackupPathBuilderService(unittest.TestCase):
         )
 
         self._picture_data = PictureData(
-            path=Path("/USELESS"),
             creation_date=datetime(2021, 5, 17, 10, 30),
             hash="abcdef123456",
             group_break=False,
@@ -65,7 +64,6 @@ class TestLocalFileBackupPathBuilderService(unittest.TestCase):
         mock_heap.get_description.return_value = "Super Party"
 
         picture_data = PictureData(
-            path=Path("/USELESS"),
             creation_date=datetime(2021, 5, 17, 10, 30),
             hash="abcdef123456",
             group_break=False,
@@ -84,7 +82,6 @@ class TestLocalFileBackupPathBuilderService(unittest.TestCase):
         mock_heap.get_description.return_value = "Super Party"
 
         picture_data = PictureData(
-            path=Path("/USELESS"),
             creation_date=datetime(2021, 5, 17, 10, 30),
             hash="abcdef123456",
             group_break=True,

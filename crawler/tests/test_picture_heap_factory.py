@@ -11,7 +11,6 @@ class TestPictureHeapFactory(unittest.TestCase):
     def setUp(self):
         self._picture_list = [
             PictureData(
-                path=Path("/path/to/pic1.jpg"),
                 creation_date=datetime(2023, 1, 1, 12, 0),
                 hash="hash1",
             )
