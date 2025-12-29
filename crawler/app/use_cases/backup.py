@@ -11,7 +11,7 @@ from app.services.picture_data_caching import (
     LocalFilePictureDataCachingService,
     iPictureDataCachingService,
 )
-from app.repositories.picture_data import JSONRecordedPictureDataRepository
+from app.repositories.picture_data import PictureDataRepository
 from app.entities.picture import PictureException
 from app.factories.picture_data import PictureDataFactory, iPictureDataFactory
 from app.tools.file import iFileTools
@@ -127,7 +127,7 @@ def backup_use_case_factory(
         sharded_folder_path=sharded_folder_path,
     )
 
-    picture_data_repo = JSONRecordedPictureDataRepository(
+    picture_data_repo = PictureDataRepository(
         cache_file_path=Path(f"{backup_folder_path}/cache.jsonl")
     )
 

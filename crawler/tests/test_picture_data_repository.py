@@ -3,7 +3,7 @@ from datetime import datetime
 from pathlib import Path
 from uuid import uuid4
 
-from app.repositories.picture_data import (JSONRecordedPictureDataRepository,
+from app.repositories.picture_data import (PictureDataRepository,
                                            RecordedPictureData)
 
 
@@ -11,7 +11,7 @@ class TestPictureDataRepository(unittest.TestCase):
     def test_get_record(self):
         file_path = Path(f"tests/files/repository/repo_{uuid4().hex}.jsonl")
 
-        repository = JSONRecordedPictureDataRepository(cache_file_path=file_path)
+        repository = PictureDataRepository(cache_file_path=file_path)
 
         recorded_picture_data = RecordedPictureData(
             path=file_path,
@@ -21,7 +21,7 @@ class TestPictureDataRepository(unittest.TestCase):
 
         repository.record(data=recorded_picture_data)
 
-        new_repository = JSONRecordedPictureDataRepository(cache_file_path=file_path)
+        new_repository = PictureDataRepository(cache_file_path=file_path)
 
         self.assertEqual(
             new_repository.get(path=recorded_picture_data.path).hash,
