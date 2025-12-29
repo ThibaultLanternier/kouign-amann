@@ -3,7 +3,10 @@ from datetime import timezone
 import logging
 from progressbar import ProgressBar
 from pathlib import Path
-from app.services.backup import LocalFileBackupService, iBackupService
+from app.services.backup import (
+    iBackupService,
+    local_file_backup_service_factory,
+)
 from app.services.picture_data_caching import (
     LocalFilePictureDataCachingService,
     iPictureDataCachingService,
@@ -11,7 +14,7 @@ from app.services.picture_data_caching import (
 from app.repositories.picture_data import PictureDataRepository
 from app.entities.picture import PictureException
 from app.factories.picture_data import PictureDataFactory, iPictureDataFactory
-from app.tools.file import FileTools, iFileTools
+from app.tools.file import iFileTools
 from app.entities.picture_data import iPictureData
 
 
@@ -35,17 +38,15 @@ class baseUseCase(ABC):
         return picture_list
 
 
-class BackupUseCase(baseUseCase):
+class BackupUseCase:
     def __init__(
         self,
         backup_service: iBackupService,
-        file_tools: iFileTools,
         picture_data_factory: iPictureDataFactory,
         picture_data_caching_service: iPictureDataCachingService,
     ):
-        super().__init__(
-            file_tools=file_tools, picture_data_factory=picture_data_factory
-        )
+        self._picture_data_factory = picture_data_factory
+        self._logger = logging.getLogger("app.backup_use_case")
 
         self._backup_service = backup_service
         self._picture_data_caching_service = picture_data_caching_service
@@ -66,7 +67,9 @@ class BackupUseCase(baseUseCase):
                 picture_data = self._picture_data_factory.compute_data(
                     path=picture_path, current_timezone=timezone.utc
                 )
-                self._picture_data_caching_service.add_to_cache(data=picture_data)
+                self._picture_data_caching_service.add_to_cache(
+                    data=picture_data, picture_path=picture_path
+                )
             except PictureException as e:
                 self._logger.warning(
                     f"Failed to compute picture id for {picture_path}: {e}"
@@ -119,26 +122,23 @@ class BackupUseCase(baseUseCase):
 def backup_use_case_factory(
     backup_folder_path: Path, sharded_folder_path: dict[int, Path]
 ) -> BackupUseCase:
+    backup_service = local_file_backup_service_factory(
+        backup_folder_path=backup_folder_path,
+        sharded_folder_path=sharded_folder_path,
+    )
+
     picture_data_repo = PictureDataRepository(
         cache_file_path=Path(f"{backup_folder_path}/cache.jsonl")
     )
 
-    picture_data_factory = PictureDataFactory()
-    file_tools = FileTools()
-
-    file_service = LocalFileBackupService(
-        backup_folder_path=backup_folder_path,
-        sharded_folder_path=sharded_folder_path,
-        picture_data_factory=picture_data_factory,
-        file_tools=file_tools,
-    )
     picture_id_service = LocalFilePictureDataCachingService(
         picture_data_repo=picture_data_repo
     )
 
+    picture_data_factory = PictureDataFactory()
+
     return BackupUseCase(
-        backup_service=file_service,
-        file_tools=file_tools,
+        backup_service=backup_service,
         picture_data_factory=picture_data_factory,
         picture_data_caching_service=picture_id_service,
     )

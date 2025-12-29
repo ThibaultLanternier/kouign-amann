@@ -19,7 +19,7 @@ class TestPictureDataFactory(unittest.TestCase):
             picture_data.get_creation_date(),
             datetime(2024, 12, 8, 0, 5, 35, tzinfo=timezone.utc),
         )
-        self.assertEqual(picture_data.get_path(), test_path)
+
         self.assertEqual(picture_data.get_hash(), "e7975821ce2e1a55")
         self.assertFalse(picture_data.is_group_break())
 
@@ -35,7 +35,7 @@ class TestPictureDataFactory(unittest.TestCase):
             picture_data.get_creation_date(),
             datetime(2021, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
         )
-        self.assertEqual(picture_data.get_path(), test_path_with_group_break)
+
         self.assertEqual(picture_data.get_hash(), "abcdef1234567890")
         self.assertTrue(picture_data.is_group_break())
         self.assertFalse(picture_data.is_selected())

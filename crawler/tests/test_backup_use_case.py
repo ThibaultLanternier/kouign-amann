@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 from app.entities.picture import HasherException
 from app.entities.picture_data import iPictureData
 from app.factories.picture_data import iPictureDataFactory
-from app.services.backup import iBackupService, iFileTools
+from app.services.backup import iBackupService
 from app.services.picture_data_caching import iPictureDataCachingService
 from app.use_cases.backup import BackupUseCase, backup_use_case_factory
 
@@ -19,7 +19,7 @@ class TestBackupUseCase(unittest.TestCase):
     def setUp(self):
         super().setUp()
 
-        self._mock_file_service = MagicMock(
+        self._mock_backup_service = MagicMock(
             name="mock_file_service", spec=iBackupService
         )
         self._mock_picture_id_service = MagicMock(
@@ -29,25 +29,12 @@ class TestBackupUseCase(unittest.TestCase):
             name="mock_picture_data_factory", spec=iPictureDataFactory
         )
 
-        self._mock_file_tools = MagicMock(name="mock_file_tools", spec=iFileTools)
-
-        self._mock_file_service.backup.return_value = True
+        self._mock_backup_service.backup.return_value = True
 
         self._backup_use_case = BackupUseCase(
-            backup_service=self._mock_file_service,
-            file_tools=self._mock_file_tools,
+            backup_service=self._mock_backup_service,
             picture_data_caching_service=self._mock_picture_id_service,
             picture_data_factory=self._mock_picture_data_factory,
-        )
-
-    def test_list_pictures_ok(self):
-        self._mock_file_tools.list_pictures.return_value = [PICTURE_PATH]
-
-        result = self._backup_use_case.list_pictures(root_path=Path("test"))
-
-        self.assertEqual([PICTURE_PATH], result)
-        self._mock_file_tools.list_pictures.assert_called_once_with(
-            root_path_list=[Path("test")], folder_name_to_exclude=[]
         )
 
     def test_backup_strict_mode_OK(self):
@@ -62,7 +49,7 @@ class TestBackupUseCase(unittest.TestCase):
 
         # When strict mode is True, cache should not be used
         self._mock_picture_id_service.get_from_cache.assert_not_called()
-        self._mock_file_service.backup.assert_called_once_with(
+        self._mock_backup_service.backup.assert_called_once_with(
             origin_path=PICTURE_PATH, data=PICTURE_DATA
         )
 
@@ -83,7 +70,7 @@ class TestBackupUseCase(unittest.TestCase):
             data=PICTURE_DATA
         )
 
-        self._mock_file_service.backup.assert_called_once_with(
+        self._mock_backup_service.backup.assert_called_once_with(
             origin_path=PICTURE_PATH, data=PICTURE_DATA
         )
 
@@ -102,13 +89,13 @@ class TestBackupUseCase(unittest.TestCase):
         self._mock_picture_data_factory.compute_data.assert_not_called()
         self._mock_picture_id_service.add_to_cache.assert_not_called()
 
-        self._mock_file_service.backup.assert_called_once_with(
+        self._mock_backup_service.backup.assert_called_once_with(
             origin_path=PICTURE_PATH, data=PICTURE_DATA
         )
 
     def test_backup_not_strict_file_cached_file_already_exists_OK(self):
         self._mock_picture_id_service.get_from_cache.return_value = PICTURE_DATA
-        self._mock_file_service.backup.return_value = False
+        self._mock_backup_service.backup.return_value = False
 
         result = self._backup_use_case.backup(
             picture_list_to_backup=[PICTURE_PATH], strict_mode=False

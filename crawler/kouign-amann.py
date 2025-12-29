@@ -1,18 +1,18 @@
 from datetime import timezone
-from typing import Union
 from uuid import uuid4
 import click
 import logging
 
 from pathlib import Path
 
+from app.services.backup import local_file_backup_service_factory
 from app.tools.logger import init_console_log, init_file_log
 from app.tools.config_file import ConfigFileManager
 
 from app.use_cases.backup import backup_use_case_factory
-from app.use_cases.group import group_use_case_factory
-from app.use_cases.rename import rename_use_case_factory
+from app.use_cases.heap import heap_use_case_factory
 from app.use_cases.check import check_use_case_factory
+from app.use_cases.list_pictures import list_pictures_use_case_factory
 
 init_console_log()
 
@@ -65,7 +65,7 @@ def init(backup_path: str, force: bool):
 @click.argument("target_path", type=click.Path(exists=True))
 def backup(target_path: str, strict: bool, debug: str, exclude_folder: list[str]):
     """
-    (NEW) Copy new pictures found in target directory to backup directory
+    Copy new pictures found in target directory to backup directory
     """
     backup_use_case = backup_use_case_factory(
         backup_folder_path=config_manager.get_backup_folder_path(),
@@ -81,7 +81,9 @@ def backup(target_path: str, strict: bool, debug: str, exclude_folder: list[str]
 
     target_folder_path = Path(target_path)
 
-    file_list = backup_use_case.list_pictures(
+    list_use_case = list_pictures_use_case_factory()
+
+    file_list = list_use_case.list_pictures(
         root_path=target_folder_path, folder_name_to_exclude=exclude_folder
     )
 
@@ -99,71 +101,25 @@ def backup(target_path: str, strict: bool, debug: str, exclude_folder: list[str]
 @click.option(
     "--group_size", help="Minimum number of pictures for a group", default=10, type=int
 )
-@click.argument(
-    "path",
-    default=None,
-    required=False,
-    type=click.Path(exists=True),
-)
-def group(delta: int, debug: bool, group_size: int, path: Union[str, None]):
+def group(delta: int, debug: bool, group_size: int):
     """
-    (NEW) Group all pictures located in path by event
+    Group all pictures located in path by event
     """
     if debug:
         enable_debug_log(action_name="group")
 
-    if path is None:
-        folder_path_to_group = config_manager.get_backup_folder_path()
-        logger.warning(f"Grouping the whole backup folder {folder_path_to_group}")
-    else:
-        folder_path_to_group = Path(path)
-        logger.warning(f"Grouping only pictures in {folder_path_to_group}")
-
-    group_use_case = group_use_case_factory(
-        hours_btw_pictures=delta, minimun_group_size=group_size
+    backup_service = local_file_backup_service_factory(
+        backup_folder_path=config_manager.get_backup_folder_path(),
+        sharded_folder_path=config_manager.get_sharded_backup_folder_path(),
     )
 
-    pictures_list = group_use_case.list_pictures(
-        root_path=folder_path_to_group,
-    )
-    group_use_case.group(picture_list=pictures_list)
-
-
-@cli.command()
-@click.option(
-    "--dry_run",
-    help="Does not actually rename the folders",
-    default=False,
-    is_flag=True,
-)
-@click.option("--verbose", help="Verbose mode", is_flag=True, default=False)
-@click.argument(
-    "path",
-    default=None,
-    type=click.Path(exists=True),
-)
-def rename(dry_run: bool, verbose: bool, path: Union[str, None] = None):
-    """
-    !! EXPERIMENTAL !! Try to rename new event folders in path based on historical path
-    """
-    if path is None:
-        folder_path_to_rename = config_manager.get_backup_folder_path()
-        logger.warning(f"Renaming the complete backup folder{folder_path_to_rename}")
-    else:
-        folder_path_to_rename = Path(path)
-        logger.warning(f"Renaming folders only in {folder_path_to_rename}")
-
-    rename_use_case = rename_use_case_factory(
-        backup_folder_path=config_manager.get_backup_folder_path()
+    heap_use_case = heap_use_case_factory(
+        backup_service=backup_service,
+        hours_btw_pictures=delta,
+        minimun_group_size=group_size,
     )
 
-    picture_path_list = rename_use_case.list_pictures(
-        root_path=folder_path_to_rename,
-    )
-
-    rename_use_case.rename_folders(
-        picture_path_list=picture_path_list, dry_run=dry_run, verbose=verbose
-    )
+    heap_use_case.reorganize_heaps()
 
 
 @cli.command()
@@ -172,17 +128,17 @@ def check(path: str):
     """
     Check all pictures in check_path have already been backed up.
     """
-    backup_folder_path = config_manager.get_backup_folder_path()
+    backup_service = local_file_backup_service_factory(
+        backup_folder_path=config_manager.get_backup_folder_path(),
+        sharded_folder_path=config_manager.get_sharded_backup_folder_path(),
+    )
+    check_use_case = check_use_case_factory(backup_service=backup_service)
 
-    check_use_case = check_use_case_factory()
-
-    backup_list = check_use_case.list_pictures(root_path=backup_folder_path)
-
-    picture_list = check_use_case.list_pictures(root_path=Path(path))
+    list_file_use_case = list_pictures_use_case_factory()
+    picture_list_to_check = list_file_use_case.list_pictures(root_path=Path(path))
 
     not_in_backup_count = check_use_case.check_pictures(
-        backup_list=backup_list,
-        picture_list=picture_list,
+        picture_list_to_check=picture_list_to_check,
         current_timezone=timezone.utc,
     )
 

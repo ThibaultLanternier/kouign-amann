@@ -12,6 +12,7 @@ from pydantic import BaseModel
 
 from app.tools.config_file import ConfigFileManager
 from app.tools.logger import init_console_log
+from app.use_cases import list_pictures
 from app.use_cases.backup import BackupUseCase, backup_use_case_factory
 from app.workers.list_pictures_worker import ListPicturesJob, ListPictureJobResult
 from app.workers.data_store import DataStore
@@ -33,6 +34,8 @@ async def lifespan(app: FastAPI):
 
     config_manager = ConfigFileManager()
 
+    list_pictures_use_case = list_pictures.list_pictures_use_case_factory()
+
     backup_use_case = backup_use_case_factory(
         backup_folder_path=config_manager.get_backup_folder_path(),
         sharded_folder_path=config_manager.get_sharded_backup_folder_path()
@@ -40,7 +43,8 @@ async def lifespan(app: FastAPI):
 
     # Store in app.state for access in endpoints
     app.state.backup_use_case = backup_use_case
-    
+    app.state.list_pictures_use_case = list_pictures_use_case
+
     results_directory = Path.home() / ".kouign-amann" / "api_results"
     
     app.state.data_store = DataStore[ListPictureJobResult](output_directory=results_directory)
@@ -135,7 +139,7 @@ async def create_list_pictures(
 
         list_pictures_job = ListPicturesJob(
             job_id=job_id, 
-            backup_use_case=request.app.state.backup_use_case, 
+            list_pictures_use_case=request.app.state.list_pictures_use_case, 
             data_store=request.app.state.data_store
         )
 
@@ -157,7 +161,7 @@ async def create_list_pictures(
 
 
 @app.get("/picture-list/{picture_list_id}")
-async def create_list_pictures(picture_list_id: str, request: Request) -> ListPictureJobResult:
+async def get_list_pictures(picture_list_id: str, request: Request) -> ListPictureJobResult:
     """
     Get the result of an async list pictures job.
     """

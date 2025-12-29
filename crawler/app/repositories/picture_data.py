@@ -1,28 +1,50 @@
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from datetime import datetime
 from json import JSONDecodeError
+import json
 import logging
 from pathlib import Path
 from typing import Union
 
-from app.entities.picture_data import iPictureData, PictureData
+
+@dataclass
+class RecordedPictureData:
+    path: Path
+    hash: str
+    creation_date: datetime
 
 
 class iPictureDataRepository(ABC):
     @abstractmethod
-    def get(self, path: Path) -> Union[iPictureData, None]:
+    def get(self, path: Path) -> Union[RecordedPictureData, None]:
         pass
 
     @abstractmethod
-    def record(self, data: iPictureData) -> bool:
-        pass
-
-    @abstractmethod
-    def get_parents_folder_list(self, picture_hash: str) -> list[str]:
+    def record(self, data: RecordedPictureData) -> bool:
         pass
 
 
 class PictureDataRepository(iPictureDataRepository):
-    def _get_data_from_file(self) -> list[iPictureData]:
+    def _get_data_from_json_line(self, line: str) -> RecordedPictureData:
+        data = json.loads(line)
+
+        return RecordedPictureData(
+            path=Path(data["path"]),
+            creation_date=datetime.fromisoformat(data["creation_date"]),
+            hash=data["hash"],
+        )
+
+    def _convert_to_json_line(self, data: RecordedPictureData) -> str:
+        return json.dumps(
+            {
+                "path": str(data.path),
+                "creation_date": data.creation_date.isoformat(),
+                "hash": data.hash,
+            }
+        )
+
+    def _get_data_from_file(self) -> list[RecordedPictureData]:
         output = []
 
         try:
@@ -30,7 +52,7 @@ class PictureDataRepository(iPictureDataRepository):
                 lines = file.readlines()
                 for line in lines:
                     try:
-                        output.append(PictureData.from_json(line.strip()))
+                        output.append(self._get_data_from_json_line(line.strip()))
                     except JSONDecodeError as e:
                         self._logger.error(
                             f"Error decoding line in cache file: {line.strip()} - {e}"
@@ -45,24 +67,16 @@ class PictureDataRepository(iPictureDataRepository):
 
         return output
 
-    def _index_data(self, data: iPictureData) -> None:
-        self._data[data.get_path()] = data
+    def _index_data(self, data: RecordedPictureData) -> None:
+        self._data[data.path] = data
 
-        picture_hash = data.get_hash()
-
-        if picture_hash not in self._folder_data:
-            self._folder_data[picture_hash] = []
-
-        self._folder_data[picture_hash].append(data.get_path())
-
-    def _write_data_to_file(self, data: iPictureData) -> None:
+    def _write_data_to_file(self, data: RecordedPictureData) -> None:
         with open(self._cache_file_path, "a+") as file:
-            file.write(PictureData.to_json(data) + "\n")
+            file.write(self._convert_to_json_line(data) + "\n")
 
     def __init__(self, cache_file_path: Path) -> None:
         self._cache_file_path = cache_file_path
-        self._data: dict[Path, iPictureData] = {}
-        self._folder_data: dict[str, list[Path]] = {}
+        self._data: dict[Path, RecordedPictureData] = {}
 
         self._logger = logging.getLogger("app.picture_data_repository")
         self._logger.info(
@@ -74,7 +88,7 @@ class PictureDataRepository(iPictureDataRepository):
         for picture_data in picture_data_list:
             self._index_data(data=picture_data)
 
-    def get(self, path: Path) -> Union[iPictureData, None]:
+    def get(self, path: Path) -> Union[RecordedPictureData, None]:
         if path in self._data:
             self._logger.debug(f"Found {path} PictureData in cache")
             return self._data[path]
@@ -82,19 +96,8 @@ class PictureDataRepository(iPictureDataRepository):
             self._logger.debug(f"{path} not found in PictureData cache")
             return None
 
-    def record(self, data: iPictureData) -> bool:
+    def record(self, data: RecordedPictureData) -> bool:
         self._index_data(data=data)
         self._write_data_to_file(data=data)
 
         return True
-
-    def get_parents_folder_list(self, picture_hash: str) -> list[str]:
-        if picture_hash in self._folder_data:
-            folders = [
-                str(path.parent.name) for path in self._folder_data[picture_hash]
-            ]
-            unique_folders = list(set(folders))
-
-            return unique_folders
-        else:
-            return []

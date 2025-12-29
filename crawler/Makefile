@@ -33,6 +33,9 @@ style-check:
 test-unit:
 	python -m unittest discover tests -v
 
+test-integration:
+	python -m unittest discover integration-tests -v
+
 publish-linux: test-unit style-check
 	pyinstaller --name kouign-amann-linux-$(SEMVER_APP) -F --clean ./kouign-amann.py
 
