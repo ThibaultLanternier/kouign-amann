@@ -114,11 +114,10 @@ class BackupUseCase:
 
         return new_picture_count
 
-    def locate_picture_by_hash(self, picture_hash: str) -> Path | None:
+    def get_picture_by_hash(self, picture_hash: str) -> bytes | None:
         self._logger.info(f"Locating picture with hash {picture_hash}")
         return self._backup_service.find_by_hash(picture_hash=picture_hash)
-
-
+    
 def backup_use_case_factory(
     backup_folder_path: Path, sharded_folder_path: dict[int, Path]
 ) -> BackupUseCase:

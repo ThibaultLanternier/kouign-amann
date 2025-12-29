@@ -8,6 +8,7 @@ from uuid import uuid4
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from app.tools.config_file import ConfigFileManager
@@ -215,18 +216,19 @@ async def backup_picture(request_body: PictureBackupRequest, request: Request, r
         )
 
 @app.get("/picture/{picture_hash}")
-async def get_picture(picture_hash: str, request: Request) -> PicturePathResponse:
+async def get_picture(picture_hash: str, request: Request):
     try:
         backup_use_case: BackupUseCase = request.app.state.backup_use_case
-        picture_path = backup_use_case.locate_picture_by_hash(picture_hash=picture_hash)
 
-        if picture_path is None:
+        picture_buffer = backup_use_case.get_picture_by_hash(picture_hash=picture_hash)
+
+        if picture_buffer is None:
             raise HTTPException(
                 status_code=404,
                 detail=f"Picture with hash {picture_hash} not found"
             )
 
-        return PicturePathResponse(path=str(picture_path))
+        return Response(content=picture_buffer, media_type="image/jpeg")
     except Exception as e:
         logger.exception(f"Error retrieving picture by hash: {e}")
         raise HTTPException(
