@@ -1,3 +1,4 @@
+from datetime import datetime
 from email.policy import strict
 import logging
 from contextlib import asynccontextmanager
@@ -105,6 +106,14 @@ class DirectoryListRequest(BaseModel):
 class DirectoryListResponse(BaseModel):
     """Response model for directory listing endpoint"""
     directories: list[str]
+
+class PictureHeap(BaseModel):
+    """Model representing a picture heap"""
+    description: str | None
+    start_date: str
+    end_date: str
+    picture_hashes: list[str]
+    heap_type: str
 
 @app.post("/picture-list", response_model=ListPictureAsyncResponse)
 async def create_list_pictures(
@@ -215,8 +224,8 @@ async def backup_picture(request_body: PictureBackupRequest, request: Request, r
             detail=f"Internal server error: {str(e)}"
         )
 
-@app.get("/picture/{picture_hash}")
-async def get_picture(picture_hash: str, request: Request):
+@app.get("/picture/{picture_hash}", response_class=Response)
+async def get_picture(picture_hash: str, request: Request) -> Response:
     try:
         backup_use_case: BackupUseCase = request.app.state.backup_use_case
 
@@ -235,7 +244,39 @@ async def get_picture(picture_hash: str, request: Request):
             status_code=500,
             detail=f"Internal server error: {str(e)}"
         )
-    
+
+@app.get("/heaps")
+async def list_picture_heaps(request: Request) -> list[PictureHeap]:
+    """List all picture heaps in the backup"""
+    try:
+        backup_use_case: BackupUseCase = request.app.state.backup_use_case
+
+        picture_heaps = backup_use_case.list_backed_up_pictures()
+
+        response_heaps: list[PictureHeap] = []
+
+        for heap in picture_heaps:
+            picture_hashes = [picture.get_hash() for picture in heap.get_picture_list()]
+
+            response_heaps.append(
+                PictureHeap(
+                    description=heap.get_description(),
+                    start_date=heap.get_start_date().isoformat(),
+                    end_date=heap.get_end_date().isoformat(),
+                    picture_hashes=picture_hashes,
+                    heap_type=heap.get_type().value
+                )
+            )
+
+        return response_heaps
+
+    except Exception as e:
+        logger.exception(f"Error listing picture heaps: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Internal server error: {str(e)}"
+        )
+
 @app.post("/directories")
 async def list_directories(request: DirectoryListRequest) -> DirectoryListResponse:
     """List all directories in the given path"""
@@ -263,6 +304,7 @@ async def list_directories(request: DirectoryListRequest) -> DirectoryListRespon
             status_code=500,
             detail=f"Internal server error: {str(e)}"
         )
+
 @app.get("/health")
 async def health_check() -> dict:
     """Health check endpoint"""

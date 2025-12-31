@@ -67,7 +67,7 @@ class TestBackupUseCase(unittest.TestCase):
             picture_path=PICTURE_PATH
         )
         self._mock_picture_id_service.add_to_cache.assert_called_once_with(
-            data=PICTURE_DATA
+            data=PICTURE_DATA, picture_path=PICTURE_PATH
         )
 
         self._mock_backup_service.backup.assert_called_once_with(

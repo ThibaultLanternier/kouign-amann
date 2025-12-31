@@ -128,15 +128,23 @@ class LocalFileBackupService(iBackupService):
     def hash_exists(self, picture_hash: str) -> bool:
         return self.__picture_already_exists(picture_hash)
 
-    def find_by_hash(self, picture_hash: str) -> bytes | None:
+    def _get_picture_path(self, picture_hash: str) -> Path | None:
         if picture_hash in self._hash_set:
-            file_path = self._hash_set[picture_hash]
-            self._logger.debug(f"Found file for hash {picture_hash}: {file_path}")
+            return self._hash_set[picture_hash]
+        else:
+            return None
+
+    def find_by_hash(self, picture_hash: str) -> bytes | None:
+        picture_path = self._get_picture_path(picture_hash=picture_hash)
+        if picture_path is not None:
+            self._logger.debug(f"Found file for hash {picture_hash}: {picture_path}")
             try:
-                with open(file_path, "rb") as picture_file:
+                with open(picture_path, "rb") as picture_file:
                     return picture_file.read()
             except FileNotFoundError:
-                self._logger.warning(f"File not found for hash {picture_hash}: {file_path}")
+                self._logger.warning(
+                    f"File not found for hash {picture_hash}: {picture_path}"
+                )
                 return None
             except Exception as e:
                 self._logger.error(f"Error reading file for hash {picture_hash}: {e}")
@@ -149,7 +157,7 @@ class LocalFileBackupService(iBackupService):
             for picture in heap.get_picture_list():
                 new_path = self._path_builder.build_path(data=picture, heap=heap)
 
-                current_path = self.find_by_hash(picture_hash=picture.get_hash())
+                current_path = self._get_picture_path(picture_hash=picture.get_hash())
 
                 if current_path is not None:
                     if str(current_path) != str(new_path):
