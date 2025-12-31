@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from math import pi
 from os import path
 from pathlib import Path
+import random
 from uuid import uuid4
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Request, Response
@@ -107,11 +108,13 @@ class DirectoryListResponse(BaseModel):
     """Response model for directory listing endpoint"""
     directories: list[str]
 
-class PictureHeap(BaseModel):
+class HeapDescription(BaseModel):
     """Model representing a picture heap"""
     description: str | None
     start_date: str
     end_date: str
+    picture_count: int
+    heap_year: int
     picture_hashes: list[str]
     heap_type: str
 
@@ -246,27 +249,34 @@ async def get_picture(picture_hash: str, request: Request) -> Response:
         )
 
 @app.get("/heaps")
-async def list_picture_heaps(request: Request) -> list[PictureHeap]:
+async def list_picture_heaps(request: Request) -> list[HeapDescription]:
     """List all picture heaps in the backup"""
     try:
         backup_use_case: BackupUseCase = request.app.state.backup_use_case
 
         picture_heaps = backup_use_case.list_backed_up_pictures()
 
-        response_heaps: list[PictureHeap] = []
+        response_heaps: list[HeapDescription] = []
 
         for heap in picture_heaps:
             picture_hashes = [picture.get_hash() for picture in heap.get_picture_list()]
 
+            # Select 4 random pictures, or all if less than 4 available
+            sample_size = min(4, len(picture_hashes))
+            random_picture_hashes = random.sample(picture_hashes, sample_size)
+
             response_heaps.append(
-                PictureHeap(
+                HeapDescription(
                     description=heap.get_description(),
                     start_date=heap.get_start_date().isoformat(),
                     end_date=heap.get_end_date().isoformat(),
-                    picture_hashes=picture_hashes,
-                    heap_type=heap.get_type().value
+                    picture_hashes=random_picture_hashes,
+                    heap_type=heap.get_type().value,
+                    heap_year=heap.get_start_date().year,
+                    picture_count=len(picture_hashes)
                 )
             )
+
 
         return response_heaps
 
