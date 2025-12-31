@@ -16,6 +16,7 @@ from app.entities.picture import PictureException
 from app.factories.picture_data import PictureDataFactory, iPictureDataFactory
 from app.tools.file import iFileTools
 from app.entities.picture_data import iPictureData
+from app.entities.picture_heap import iPictureHeap
 
 
 class baseUseCase(ABC):
@@ -114,9 +115,13 @@ class BackupUseCase:
 
         return new_picture_count
 
-    def locate_picture_by_hash(self, picture_hash: str) -> Path | None:
+    def get_picture_by_hash(self, picture_hash: str) -> bytes | None:
         self._logger.info(f"Locating picture with hash {picture_hash}")
         return self._backup_service.find_by_hash(picture_hash=picture_hash)
+
+    def list_backed_up_pictures(self) -> list[iPictureHeap]:
+        self._logger.info("Listing all backed up pictures")
+        return self._backup_service.list_backed_up_pictures()
 
 
 def backup_use_case_factory(

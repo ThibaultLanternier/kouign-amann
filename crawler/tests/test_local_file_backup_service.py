@@ -98,12 +98,7 @@ class TestLocalFileBackupService(unittest.TestCase):
 
         test_hash = "3eacfe02c923466cb98163c0b65c739e"
 
-        self.assertEqual(
-            file_service.find_by_hash(test_hash),
-            Path(
-                "tests/files/local_recorder_2/2024/NOT_GROUPED/1732963500-3eacfe02c923466cb98163c0b65c739e.jpg"  # noqa: E501
-            ),
-        )
+        self.assertIsInstance(file_service.find_by_hash(test_hash), bytes)
         self.assertIsNone(file_service.find_by_hash("XXXXX"))
 
     def test_list_backed_up_pictures(self):

@@ -1,13 +1,16 @@
+from datetime import datetime
 from email.policy import strict
 import logging
 from contextlib import asynccontextmanager
 from math import pi
 from os import path
 from pathlib import Path
+import random
 from uuid import uuid4
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from app.tools.config_file import ConfigFileManager
@@ -104,6 +107,16 @@ class DirectoryListRequest(BaseModel):
 class DirectoryListResponse(BaseModel):
     """Response model for directory listing endpoint"""
     directories: list[str]
+
+class HeapDescription(BaseModel):
+    """Model representing a picture heap"""
+    description: str | None
+    start_date: str
+    end_date: str
+    picture_count: int
+    heap_year: int
+    picture_hashes: list[str]
+    heap_type: str
 
 @app.post("/picture-list", response_model=ListPictureAsyncResponse)
 async def create_list_pictures(
@@ -214,26 +227,66 @@ async def backup_picture(request_body: PictureBackupRequest, request: Request, r
             detail=f"Internal server error: {str(e)}"
         )
 
-@app.get("/picture/{picture_hash}")
-async def get_picture(picture_hash: str, request: Request) -> PicturePathResponse:
+@app.get("/picture/{picture_hash}", response_class=Response)
+async def get_picture(picture_hash: str, request: Request) -> Response:
     try:
         backup_use_case: BackupUseCase = request.app.state.backup_use_case
-        picture_path = backup_use_case.locate_picture_by_hash(picture_hash=picture_hash)
 
-        if picture_path is None:
+        picture_buffer = backup_use_case.get_picture_by_hash(picture_hash=picture_hash)
+
+        if picture_buffer is None:
             raise HTTPException(
                 status_code=404,
                 detail=f"Picture with hash {picture_hash} not found"
             )
 
-        return PicturePathResponse(path=str(picture_path))
+        return Response(content=picture_buffer, media_type="image/jpeg")
     except Exception as e:
         logger.exception(f"Error retrieving picture by hash: {e}")
         raise HTTPException(
             status_code=500,
             detail=f"Internal server error: {str(e)}"
         )
-    
+
+@app.get("/heaps")
+async def list_picture_heaps(request: Request) -> list[HeapDescription]:
+    """List all picture heaps in the backup"""
+    try:
+        backup_use_case: BackupUseCase = request.app.state.backup_use_case
+
+        picture_heaps = backup_use_case.list_backed_up_pictures()
+
+        response_heaps: list[HeapDescription] = []
+
+        for heap in picture_heaps:
+            picture_hashes = [picture.get_hash() for picture in heap.get_picture_list()]
+
+            # Select 4 random pictures, or all if less than 4 available
+            sample_size = min(4, len(picture_hashes))
+            random_picture_hashes = random.sample(picture_hashes, sample_size)
+
+            response_heaps.append(
+                HeapDescription(
+                    description=heap.get_description(),
+                    start_date=heap.get_start_date().isoformat(),
+                    end_date=heap.get_end_date().isoformat(),
+                    picture_hashes=random_picture_hashes,
+                    heap_type=heap.get_type().value,
+                    heap_year=heap.get_start_date().year,
+                    picture_count=len(picture_hashes)
+                )
+            )
+
+
+        return response_heaps
+
+    except Exception as e:
+        logger.exception(f"Error listing picture heaps: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Internal server error: {str(e)}"
+        )
+
 @app.post("/directories")
 async def list_directories(request: DirectoryListRequest) -> DirectoryListResponse:
     """List all directories in the given path"""
@@ -261,6 +314,7 @@ async def list_directories(request: DirectoryListRequest) -> DirectoryListRespon
             status_code=500,
             detail=f"Internal server error: {str(e)}"
         )
+
 @app.get("/health")
 async def health_check() -> dict:
     """Health check endpoint"""
