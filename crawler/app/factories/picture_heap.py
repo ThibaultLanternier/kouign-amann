@@ -38,7 +38,10 @@ class PictureHeapFactory:
             raise PictureHeapException("Folder name does not contain a description")
 
     def from_folder_path(
-        self, folder_path: Path, picture_list: list[iPictureData]
+        self,
+        folder_path: Path,
+        picture_list: list[iPictureData],
+        heap_id: str | None = None,
     ) -> iPictureHeap:
         heap_type = self._get_type_from_folder_name(folder_path)
 
@@ -51,4 +54,5 @@ class PictureHeapFactory:
             heap_type=heap_type,
             picture_list=picture_list,
             description=description,
+            heap_id=heap_id,
         )

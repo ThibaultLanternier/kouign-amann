@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+import uuid
 from datetime import datetime
 from enum import Enum
 
@@ -16,6 +17,10 @@ class HeapType(Enum):
 
 
 class iPictureHeap(ABC):
+    @abstractmethod
+    def get_id(self) -> str:
+        pass
+
     @abstractmethod
     def get_description(self) -> str | None:
         pass
@@ -43,7 +48,9 @@ class PictureHeap(iPictureHeap):
         heap_type: HeapType,
         picture_list: list[iPictureData],
         description: str | None,
+        heap_id: str | None = None,
     ) -> None:
+        self._id = heap_id if heap_id is not None else uuid.uuid4().hex
         self._picture_list = picture_list
         self._heap_type = heap_type
 
@@ -52,6 +59,9 @@ class PictureHeap(iPictureHeap):
             key=lambda picture: picture.get_creation_date(),
         )
         self._description = description
+
+    def get_id(self) -> str:
+        return self._id
 
     def get_description(self) -> str | None:
         return self._description

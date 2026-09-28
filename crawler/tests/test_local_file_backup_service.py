@@ -116,6 +116,31 @@ class TestLocalFileBackupService(unittest.TestCase):
             set([HeapType.OTHER, HeapType.GROUPED, HeapType.NOT_GROUPED]),
         )
 
+    def test_list_backed_up_pictures_heap_ids(self):
+        backup_service = LocalFileBackupService(
+            backup_folder_path=Path("tests/files/local_recorder_2"),
+            sharded_folder_path={},
+            picture_data_factory=PictureDataFactory(),
+            file_tools=FileTools(),
+        )
+
+        heap_id_list = [
+            heap.get_id() for heap in backup_service.list_backed_up_pictures()
+        ]
+
+        self.assertEqual(len(heap_id_list), 4)
+        self.assertEqual(len(set(heap_id_list)), 4, "Heap ids should be unique")
+
+        for heap_id in heap_id_list:
+            self.assertRegex(heap_id, r"^[0-9a-f]{16}$")
+            self.assertNotIn("local_recorder_2", heap_id)
+
+        self.assertEqual(
+            heap_id_list,
+            [heap.get_id() for heap in backup_service.list_backed_up_pictures()],
+            "Heap ids should be stable between calls",
+        )
+
     def test_update_picture_heaps(self):
         mock_file_tools = MagicMock(spec=iFileTools)
 

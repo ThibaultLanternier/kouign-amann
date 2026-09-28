@@ -70,3 +70,27 @@ class TestPictureHeapFactory(unittest.TestCase):
         self.assertEqual(picture_heap.get_picture_list(), self._picture_list)
         self.assertEqual(picture_heap.get_type(), HeapType.GROUPED)
         self.assertEqual(picture_heap.get_description(), None)
+
+    def test_from_folder_path_with_heap_id(self):
+        parent_folder = Path("/path/to/2025 OTHER")
+
+        picture_heap = PictureHeapFactory().from_folder_path(
+            folder_path=parent_folder,
+            picture_list=self._picture_list,
+            heap_id="abcdef0123456789",
+        )
+
+        self.assertEqual(picture_heap.get_id(), "abcdef0123456789")
+
+    def test_from_folder_path_without_heap_id_generates_one(self):
+        parent_folder = Path("/path/to/2025 OTHER")
+
+        first_heap = PictureHeapFactory().from_folder_path(
+            folder_path=parent_folder, picture_list=self._picture_list
+        )
+        second_heap = PictureHeapFactory().from_folder_path(
+            folder_path=parent_folder, picture_list=self._picture_list
+        )
+
+        self.assertIsInstance(first_heap.get_id(), str)
+        self.assertNotEqual(first_heap.get_id(), second_heap.get_id())

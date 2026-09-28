@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from datetime import timezone
+import hashlib
 import logging
 import os
 from pathlib import Path
@@ -81,6 +82,8 @@ class LocalFileBackupService(iBackupService):
 
         self._picture_data_factory = picture_data_factory
         self._file_tools = file_tools
+
+        self._heap_path_dict: dict[str, Path] = {}
 
         self._logger = logging.getLogger("app.file_service")
         self._logger.info(
@@ -170,6 +173,9 @@ class LocalFileBackupService(iBackupService):
 
         return True
 
+    def _compute_heap_id(self, folder_path: Path) -> str:
+        return hashlib.sha256(str(folder_path).encode("utf-8")).hexdigest()[:16]
+
     def list_backed_up_pictures(self) -> list[iPictureHeap]:
         heap_list: dict[Path, list[iPictureData]] = {}
 
@@ -194,8 +200,13 @@ class LocalFileBackupService(iBackupService):
         output: list[iPictureHeap] = []
 
         for folder_path, picture_data_list in heap_list.items():
+            heap_id = self._compute_heap_id(folder_path)
+            self._heap_path_dict[heap_id] = folder_path
+
             picture_heap = PictureHeapFactory().from_folder_path(
-                folder_path=folder_path, picture_list=picture_data_list
+                folder_path=folder_path,
+                picture_list=picture_data_list,
+                heap_id=heap_id,
             )
 
             output.append(picture_heap)
