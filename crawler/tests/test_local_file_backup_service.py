@@ -151,7 +151,10 @@ class TestLocalFileBackupService(unittest.TestCase):
 
         for heap in backup_service.list_backed_up_pictures():
             self.assertEqual(
-                [p.get_hash() for p in backup_service.get_pictures_by_heap_id(heap.get_id())],
+                [
+                    p.get_hash()
+                    for p in backup_service.get_pictures_by_heap_id(heap.get_id())
+                ],
                 [p.get_hash() for p in heap.get_picture_list()],
             )
 
