@@ -141,6 +141,54 @@ class TestLocalFileBackupService(unittest.TestCase):
             "Heap ids should be stable between calls",
         )
 
+    def test_get_pictures_by_heap_id(self):
+        backup_service = LocalFileBackupService(
+            backup_folder_path=Path("tests/files/local_recorder_2"),
+            sharded_folder_path={},
+            picture_data_factory=PictureDataFactory(),
+            file_tools=FileTools(),
+        )
+
+        for heap in backup_service.list_backed_up_pictures():
+            self.assertEqual(
+                [p.get_hash() for p in backup_service.get_pictures_by_heap_id(heap.get_id())],
+                [p.get_hash() for p in heap.get_picture_list()],
+            )
+
+    def test_get_pictures_by_heap_id_without_prior_listing(self):
+        heap_list = LocalFileBackupService(
+            backup_folder_path=Path("tests/files/local_recorder_2"),
+            sharded_folder_path={},
+            picture_data_factory=PictureDataFactory(),
+            file_tools=FileTools(),
+        ).list_backed_up_pictures()
+
+        other_heap = [h for h in heap_list if h.get_type() == HeapType.OTHER][0]
+
+        fresh_backup_service = LocalFileBackupService(
+            backup_folder_path=Path("tests/files/local_recorder_2"),
+            sharded_folder_path={},
+            picture_data_factory=PictureDataFactory(),
+            file_tools=FileTools(),
+        )
+
+        picture_list = fresh_backup_service.get_pictures_by_heap_id(other_heap.get_id())
+
+        self.assertEqual(
+            [picture.get_hash() for picture in picture_list],
+            ["5eacfe02c923466cb98163c0b65c739e"],
+        )
+
+    def test_get_pictures_by_heap_id_unknown(self):
+        backup_service = LocalFileBackupService(
+            backup_folder_path=Path("tests/files/local_recorder_2"),
+            sharded_folder_path={},
+            picture_data_factory=PictureDataFactory(),
+            file_tools=FileTools(),
+        )
+
+        self.assertEqual(backup_service.get_pictures_by_heap_id("XXXXX"), [])
+
     def test_update_picture_heaps(self):
         mock_file_tools = MagicMock(spec=iFileTools)
 

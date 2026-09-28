@@ -34,6 +34,11 @@ class iBackupService(ABC):
         pass
 
     @abstractmethod
+    def get_pictures_by_heap_id(self, heap_id: str) -> list[iPictureData]:
+        """List pictures of the heap, empty list if heap is not found"""
+        pass
+
+    @abstractmethod
     def hash_exists(self, picture_hash: str) -> bool:
         """Find file by hash"""
         pass
@@ -175,6 +180,43 @@ class LocalFileBackupService(iBackupService):
 
     def _compute_heap_id(self, folder_path: Path) -> str:
         return hashlib.sha256(str(folder_path).encode("utf-8")).hexdigest()[:16]
+
+    def _refresh_heap_path_dict(self) -> None:
+        for path in self._hash_set.values():
+            folder_path = path.parent
+            self._heap_path_dict[self._compute_heap_id(folder_path)] = folder_path
+
+    def _get_heap_path(self, heap_id: str) -> Path | None:
+        if heap_id not in self._heap_path_dict:
+            self._refresh_heap_path_dict()
+
+        return self._heap_path_dict.get(heap_id)
+
+    def get_pictures_by_heap_id(self, heap_id: str) -> list[iPictureData]:
+        heap_path = self._get_heap_path(heap_id=heap_id)
+
+        if heap_path is None:
+            self._logger.debug(f"Heap {heap_id} not found")
+            return []
+
+        output: list[iPictureData] = []
+
+        for path in self._hash_set.values():
+            if path.parent != heap_path:
+                continue
+
+            try:
+                output.append(
+                    self._picture_data_factory.from_standard_path(
+                        path, current_timezone=timezone.utc
+                    )
+                )
+            except NotStandardFileNameException:
+                self._logger.warning(
+                    f"File {path} is not in the standard format, skipping"
+                )
+
+        return sorted(output, key=lambda picture: picture.get_creation_date())
 
     def list_backed_up_pictures(self) -> list[iPictureHeap]:
         heap_list: dict[Path, list[iPictureData]] = {}
