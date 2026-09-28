@@ -189,6 +189,37 @@ class TestLocalFileBackupService(unittest.TestCase):
 
         self.assertEqual(backup_service.get_pictures_by_heap_id("XXXXX"), [])
 
+    def test_get_heap_by_id(self):
+        backup_service = LocalFileBackupService(
+            backup_folder_path=Path("tests/files/local_recorder_2"),
+            sharded_folder_path={},
+            picture_data_factory=PictureDataFactory(),
+            file_tools=FileTools(),
+        )
+
+        for heap in backup_service.list_backed_up_pictures():
+            found_heap = backup_service.get_heap_by_id(heap.get_id())
+
+            self.assertIsNotNone(found_heap)
+            assert found_heap is not None
+            self.assertEqual(found_heap.get_id(), heap.get_id())
+            self.assertEqual(found_heap.get_type(), heap.get_type())
+            self.assertEqual(found_heap.get_description(), heap.get_description())
+            self.assertEqual(
+                [p.get_hash() for p in found_heap.get_picture_list()],
+                [p.get_hash() for p in heap.get_picture_list()],
+            )
+
+    def test_get_heap_by_id_unknown(self):
+        backup_service = LocalFileBackupService(
+            backup_folder_path=Path("tests/files/local_recorder_2"),
+            sharded_folder_path={},
+            picture_data_factory=PictureDataFactory(),
+            file_tools=FileTools(),
+        )
+
+        self.assertIsNone(backup_service.get_heap_by_id("XXXXX"))
+
     def test_update_picture_heaps(self):
         mock_file_tools = MagicMock(spec=iFileTools)
 

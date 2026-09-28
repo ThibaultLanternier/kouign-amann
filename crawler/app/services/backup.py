@@ -39,6 +39,11 @@ class iBackupService(ABC):
         pass
 
     @abstractmethod
+    def get_heap_by_id(self, heap_id: str) -> iPictureHeap | None:
+        """Get heap by its id, None if heap is not found"""
+        pass
+
+    @abstractmethod
     def hash_exists(self, picture_hash: str) -> bool:
         """Find file by hash"""
         pass
@@ -217,6 +222,17 @@ class LocalFileBackupService(iBackupService):
                 )
 
         return sorted(output, key=lambda picture: picture.get_creation_date())
+
+    def get_heap_by_id(self, heap_id: str) -> iPictureHeap | None:
+        heap_path = self._get_heap_path(heap_id=heap_id)
+        picture_list = self.get_pictures_by_heap_id(heap_id=heap_id)
+
+        if heap_path is None or len(picture_list) == 0:
+            return None
+
+        return PictureHeapFactory().from_folder_path(
+            folder_path=heap_path, picture_list=picture_list, heap_id=heap_id
+        )
 
     def list_backed_up_pictures(self) -> list[iPictureHeap]:
         heap_list: dict[Path, list[iPictureData]] = {}
