@@ -1,7 +1,7 @@
 import unittest
 from datetime import timezone
-from pathlib import Path
 from io import BytesIO
+from pathlib import Path
 from unittest.mock import MagicMock
 
 from PIL import Image
