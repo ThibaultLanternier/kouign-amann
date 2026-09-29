@@ -2,8 +2,7 @@ import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 
-from app.factories.picture_data import (NotStandardFileNameException,
-                                        PictureDataFactory)
+from app.factories.picture_data import NotStandardFileNameException, PictureDataFactory
 
 
 class TestPictureDataFactory(unittest.TestCase):

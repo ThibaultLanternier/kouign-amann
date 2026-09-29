@@ -2,8 +2,7 @@ import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 
-from app.entities.picture import (HasherException, MalformedImageFileException,
-                                  Picture)
+from app.entities.picture import HasherException, MalformedImageFileException, Picture
 
 TEST_PICTURE_CAMERA = "tests/files/test-canon-eos70D-exif.jpg"
 TEST_PICTURE_OLD_SCAN_2 = "tests/files/0001.jpg"

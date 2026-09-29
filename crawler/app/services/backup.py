@@ -77,8 +77,6 @@ class LocalFileBackupService(iBackupService):
 
         return output
 
-
-
     def __init__(
         self,
         backup_folder_path: Path,
@@ -115,7 +113,9 @@ class LocalFileBackupService(iBackupService):
             )
         )
 
-        self._path_to_id: Callable[[Path], str] = lambda path: hashlib.sha256(str(path).encode("utf-8")).hexdigest()[:16]
+        self._path_to_id: Callable[[Path], str] = lambda path: hashlib.sha256(
+            str(path).encode("utf-8")
+        ).hexdigest()[:16]
 
     def __picture_already_exists(self, picture_hash: str) -> bool:
         return picture_hash in self._hash_set.keys()
@@ -233,7 +233,9 @@ class LocalFileBackupService(iBackupService):
             return None
 
         return PictureHeapFactory().from_folder_path(
-            folder_path=heap_path, picture_list=picture_list, path_to_id=self._path_to_id
+            folder_path=heap_path,
+            picture_list=picture_list,
+            path_to_id=self._path_to_id,
         )
 
     def list_backed_up_pictures(self) -> list[iPictureHeap]:
