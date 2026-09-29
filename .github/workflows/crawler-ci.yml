@@ -1,0 +1,58 @@
+name: Crawler CI
+
+on:
+  pull_request:
+    paths:
+      - "crawler/**"
+      - ".github/workflows/crawler-ci.yml"
+
+defaults:
+  run:
+    working-directory: crawler
+
+jobs:
+  unit-tests:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pipenv
+          cache-dependency-path: crawler/Pipfile.lock
+
+      - name: Install dependencies
+        run: |
+          pip install pipenv
+          pipenv install --dev --deploy
+
+      - name: Create test.env
+        run: cp test.env.sample test.env
+
+      - name: Run unit tests
+        run: pipenv run make test-unit
+
+  style-check:
+    name: Style check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pipenv
+          cache-dependency-path: crawler/Pipfile.lock
+
+      - name: Install dependencies
+        run: |
+          pip install pipenv
+          pipenv install --dev --deploy
+
+      - name: Create test.env
+        run: cp test.env.sample test.env
+
+      - name: Run style check
+        run: pipenv run make style-check
