@@ -110,6 +110,7 @@ class DirectoryListResponse(BaseModel):
 
 class HeapDescription(BaseModel):
     """Model representing a picture heap"""
+    heap_id: str
     description: str | None
     start_date: str
     end_date: str
@@ -267,6 +268,7 @@ async def list_picture_heaps(request: Request) -> list[HeapDescription]:
 
             response_heaps.append(
                 HeapDescription(
+                    heap_id=heap.get_id(),
                     description=heap.get_description(),
                     start_date=heap.get_start_date().isoformat(),
                     end_date=heap.get_end_date().isoformat(),
