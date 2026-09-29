@@ -266,7 +266,7 @@ async def get_picture(picture_hash: str, request: Request) -> Response:
         )
 
 @app.get("/picture/{picture_hash}/thumbnail", response_class=Response)
-async def get_picture_thumbnail(
+def get_picture_thumbnail(
     picture_hash: str,
     request: Request,
     size: int = Query(default=DEFAULT_THUMBNAIL_SIZE, gt=0, le=2000)
