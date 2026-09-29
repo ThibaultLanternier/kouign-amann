@@ -7,6 +7,7 @@ from app.entities.picture_heap import (
     PictureHeapException,
     iPictureHeap,
 )
+from typing import Callable
 
 
 class PictureHeapFactory:
@@ -41,7 +42,7 @@ class PictureHeapFactory:
         self,
         folder_path: Path,
         picture_list: list[iPictureData],
-        heap_id: str | None = None,
+        path_to_id: Callable[[Path], str],
     ) -> iPictureHeap:
         heap_type = self._get_type_from_folder_name(folder_path)
 
@@ -54,5 +55,5 @@ class PictureHeapFactory:
             heap_type=heap_type,
             picture_list=picture_list,
             description=description,
-            heap_id=heap_id,
+            heap_id=path_to_id(folder_path),
         )

@@ -4,6 +4,7 @@ import hashlib
 import logging
 import os
 from pathlib import Path
+from typing import Callable
 
 from app.entities.picture_data import iPictureData
 from app.factories.picture_data import (
@@ -76,6 +77,8 @@ class LocalFileBackupService(iBackupService):
 
         return output
 
+
+
     def __init__(
         self,
         backup_folder_path: Path,
@@ -111,6 +114,8 @@ class LocalFileBackupService(iBackupService):
                 folder_name_to_exclude=[],
             )
         )
+
+        self._path_to_id: Callable[[Path], str] = lambda path: hashlib.sha256(str(path).encode("utf-8")).hexdigest()[:16]
 
     def __picture_already_exists(self, picture_hash: str) -> bool:
         return picture_hash in self._hash_set.keys()
@@ -183,13 +188,10 @@ class LocalFileBackupService(iBackupService):
 
         return True
 
-    def _compute_heap_id(self, folder_path: Path) -> str:
-        return hashlib.sha256(str(folder_path).encode("utf-8")).hexdigest()[:16]
-
     def _refresh_heap_path_dict(self) -> None:
         for path in self._hash_set.values():
             folder_path = path.parent
-            self._heap_path_dict[self._compute_heap_id(folder_path)] = folder_path
+            self._heap_path_dict[self._path_to_id(folder_path)] = folder_path
 
     def _get_heap_path(self, heap_id: str) -> Path | None:
         if heap_id not in self._heap_path_dict:
@@ -231,7 +233,7 @@ class LocalFileBackupService(iBackupService):
             return None
 
         return PictureHeapFactory().from_folder_path(
-            folder_path=heap_path, picture_list=picture_list, heap_id=heap_id
+            folder_path=heap_path, picture_list=picture_list, path_to_id=self._path_to_id
         )
 
     def list_backed_up_pictures(self) -> list[iPictureHeap]:
@@ -258,13 +260,13 @@ class LocalFileBackupService(iBackupService):
         output: list[iPictureHeap] = []
 
         for folder_path, picture_data_list in heap_list.items():
-            heap_id = self._compute_heap_id(folder_path)
+            heap_id = self._path_to_id(folder_path)
             self._heap_path_dict[heap_id] = folder_path
 
             picture_heap = PictureHeapFactory().from_folder_path(
                 folder_path=folder_path,
                 picture_list=picture_data_list,
-                heap_id=heap_id,
+                path_to_id=self._path_to_id,
             )
 
             output.append(picture_heap)
