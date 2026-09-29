@@ -7,6 +7,7 @@ from app.entities.picture_heap import (
     PictureHeapException,
     iPictureHeap,
 )
+from typing import Callable
 
 
 class PictureHeapFactory:
@@ -38,7 +39,10 @@ class PictureHeapFactory:
             raise PictureHeapException("Folder name does not contain a description")
 
     def from_folder_path(
-        self, folder_path: Path, picture_list: list[iPictureData]
+        self,
+        folder_path: Path,
+        picture_list: list[iPictureData],
+        path_to_id: Callable[[Path], str],
     ) -> iPictureHeap:
         heap_type = self._get_type_from_folder_name(folder_path)
 
@@ -51,4 +55,5 @@ class PictureHeapFactory:
             heap_type=heap_type,
             picture_list=picture_list,
             description=description,
+            heap_id=path_to_id(folder_path),
         )

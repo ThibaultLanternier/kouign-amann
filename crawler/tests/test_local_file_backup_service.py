@@ -116,6 +116,113 @@ class TestLocalFileBackupService(unittest.TestCase):
             set([HeapType.OTHER, HeapType.GROUPED, HeapType.NOT_GROUPED]),
         )
 
+    def test_list_backed_up_pictures_heap_ids(self):
+        backup_service = LocalFileBackupService(
+            backup_folder_path=Path("tests/files/local_recorder_2"),
+            sharded_folder_path={},
+            picture_data_factory=PictureDataFactory(),
+            file_tools=FileTools(),
+        )
+
+        heap_id_list = [
+            heap.get_id() for heap in backup_service.list_backed_up_pictures()
+        ]
+
+        self.assertEqual(len(heap_id_list), 4)
+        self.assertEqual(len(set(heap_id_list)), 4, "Heap ids should be unique")
+
+        for heap_id in heap_id_list:
+            self.assertRegex(heap_id, r"^[0-9a-f]{16}$")
+            self.assertNotIn("local_recorder_2", heap_id)
+
+        self.assertEqual(
+            heap_id_list,
+            [heap.get_id() for heap in backup_service.list_backed_up_pictures()],
+            "Heap ids should be stable between calls",
+        )
+
+    def test_get_pictures_by_heap_id(self):
+        backup_service = LocalFileBackupService(
+            backup_folder_path=Path("tests/files/local_recorder_2"),
+            sharded_folder_path={},
+            picture_data_factory=PictureDataFactory(),
+            file_tools=FileTools(),
+        )
+
+        for heap in backup_service.list_backed_up_pictures():
+            self.assertEqual(
+                [
+                    p.get_hash()
+                    for p in backup_service.get_pictures_by_heap_id(heap.get_id())
+                ],
+                [p.get_hash() for p in heap.get_picture_list()],
+            )
+
+    def test_get_pictures_by_heap_id_without_prior_listing(self):
+        heap_list = LocalFileBackupService(
+            backup_folder_path=Path("tests/files/local_recorder_2"),
+            sharded_folder_path={},
+            picture_data_factory=PictureDataFactory(),
+            file_tools=FileTools(),
+        ).list_backed_up_pictures()
+
+        other_heap = [h for h in heap_list if h.get_type() == HeapType.OTHER][0]
+
+        fresh_backup_service = LocalFileBackupService(
+            backup_folder_path=Path("tests/files/local_recorder_2"),
+            sharded_folder_path={},
+            picture_data_factory=PictureDataFactory(),
+            file_tools=FileTools(),
+        )
+
+        picture_list = fresh_backup_service.get_pictures_by_heap_id(other_heap.get_id())
+
+        self.assertEqual(
+            [picture.get_hash() for picture in picture_list],
+            ["5eacfe02c923466cb98163c0b65c739e"],
+        )
+
+    def test_get_pictures_by_heap_id_unknown(self):
+        backup_service = LocalFileBackupService(
+            backup_folder_path=Path("tests/files/local_recorder_2"),
+            sharded_folder_path={},
+            picture_data_factory=PictureDataFactory(),
+            file_tools=FileTools(),
+        )
+
+        self.assertEqual(backup_service.get_pictures_by_heap_id("XXXXX"), [])
+
+    def test_get_heap_by_id(self):
+        backup_service = LocalFileBackupService(
+            backup_folder_path=Path("tests/files/local_recorder_2"),
+            sharded_folder_path={},
+            picture_data_factory=PictureDataFactory(),
+            file_tools=FileTools(),
+        )
+
+        for heap in backup_service.list_backed_up_pictures():
+            found_heap = backup_service.get_heap_by_id(heap.get_id())
+
+            self.assertIsNotNone(found_heap)
+            assert found_heap is not None
+            self.assertEqual(found_heap.get_id(), heap.get_id())
+            self.assertEqual(found_heap.get_type(), heap.get_type())
+            self.assertEqual(found_heap.get_description(), heap.get_description())
+            self.assertEqual(
+                [p.get_hash() for p in found_heap.get_picture_list()],
+                [p.get_hash() for p in heap.get_picture_list()],
+            )
+
+    def test_get_heap_by_id_unknown(self):
+        backup_service = LocalFileBackupService(
+            backup_folder_path=Path("tests/files/local_recorder_2"),
+            sharded_folder_path={},
+            picture_data_factory=PictureDataFactory(),
+            file_tools=FileTools(),
+        )
+
+        self.assertIsNone(backup_service.get_heap_by_id("XXXXX"))
+
     def test_update_picture_heaps(self):
         mock_file_tools = MagicMock(spec=iFileTools)
 
