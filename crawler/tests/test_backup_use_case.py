@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 
 from app.entities.picture import HasherException
 from app.entities.picture_data import iPictureData
+from app.entities.picture_heap import iPictureHeap
 from app.factories.picture_data import iPictureDataFactory
 from app.services.backup import iBackupService
 from app.services.picture_data_caching import iPictureDataCachingService
@@ -120,6 +121,35 @@ class TestBackupUseCase(unittest.TestCase):
         )
 
         self.assertEqual(0, result)
+
+    def test_get_heap_by_id_OK(self):
+        heap = MagicMock(name="fake_heap", spec=iPictureHeap)
+        self._mock_backup_service.get_heap_by_id.return_value = heap
+
+        result = self._backup_use_case.get_heap_by_id(heap_id="heap1")
+
+        self.assertEqual(heap, result)
+        self._mock_backup_service.get_heap_by_id.assert_called_once_with(
+            heap_id="heap1"
+        )
+
+    def test_get_heap_by_id_not_found(self):
+        self._mock_backup_service.get_heap_by_id.return_value = None
+
+        self.assertIsNone(self._backup_use_case.get_heap_by_id(heap_id="unknown"))
+
+    def test_get_pictures_by_heap_id_OK(self):
+        self._mock_backup_service.get_pictures_by_heap_id.return_value = [
+            PICTURE_DATA,
+            PICTURE_DATA_2,
+        ]
+
+        result = self._backup_use_case.get_pictures_by_heap_id(heap_id="heap1")
+
+        self.assertEqual([PICTURE_DATA, PICTURE_DATA_2], result)
+        self._mock_backup_service.get_pictures_by_heap_id.assert_called_once_with(
+            heap_id="heap1"
+        )
 
 
 class TestBackupUseCaseFactory(unittest.TestCase):

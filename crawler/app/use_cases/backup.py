@@ -123,6 +123,14 @@ class BackupUseCase:
         self._logger.info("Listing all backed up pictures")
         return self._backup_service.list_backed_up_pictures()
 
+    def get_heap_by_id(self, heap_id: str) -> iPictureHeap | None:
+        self._logger.info(f"Retrieving heap {heap_id}")
+        return self._backup_service.get_heap_by_id(heap_id=heap_id)
+
+    def get_pictures_by_heap_id(self, heap_id: str) -> list[iPictureData]:
+        self._logger.info(f"Listing pictures of heap {heap_id}")
+        return self._backup_service.get_pictures_by_heap_id(heap_id=heap_id)
+
 
 def backup_use_case_factory(
     backup_folder_path: Path, sharded_folder_path: dict[int, Path]

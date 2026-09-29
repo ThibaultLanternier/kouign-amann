@@ -110,6 +110,7 @@ class DirectoryListResponse(BaseModel):
 
 class HeapDescription(BaseModel):
     """Model representing a picture heap"""
+    heap_id: str
     description: str | None
     start_date: str
     end_date: str
@@ -117,6 +118,21 @@ class HeapDescription(BaseModel):
     heap_year: int
     picture_hashes: list[str]
     heap_type: str
+
+class HeapInfo(BaseModel):
+    """Response model for heap info endpoint"""
+    heap_id: str
+    description: str | None
+    start_date: str
+    end_date: str
+    picture_count: int
+    heap_year: int
+    heap_type: str
+
+class HeapPicturesResponse(BaseModel):
+    """Response model for heap pictures endpoint"""
+    heap_id: str
+    picture_hashes: list[str]
 
 @app.post("/picture-list", response_model=ListPictureAsyncResponse)
 async def create_list_pictures(
@@ -267,6 +283,7 @@ async def list_picture_heaps(request: Request) -> list[HeapDescription]:
 
             response_heaps.append(
                 HeapDescription(
+                    heap_id=heap.get_id(),
                     description=heap.get_description(),
                     start_date=heap.get_start_date().isoformat(),
                     end_date=heap.get_end_date().isoformat(),
@@ -282,6 +299,67 @@ async def list_picture_heaps(request: Request) -> list[HeapDescription]:
 
     except Exception as e:
         logger.exception(f"Error listing picture heaps: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Internal server error: {str(e)}"
+        )
+
+@app.get("/heap/{heap_id}/info")
+async def get_heap_info(heap_id: str, request: Request) -> HeapInfo:
+    """Get information about a picture heap"""
+    try:
+        backup_use_case: BackupUseCase = request.app.state.backup_use_case
+
+        heap = backup_use_case.get_heap_by_id(heap_id=heap_id)
+
+        if heap is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Heap {heap_id} not found"
+            )
+
+        return HeapInfo(
+            heap_id=heap.get_id(),
+            description=heap.get_description(),
+            start_date=heap.get_start_date().isoformat(),
+            end_date=heap.get_end_date().isoformat(),
+            picture_count=len(heap.get_picture_list()),
+            heap_year=heap.get_start_date().year,
+            heap_type=heap.get_type().value
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception(f"Error retrieving heap info: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Internal server error: {str(e)}"
+        )
+
+@app.get("/heap/{heap_id}/pictures")
+async def get_heap_pictures(heap_id: str, request: Request) -> HeapPicturesResponse:
+    """List the hashes of all pictures contained in a heap"""
+    try:
+        backup_use_case: BackupUseCase = request.app.state.backup_use_case
+
+        picture_list = backup_use_case.get_pictures_by_heap_id(heap_id=heap_id)
+
+        if len(picture_list) == 0:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Heap {heap_id} not found"
+            )
+
+        return HeapPicturesResponse(
+            heap_id=heap_id,
+            picture_hashes=[picture.get_hash() for picture in picture_list]
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception(f"Error listing heap pictures: {e}")
         raise HTTPException(
             status_code=500,
             detail=f"Internal server error: {str(e)}"
