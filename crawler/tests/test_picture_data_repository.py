@@ -3,8 +3,7 @@ from datetime import datetime
 from pathlib import Path
 from uuid import uuid4
 
-from app.repositories.picture_data import (PictureDataRepository,
-                                           RecordedPictureData)
+from app.repositories.picture_data import PictureDataRepository, RecordedPictureData
 
 
 class TestPictureDataRepository(unittest.TestCase):

@@ -23,9 +23,11 @@ class TestPictureHeapFactory(unittest.TestCase):
 
     def test_from_folder_path_other(self):
         parent_folder = Path("/path/to/2025 OTHER")
-        
+
         picture_heap = PictureHeapFactory().from_folder_path(
-            folder_path=parent_folder, picture_list=self._picture_list, path_to_id=self._path_to_id
+            folder_path=parent_folder,
+            picture_list=self._picture_list,
+            path_to_id=self._path_to_id,
         )
 
         self.assertEqual(picture_heap.get_picture_list(), self._picture_list)
@@ -36,7 +38,9 @@ class TestPictureHeapFactory(unittest.TestCase):
         parent_folder = Path("/path/to/NOT_GROUPED")
 
         picture_heap = PictureHeapFactory().from_folder_path(
-            folder_path=parent_folder, picture_list=self._picture_list, path_to_id=self._path_to_id
+            folder_path=parent_folder,
+            picture_list=self._picture_list,
+            path_to_id=self._path_to_id,
         )
 
         self.assertEqual(picture_heap.get_picture_list(), self._picture_list)
@@ -46,7 +50,9 @@ class TestPictureHeapFactory(unittest.TestCase):
         parent_folder = Path("/path/to/2025-12-25 Christmas Party")
 
         picture_heap = PictureHeapFactory().from_folder_path(
-            folder_path=parent_folder, picture_list=self._picture_list, path_to_id=self._path_to_id
+            folder_path=parent_folder,
+            picture_list=self._picture_list,
+            path_to_id=self._path_to_id,
         )
 
         self.assertEqual(picture_heap.get_picture_list(), self._picture_list)
@@ -57,7 +63,9 @@ class TestPictureHeapFactory(unittest.TestCase):
         parent_folder = Path("/path/to/2025-12-25 <EVENT DESCRIPTION>")
 
         picture_heap = PictureHeapFactory().from_folder_path(
-            folder_path=parent_folder, picture_list=self._picture_list, path_to_id=self._path_to_id
+            folder_path=parent_folder,
+            picture_list=self._picture_list,
+            path_to_id=self._path_to_id,
         )
 
         self.assertEqual(picture_heap.get_picture_list(), self._picture_list)
@@ -68,7 +76,9 @@ class TestPictureHeapFactory(unittest.TestCase):
         parent_folder = Path("/path/to/2025-12-25 <EVENT DESCRIPTION 125>")
 
         picture_heap = PictureHeapFactory().from_folder_path(
-            folder_path=parent_folder, picture_list=self._picture_list, path_to_id=self._path_to_id
+            folder_path=parent_folder,
+            picture_list=self._picture_list,
+            path_to_id=self._path_to_id,
         )
 
         self.assertEqual(picture_heap.get_picture_list(), self._picture_list)
@@ -90,13 +100,19 @@ class TestPictureHeapFactory(unittest.TestCase):
         parent_folder = Path("/path/to/2025 OTHER")
         parent_folder_2 = Path("/path/to/2025 OTHER 2")
 
-        self._path_to_id = lambda path: hashlib.sha256(str(path).encode("utf-8")).hexdigest()[:16]
+        self._path_to_id = lambda path: hashlib.sha256(
+            str(path).encode("utf-8")
+        ).hexdigest()[:16]
 
         first_heap = PictureHeapFactory().from_folder_path(
-            folder_path=parent_folder, picture_list=self._picture_list, path_to_id=self._path_to_id
+            folder_path=parent_folder,
+            picture_list=self._picture_list,
+            path_to_id=self._path_to_id,
         )
         second_heap = PictureHeapFactory().from_folder_path(
-            folder_path=parent_folder_2, picture_list=self._picture_list, path_to_id=self._path_to_id
+            folder_path=parent_folder_2,
+            picture_list=self._picture_list,
+            path_to_id=self._path_to_id,
         )
 
         self.assertIsInstance(first_heap.get_id(), str)

@@ -3,8 +3,10 @@ from pathlib import Path
 from unittest.mock import MagicMock
 
 from app.tools.file import iFileTools
-from app.use_cases.list_pictures import (ListPicturesUseCase,
-                                         list_pictures_use_case_factory)
+from app.use_cases.list_pictures import (
+    ListPicturesUseCase,
+    list_pictures_use_case_factory,
+)
 
 
 class TestListPicturesUseCase(unittest.TestCase):
