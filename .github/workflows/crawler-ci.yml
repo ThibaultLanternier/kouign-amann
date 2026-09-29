@@ -32,6 +32,10 @@ jobs:
         run: cp test.env.sample test.env
 
       - name: Run unit tests
+        # Backup file names are built from local-time timestamps and the
+        # expected values in the tests were computed in this timezone
+        env:
+          TZ: Europe/Paris
         run: pipenv run make test-unit
 
   style-check:
