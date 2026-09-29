@@ -8,7 +8,7 @@ from pathlib import Path
 import random
 from uuid import uuid4
 
-from fastapi import BackgroundTasks, FastAPI, HTTPException, Request, Response
+from fastapi import BackgroundTasks, FastAPI, HTTPException, Query, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
@@ -20,6 +20,7 @@ from app.use_cases.backup import BackupUseCase, backup_use_case_factory
 from app.workers.list_pictures_worker import ListPicturesJob, ListPictureJobResult
 from app.workers.data_store import DataStore
 from app.tools.file import FileTools
+from app.tools.thumbnail import DEFAULT_THUMBNAIL_SIZE
 
 # Initialize logging
 init_console_log()
@@ -259,6 +260,41 @@ async def get_picture(picture_hash: str, request: Request) -> Response:
         return Response(content=picture_buffer, media_type="image/jpeg")
     except Exception as e:
         logger.exception(f"Error retrieving picture by hash: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Internal server error: {str(e)}"
+        )
+
+@app.get("/picture/{picture_hash}/thumbnail", response_class=Response)
+async def get_picture_thumbnail(
+    picture_hash: str,
+    request: Request,
+    size: int = Query(default=DEFAULT_THUMBNAIL_SIZE, gt=0, le=2000)
+) -> Response:
+    """Get a JPEG thumbnail of a picture, its largest side being at most size pixels"""
+    try:
+        backup_use_case: BackupUseCase = request.app.state.backup_use_case
+
+        thumbnail_buffer = backup_use_case.get_thumbnail_by_hash(
+            picture_hash=picture_hash,
+            max_size=size
+        )
+
+        if thumbnail_buffer is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Picture with hash {picture_hash} not found"
+            )
+
+        return Response(
+            content=thumbnail_buffer,
+            media_type="image/jpeg",
+            headers={"Cache-Control": "public, max-age=86400"}
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception(f"Error retrieving picture thumbnail by hash: {e}")
         raise HTTPException(
             status_code=500,
             detail=f"Internal server error: {str(e)}"
