@@ -43,6 +43,7 @@ class iPicture(ABC):
 
 
 DEFAULT_DATETIME = datetime(1970, 1, 1, tzinfo=timezone.utc)
+DEFAULT_THUMBNAIL_SIZE = 400
 
 
 class Picture(iPicture):

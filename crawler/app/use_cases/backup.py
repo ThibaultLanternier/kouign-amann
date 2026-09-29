@@ -12,10 +12,9 @@ from app.services.picture_data_caching import (
     iPictureDataCachingService,
 )
 from app.repositories.picture_data import PictureDataRepository
-from app.entities.picture import PictureException
+from app.entities.picture import DEFAULT_THUMBNAIL_SIZE, Picture, PictureException
 from app.factories.picture_data import PictureDataFactory, iPictureDataFactory
 from app.tools.file import iFileTools
-from app.tools.thumbnail import DEFAULT_THUMBNAIL_SIZE, create_thumbnail
 from app.entities.picture_data import iPictureData
 from app.entities.picture_heap import iPictureHeap
 
@@ -123,12 +122,12 @@ class BackupUseCase:
     def get_thumbnail_by_hash(
         self, picture_hash: str, max_size: int = DEFAULT_THUMBNAIL_SIZE
     ) -> bytes | None:
-        picture_buffer = self.get_picture_by_hash(picture_hash=picture_hash)
+        picture_path = self._backup_service.find_path_by_hash(picture_hash=picture_hash)
 
-        if picture_buffer is None:
+        if picture_path is None:
             return None
 
-        return create_thumbnail(picture_buffer=picture_buffer, max_size=max_size)
+        return Picture(path=picture_path).get_binary(max_size=max_size)
 
     def list_backed_up_pictures(self) -> list[iPictureHeap]:
         self._logger.info("Listing all backed up pictures")

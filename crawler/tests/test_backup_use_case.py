@@ -126,9 +126,9 @@ class TestBackupUseCase(unittest.TestCase):
         self.assertEqual(0, result)
 
     def test_get_thumbnail_by_hash_OK(self):
-        self._mock_backup_service.find_by_hash.return_value = Path(
+        self._mock_backup_service.find_path_by_hash.return_value = Path(
             "tests/files/test-canon-eos70D.jpg"
-        ).read_bytes()
+        )
 
         result = self._backup_use_case.get_thumbnail_by_hash(
             picture_hash="hash1", max_size=150
@@ -137,12 +137,12 @@ class TestBackupUseCase(unittest.TestCase):
         assert result is not None
         with Image.open(BytesIO(result)) as image:
             self.assertEqual(150, max(image.size))
-        self._mock_backup_service.find_by_hash.assert_called_once_with(
+        self._mock_backup_service.find_path_by_hash.assert_called_once_with(
             picture_hash="hash1"
         )
 
     def test_get_thumbnail_by_hash_not_found(self):
-        self._mock_backup_service.find_by_hash.return_value = None
+        self._mock_backup_service.find_path_by_hash.return_value = None
 
         self.assertIsNone(
             self._backup_use_case.get_thumbnail_by_hash(picture_hash="unknown")

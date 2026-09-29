@@ -50,6 +50,11 @@ class iBackupService(ABC):
         pass
 
     @abstractmethod
+    def find_path_by_hash(self, picture_hash: str) -> Path | None:
+        """Locate picture by its hash value and return its path"""
+        pass
+
+    @abstractmethod
     def find_by_hash(self, picture_hash: str) -> bytes | None:
         """Locate picture by its hash value and return binary data"""
         pass
@@ -146,14 +151,14 @@ class LocalFileBackupService(iBackupService):
     def hash_exists(self, picture_hash: str) -> bool:
         return self.__picture_already_exists(picture_hash)
 
-    def _get_picture_path(self, picture_hash: str) -> Path | None:
+    def find_path_by_hash(self, picture_hash: str) -> Path | None:
         if picture_hash in self._hash_set:
             return self._hash_set[picture_hash]
         else:
             return None
 
     def find_by_hash(self, picture_hash: str) -> bytes | None:
-        picture_path = self._get_picture_path(picture_hash=picture_hash)
+        picture_path = self.find_path_by_hash(picture_hash=picture_hash)
         if picture_path is not None:
             self._logger.debug(f"Found file for hash {picture_hash}: {picture_path}")
             try:
@@ -175,7 +180,7 @@ class LocalFileBackupService(iBackupService):
             for picture in heap.get_picture_list():
                 new_path = self._path_builder.build_path(data=picture, heap=heap)
 
-                current_path = self._get_picture_path(picture_hash=picture.get_hash())
+                current_path = self.find_path_by_hash(picture_hash=picture.get_hash())
 
                 if current_path is not None:
                     if str(current_path) != str(new_path):

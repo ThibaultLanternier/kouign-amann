@@ -20,7 +20,7 @@ from app.use_cases.backup import BackupUseCase, backup_use_case_factory
 from app.workers.list_pictures_worker import ListPicturesJob, ListPictureJobResult
 from app.workers.data_store import DataStore
 from app.tools.file import FileTools
-from app.tools.thumbnail import DEFAULT_THUMBNAIL_SIZE
+from app.entities.picture import DEFAULT_THUMBNAIL_SIZE
 
 # Initialize logging
 init_console_log()
