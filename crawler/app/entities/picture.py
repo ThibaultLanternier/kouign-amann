@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
+from io import BytesIO
 from pathlib import Path
-from PIL import Image
+from PIL import Image, ImageOps
 
 import imagehash
 import piexif
@@ -36,8 +37,13 @@ class iPicture(ABC):
     def get_hash(self) -> str:
         pass
 
+    @abstractmethod
+    def get_binary(self, max_size: int = -1) -> bytes:
+        pass
+
 
 DEFAULT_DATETIME = datetime(1970, 1, 1, tzinfo=timezone.utc)
+DEFAULT_THUMBNAIL_SIZE = 400
 
 
 class Picture(iPicture):
@@ -103,3 +109,23 @@ class Picture(iPicture):
             return str(imagehash.phash(self._image))
         except Exception:
             raise HasherException(str(self._path))
+
+    def get_binary(self, max_size: int = -1) -> bytes:
+        """Return the full picture if max_size is -1, otherwise a JPEG thumbnail
+        whose largest side is at most max_size pixels"""
+        if max_size == -1:
+            return self._path.read_bytes()
+
+        if max_size <= 0:
+            raise ValueError(f"Thumbnail size must be positive, got {max_size}")
+
+        thumbnail = ImageOps.exif_transpose(self._image)
+        thumbnail.thumbnail((max_size, max_size))
+
+        if thumbnail.mode != "RGB":
+            thumbnail = thumbnail.convert("RGB")
+
+        output = BytesIO()
+        thumbnail.save(output, format="JPEG", quality=85)
+
+        return output.getvalue()

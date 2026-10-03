@@ -101,6 +101,22 @@ class TestLocalFileBackupService(unittest.TestCase):
         self.assertIsInstance(file_service.find_by_hash(test_hash), bytes)
         self.assertIsNone(file_service.find_by_hash("XXXXX"))
 
+    def test_find_path_by_hash(self):
+        file_service = LocalFileBackupService(
+            backup_folder_path=Path("tests/files/local_recorder_2"),
+            sharded_folder_path={},
+            picture_data_factory=PictureDataFactory(),
+            file_tools=FileTools(),
+        )
+
+        test_hash = "3eacfe02c923466cb98163c0b65c739e"
+
+        picture_path = file_service.find_path_by_hash(test_hash)
+
+        assert picture_path is not None
+        self.assertTrue(picture_path.is_file())
+        self.assertIsNone(file_service.find_path_by_hash("XXXXX"))
+
     def test_list_backed_up_pictures(self):
         backup_service = LocalFileBackupService(
             backup_folder_path=Path("tests/files/local_recorder_2"),

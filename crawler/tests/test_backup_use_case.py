@@ -1,7 +1,10 @@
 import unittest
 from datetime import timezone
+from io import BytesIO
 from pathlib import Path
 from unittest.mock import MagicMock
+
+from PIL import Image
 
 from app.entities.picture import HasherException
 from app.entities.picture_data import iPictureData
@@ -121,6 +124,29 @@ class TestBackupUseCase(unittest.TestCase):
         )
 
         self.assertEqual(0, result)
+
+    def test_get_thumbnail_by_hash_OK(self):
+        self._mock_backup_service.find_path_by_hash.return_value = Path(
+            "tests/files/test-canon-eos70D.jpg"
+        )
+
+        result = self._backup_use_case.get_thumbnail_by_hash(
+            picture_hash="hash1", max_size=150
+        )
+
+        assert result is not None
+        with Image.open(BytesIO(result)) as image:
+            self.assertEqual(150, max(image.size))
+        self._mock_backup_service.find_path_by_hash.assert_called_once_with(
+            picture_hash="hash1"
+        )
+
+    def test_get_thumbnail_by_hash_not_found(self):
+        self._mock_backup_service.find_path_by_hash.return_value = None
+
+        self.assertIsNone(
+            self._backup_use_case.get_thumbnail_by_hash(picture_hash="unknown")
+        )
 
     def test_get_heap_by_id_OK(self):
         heap = MagicMock(name="fake_heap", spec=iPictureHeap)
